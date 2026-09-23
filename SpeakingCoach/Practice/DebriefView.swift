@@ -33,7 +33,7 @@ struct DebriefView: View {
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: Space.xxl) {
                     HStack {
-                        Kicker(text: comparison == nil ? definition.title : "Retry · \(definition.title)", color: Palette.coralDeep)
+                        Kicker(text: comparison == nil ? (report.analysis.custom?.title ?? definition.title) : "Retry · \(definition.title)", color: Palette.coralDeep)
                         Spacer()
                         GlassIconButton(systemImage: "xmark", size: 40, iconSize: 14, color: Palette.dim, accessibilityLabel: "Close", action: onDone)
                     }
@@ -49,12 +49,58 @@ struct DebriefView: View {
                         .fixedSize(horizontal: false, vertical: true)
                         .revealIn(after: comparison == nil ? 0.1 : 0.4)
 
-                    if assessment == nil, let improvements = report.analysis.improvements, !improvements.isEmpty {
-                        card(icon: "arrow.turn.up.right", title: "What to work on", tint: Palette.coralDeep) {
-                            ForEach(improvements, id: \.self) { item in
-                                Text(item).font(Typeface.body(16)).foregroundStyle(Palette.ink).fixedSize(horizontal: false, vertical: true)
+                    if assessment == nil, let subscores = report.analysis.subscores, !subscores.isEmpty {
+                        card(icon: "chart.bar.fill", title: "How it went", tint: Palette.coralDeep) {
+                            ForEach(subscores, id: \.label) { subscore in
+                                VStack(alignment: .leading, spacing: Space.xs) {
+                                    HStack {
+                                        Text(subscore.label).font(Typeface.label(15)).foregroundStyle(Palette.ink)
+                                        Spacer()
+                                        Text(Self.band(subscore.score)).font(Typeface.body(13)).foregroundStyle(Palette.dim)
+                                    }
+                                    ScoreBar(value: Double(subscore.score) / 100)
+                                    Text(subscore.note)
+                                        .font(Typeface.body(14))
+                                        .foregroundStyle(Palette.dim)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                }
                             }
                         }
+                        .revealIn(after: 0.35)
+                    }
+
+                    if assessment == nil, let improvements = report.analysis.improvements, !improvements.isEmpty {
+                        card(icon: "arrow.turn.up.right", title: report.analysis.custom == nil ? "What to work on" : "Try these", tint: Palette.coralDeep) {
+                            ForEach(Array(improvements.enumerated()), id: \.offset) { index, item in
+                                HStack(alignment: .top, spacing: Space.sm) {
+                                    Text("\(index + 1)")
+                                        .font(Typeface.label(12))
+                                        .foregroundStyle(.white)
+                                        .frame(width: 20, height: 20)
+                                        .background(Circle().fill(Palette.coral))
+                                    Text(item).font(Typeface.body(16)).foregroundStyle(Palette.ink).fixedSize(horizontal: false, vertical: true)
+                                }
+                            }
+                        }
+                        .revealIn(after: 0.6)
+                    }
+
+                    if assessment == nil, let rewrites = report.analysis.rewrites, !rewrites.isEmpty {
+                        card(icon: "text.quote", title: "Say it better", tint: Palette.sage) {
+                            ForEach(rewrites, id: \.original) { rewrite in
+                                VStack(alignment: .leading, spacing: Space.xs) {
+                                    Text("You said").font(Typeface.label(12)).foregroundStyle(Palette.muted)
+                                    quoteView(rewrite.original).opacity(0.75)
+                                    Text("Try").font(Typeface.label(12)).foregroundStyle(Palette.sage).padding(.top, Space.xs)
+                                    Text(rewrite.better)
+                                        .font(Typeface.body(16))
+                                        .foregroundStyle(Palette.ink)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                        .textSelection(.enabled)
+                                }
+                            }
+                        }
+                        .revealIn(after: 0.85)
                     }
 
                     if let strength {
@@ -137,10 +183,10 @@ struct DebriefView: View {
                 PrimaryButton(title: "Retry this moment · 90 sec", systemImage: "arrow.counterclockwise", action: onRetry)
                 QuietButton(title: "Done", action: onDone)
             }
-        } else if comparison != nil, let onRehearseAgain {
+        } else if comparison != nil || report.analysis.custom != nil, let onRehearseAgain {
             VStack(spacing: Space.xs) {
                 PrimaryButton(title: "Done", action: onDone)
-                QuietButton(title: "Rehearse the whole scene again", color: Palette.coralDeep, action: onRehearseAgain)
+                QuietButton(title: report.analysis.custom == nil ? "Rehearse the whole scene again" : "Rehearse it again", color: Palette.coralDeep, action: onRehearseAgain)
             }
         } else {
             PrimaryButton(title: "Done", action: onDone)
@@ -196,6 +242,11 @@ struct DebriefView: View {
                 quoteView(quote).opacity(faded ? 0.7 : 1)
             }
         }
+    }
+
+    /// Words, not a bare number: a score out of 100 means nothing on its own.
+    static func band(_ score: Int) -> String {
+        score >= 75 ? "Strong" : score >= 50 ? "Getting there" : "Needs work"
     }
 
     static func levelName(_ level: Int) -> String {
@@ -276,6 +327,24 @@ struct DebriefView: View {
             }
             .fixedSize(horizontal: false, vertical: true)
             .textSelection(.enabled)
+    }
+}
+
+/// A thin coral bar, 0…1.
+private struct ScoreBar: View {
+    let value: Double
+
+    var body: some View {
+        GeometryReader { proxy in
+            ZStack(alignment: .leading) {
+                Capsule().fill(Palette.ink.opacity(0.08))
+                Capsule()
+                    .fill(LinearGradient(colors: [Palette.peach, Palette.coral], startPoint: .leading, endPoint: .trailing))
+                    .frame(width: max(6, proxy.size.width * min(max(value, 0), 1)))
+            }
+        }
+        .frame(height: 5)
+        .accessibilityHidden(true)
     }
 }
 

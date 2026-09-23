@@ -3,6 +3,7 @@ import Foundation
 /// One rehearsal from `practice-content.json` — the same file the server
 /// grades against, bundled unchanged so ids and versions always agree.
 struct PracticeDefinition: Codable, Identifiable, Hashable {
+    // Memberwise init stays available: custom situations build one in code.
     struct Criterion: Codable, Hashable {
         let id: String
         let label: String

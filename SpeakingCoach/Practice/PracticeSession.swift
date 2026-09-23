@@ -48,9 +48,19 @@ final class PracticeSession {
         self.onFinished = onFinished
     }
 
+    /// A situation the user described themselves.
+    init(custom: CustomSituation, setup: PracticeSetup, language: String, userID: UUID, onFinished: @escaping () -> Void) {
+        definition = custom.definition
+        var context = PracticeContext.new(for: PracticeSetup(practice: custom.definition, pressure: setup.pressure, pacing: setup.pacing, persona: setup.persona, situation: custom.description), language: language)
+        context.custom = custom
+        self.context = context
+        self.userID = userID
+        self.onFinished = onFinished
+    }
+
     /// Resuming a saved attempt instead of starting a new one.
     init(draft: PracticeDraft, userID: UUID, onFinished: @escaping () -> Void) {
-        definition = PracticeCatalog.definition(draft.context.activityId) ?? PracticeCatalog.all[0]
+        definition = draft.context.custom?.definition ?? PracticeCatalog.definition(draft.context.activityId) ?? PracticeCatalog.all[0]
         context = draft.context
         self.userID = userID
         self.onFinished = onFinished
@@ -67,13 +77,15 @@ final class PracticeSession {
     /// Opening a past report: straight to its debrief.
     init(report: PracticeReport, userID: UUID, onFinished: @escaping () -> Void) {
         let activity = report.analysis.practiceContext?.activityId ?? ""
-        let found = PracticeCatalog.definition(activity) ?? PracticeCatalog.all[0]
+        let found = report.analysis.custom?.definition ?? PracticeCatalog.definition(activity) ?? PracticeCatalog.all[0]
         definition = found
-        context = report.analysis.practiceContext ?? PracticeContext(
+        var context = report.analysis.practiceContext ?? PracticeContext(
             attemptId: report.id, activityId: found.id, activityVersion: found.version,
             rubricVersion: found.rubricVersion, language: "en", pressure: "realistic",
-            pacing: "patient", situation: "", startedAt: ""
+            pacing: "patient", situation: report.analysis.custom?.description ?? "", startedAt: ""
         )
+        if let custom = report.analysis.custom { context.custom = custom }
+        self.context = context
         self.userID = userID
         self.onFinished = onFinished
         stage = .report(report)
@@ -125,17 +137,26 @@ final class PracticeSession {
             return
         }
         do {
-            let started = try await PracticeAPI.start(context)
-            context = started.context
+            // Catalog rehearsals start on the practice server (which checks
+            // the plan and reserves the attempt); a custom situation gets its
+            // token straight from the partner agent.
+            let token: String
+            if context.isCustom {
+                token = try await CustomSituationAPI.token(persona: PracticeSetup.Persona(rawValue: context.personaId ?? "female") ?? .female)
+            } else {
+                let started = try await PracticeAPI.start(context)
+                context = started.context
+                token = started.token
+            }
             saveDraft([])
             voice.onTranscript = { [weak self] lines in self?.saveDraft(lines) }
             voice.onNaturalEnd = { [weak self] in Task { await self?.finish() } }
             voice.firstUserWords = { [weak self] in
-                guard let id = self?.context.attemptId else { return }
-                PracticeAPI.event("user_first_spoke", attemptId: id)
+                guard let self, !self.context.isCustom else { return }
+                PracticeAPI.event("user_first_spoke", attemptId: self.context.attemptId)
             }
             try await voice.start(
-                token: started.token,
+                token: token,
                 prompt: PracticePrompt.build(definition, context),
                 language: context.language,
                 duration: PracticePrompt.duration(definition, context),
@@ -143,7 +164,7 @@ final class PracticeSession {
             )
             stage = .live
             UIApplication.shared.isIdleTimerDisabled = true
-            PracticeAPI.event("practice_connected", attemptId: context.attemptId)
+            if !context.isCustom { PracticeAPI.event("practice_connected", attemptId: context.attemptId) }
             observeDrop()
         } catch let error as PracticeAPIError {
             stage = .failed(Failure(title: "Couldn't start", message: error.localizedDescription, canRetry: !(error.isSubscription)))
@@ -183,7 +204,7 @@ final class PracticeSession {
         UIApplication.shared.isIdleTimerDisabled = false
         let transcript = voice.transcript
         await voice.end()
-        PracticeAPI.event("practice_ended", attemptId: context.attemptId)
+        if !context.isCustom { PracticeAPI.event("practice_ended", attemptId: context.attemptId) }
         let draft = PracticeDraft(context: context, transcript: transcript)
         saveDraft(transcript)
         guard draft.hasUserWords else {
@@ -199,11 +220,17 @@ final class PracticeSession {
     func assess(_ draft: PracticeDraft) async {
         stage = .assessing
         do {
-            let report = try await PracticeAPI.assess(attemptId: draft.context.attemptId, transcript: draft.transcript)
+            let report: PracticeReport
+            if draft.context.isCustom, let custom = draft.context.custom {
+                let analysis = try await CustomSituationAPI.analyze(draft.transcript, situation: custom, language: draft.context.language)
+                report = try await CustomSituationAPI.save(analysis, transcript: draft.transcript, context: draft.context, userID: userID)
+            } else {
+                report = try await PracticeAPI.assess(attemptId: draft.context.attemptId, transcript: draft.transcript)
+            }
             PracticeDrafts.clear(userID: userID)
             stage = .report(report)
             Haptics.success()
-            PracticeAPI.event("debrief_viewed", attemptId: draft.context.attemptId)
+            if !draft.context.isCustom { PracticeAPI.event("debrief_viewed", attemptId: draft.context.attemptId) }
             onFinished()
         } catch {
             stage = .failed(Failure(

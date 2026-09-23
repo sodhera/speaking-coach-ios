@@ -11,6 +11,7 @@ struct SettingsView: View {
     @State private var confirmingSignOut = false
     @State private var deleting = false
     @State private var remindersOn = Reminders.isEnabled
+    @State private var sendingFeedback = false
 
     private var subscriptions: Subscriptions { model.subscriptions }
 
@@ -80,6 +81,10 @@ struct SettingsView: View {
                     .padding(.vertical, Space.md)
                 }
 
+                section("Help") {
+                    rowButton(GlassRow(icon: "bubble.left.fill", title: "Send feedback", showsChevron: true)) { sendingFeedback = true }
+                }
+
                 section("About") {
                     rowButton(GlassRow(icon: "hand.raised.fill", title: "Privacy policy", showsChevron: true)) { UIApplication.shared.open(AppConfig.privacyURL) }
                     GlassRowDivider()
@@ -107,6 +112,10 @@ struct SettingsView: View {
                 dismiss()
                 Task { await model.signOut() }
             }
+        }
+        .sheet(isPresented: $sendingFeedback) {
+            FeedbackView(userID: model.userID)
+                .presentationDragIndicator(.visible)
         }
         .sheet(isPresented: $deleting) {
             DeleteAccountSheet(model: model)

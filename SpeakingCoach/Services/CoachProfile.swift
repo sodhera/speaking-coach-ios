@@ -15,6 +15,11 @@ struct CoachProfile: Codable, Equatable {
     var costs: [SpeakingCost]
     var outcomes: [SpeakingOutcome]
     var onboardedAt: Date
+    /// Readiness re-rated at the end of the first plan — the plan's last
+    /// step. Read against `readiness`, the baseline from onboarding.
+    var planReadiness: Int?
+    /// When the first plan was finished. Home stops guiding after this.
+    var planCompletedAt: Date?
     /// True for an account that onboarded in the old app, whose profile only
     /// carries a name and language.
     var isLegacy = false

@@ -67,6 +67,16 @@ enum SpeakingMoment: String, Codable, CaseIterable, Identifiable {
         }
     }
 
+    /// The plan's last step, in the user's own outcome: "Walk in clear".
+    /// The same words before the paywall and after it — the plan the app
+    /// keeps is the plan the user committed to.
+    func planFinish(outcomes: [SpeakingOutcome]) -> String {
+        let outcome = SpeakingOutcome.allCases.first(where: outcomes.contains)
+        if isGeneral { return "Speak \(outcome?.adverb ?? "with ease"), every day" }
+        let how = outcome.map { " \($0.phrase)" } ?? " ready"
+        return self == .meetingPeople ? "Meet people\(how)" : "Walk in\(how)"
+    }
+
     var readinessQuestion: String {
         switch self {
         case .meetingPeople: "How at ease do you feel meeting someone new?"

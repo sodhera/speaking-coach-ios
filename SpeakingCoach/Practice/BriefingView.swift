@@ -177,8 +177,11 @@ struct Segmented<Option: Hashable>: View {
                         } label: {
                             Text(label(option))
                                 .font(Typeface.label(15))
-                                .foregroundStyle(isSelected ? Palette.coralDeep : Palette.ink)
+                                .foregroundStyle(isSelected ? .white : Palette.ink)
                                 .frame(maxWidth: .infinity, minHeight: 44)
+                                // Selection is drawn inside the glass: inside
+                                // a glass container, overlays get absorbed.
+                                .background(Capsule().fill(Palette.coral.opacity(isSelected ? 1 : 0)))
                                 .contentShape(Capsule())
                         }
                         .buttonStyle(SegmentStyle(isSelected: isSelected))
@@ -195,8 +198,8 @@ private struct SegmentStyle: ButtonStyle {
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .glassSurface(cornerRadius: 22, tint: isSelected ? Palette.glassCoral : nil, interactive: true)
-            .overlay { Capsule().strokeBorder(Palette.coral.opacity(isSelected ? 0.8 : 0), lineWidth: 1.5) }
+            .glassSurface(cornerRadius: 22, interactive: true)
+            .animation(.easeOut(duration: 0.18), value: isSelected)
             .scaleEffect(configuration.isPressed ? 0.96 : 1)
             .animation(Motion.press, value: configuration.isPressed)
     }

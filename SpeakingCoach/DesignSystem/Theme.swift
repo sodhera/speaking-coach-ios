@@ -22,14 +22,16 @@ extension Color {
 }
 
 enum Palette {
-    // Ground. Five stops with a real hue journey — a barely-cool crown warming
-    // through blush to peach, where the sunrise sits. Two-stop gradients are
+    // Ground. Five stops with a real hue journey — a near-white crown warming
+    // through cream to apricot, where the sunrise sits. Two-stop gradients are
     // what make a light background look like a default rather than a place.
-    static let skyCrown = Color(hex: 0xFFFAF6)
-    static let skyHigh = Color(hex: 0xFEF4EE)
-    static let skyMid = Color(hex: 0xFCEAE1)
-    static let skyLow = Color(hex: 0xF9DDD0)
-    static let skyBase = Color(hex: 0xF5CDBB)
+    // The ground leans yellow and stays low-chroma on purpose: coral is the
+    // one accent, and a salmon ground would swallow every coral fill on it.
+    static let skyCrown = Color(hex: 0xFFFBF7)
+    static let skyHigh = Color(hex: 0xFDF7F1)
+    static let skyMid = Color(hex: 0xFAF0E7)
+    static let skyLow = Color(hex: 0xF6E7DA)
+    static let skyBase = Color(hex: 0xF1DCCB)
     static let paper = skyCrown
 
     // Brand. `coral` is the icon's own color. On paper it is a *fill* color —
@@ -37,7 +39,10 @@ enum Palette {
     static let coral = Color(hex: 0xFF5A5F)
     static let coralDeep = Color(hex: 0xD2414A)
     static let peach = Color(hex: 0xFFB199)
-    static let sun = Color(hex: 0xFFD6BF)
+    static let sun = Color(hex: 0xFFE6CF)
+    /// The sunrise's outer halo — apricot, not peach, so it warms the ground
+    /// without reddening it.
+    static let glow = Color(hex: 0xF5D3B8)
 
     // Ink — warm near-black, never #000.
     static let ink = Color(hex: 0x231A1B)

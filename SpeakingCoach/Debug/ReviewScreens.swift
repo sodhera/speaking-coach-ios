@@ -4,7 +4,8 @@ import SwiftUI
 /// `-review-screen=<name>` renders a screen against a fixture profile, with
 /// no account or purchase needed: `welcome`, `signin`, `existing`, `paywall`,
 /// `microphone`, `reminders`, `setup`, `home`, `profile`, `library`,
-/// `briefing`, `settings`.
+/// `briefing`, `settings`, `checkin`. Add `-review-plan-step=retry|finish|done`
+/// to see Home (or the hand-off) partway through the first plan.
 struct ReviewScreens: View {
     let name: String
     let model: AppModel
@@ -30,7 +31,7 @@ struct ReviewScreens: View {
             case "setup":
                 ZStack {
                     MorningStage(depth: 1)
-                    SetupCompleteView(model: model) {}
+                    SetupCompleteView(model: model) { _ in }
                 }
             case "existing":
                 ZStack {
@@ -41,10 +42,60 @@ struct ReviewScreens: View {
                 BriefingView(practice: PracticeCatalog.definition("interview_tell_me_about_yourself")!, onBack: {}, onStart: { _ in })
             case "settings":
                 SettingsView(model: model)
-            case "room", "debrief", "assessing", "recovery", "retry":
+            case "checkin":
+                ZStack {
+                    MorningStage(depth: 1)
+                    if let plan = FirstPlan(profile: model.profile, records: model.history.records) {
+                        PlanCheckInView(plan: plan) { model.completePlan(readiness: $0) }
+                    }
+                }
+            case "custom":
+                CustomSituationView(language: "en", onBack: {}, onStart: { _, _ in })
+            case "room", "debrief", "assessing", "recovery", "retry", "customdebrief":
                 PracticeSessionView(session: reviewSession, onClose: {})
             case "library":
-                LibraryView { _ in }
+                LibraryView(presentations: model.presentations, model: model) { _ in }
+            case "routine":
+                NavigationStack {
+                    RoutineView(routine: model.routine, language: "en", onBack: {})
+                }
+            case "prompt":
+                PromptView(routine: model.routine, source: .reminder, language: "en", onClose: {})
+            case "planprogress":
+                NavigationStack {
+                    PreparationPlanView(model: model, onBack: {}, onPractice: { _ in })
+                }
+                .onAppear {
+                    model.preparation.setReviewPlan(PreparationPlan(
+                        programID: "interview", eventName: "Interview at Acme",
+                        eventDate: Calendar.current.date(byAdding: .day, value: 5, to: .now), reminderEnabled: true,
+                        createdAt: .distantPast, reflection: nil
+                    ))
+                }
+            case "plan":
+                NavigationStack {
+                    PreparationPlanView(model: model, onBack: {}, onPractice: { _ in })
+                }
+            case "feedback":
+                FeedbackView(userID: nil)
+            case "presentations":
+                NavigationStack {
+                    PresentationsView(store: model.presentations, language: "en", onBack: {})
+                }
+                .onAppear { _ = model.presentations.loadReviewFixture() }
+            case "deck":
+                let (deck, _) = model.presentations.loadReviewFixture()
+                NavigationStack {
+                    DeckView(store: model.presentations, deck: deck, language: "en", onBack: {})
+                }
+            case "presentationreview":
+                let (deck, rehearsal) = model.presentations.loadReviewFixture()
+                NavigationStack {
+                    RehearsalReviewView(store: model.presentations, deck: deck, rehearsalID: rehearsal.id, language: "en", isFresh: true, onBack: {})
+                }
+            case "rehearsalready":
+                let (deck, _) = model.presentations.loadReviewFixture()
+                RehearsalView(store: model.presentations, deck: deck, language: "en", onClose: {})
             case "profile":
                 ProfileView(model: model)
             case "signin":
@@ -81,6 +132,26 @@ extension ReviewScreens {
         case "room": session.loadReviewStage(.live)
         case "assessing": session.loadReviewStage(.assessing)
         case "recovery": session.loadReviewStage(.recovery(PracticeDraft(context: context, transcript: transcript)))
+        case "customdebrief":
+            let situation = CustomSituation(description: "Ask my landlord to return my deposit.", partner: "My landlord", title: "Talking to my landlord")
+            let lines = [
+                TranscriptLine(id: "coach-c1", role: .coach, text: "Oh, hi. Is this about the deposit again?"),
+                TranscriptLine(id: "user-c1", role: .user, text: "Yeah, um, sorry to bother you, I was just wondering if maybe the deposit could come back soon?"),
+            ]
+            let analysis = PracticeReport.Analysis(
+                score: 58,
+                summary: "You raised the issue, but the apology and the maybe made it easy to put you off.",
+                improvements: ["Lead with the ask, not an apology.", "Name the amount and a date.", "If they deflect, calmly repeat the ask once."],
+                subscores: [
+                    Subscore(label: "Clarity", score: 64, note: "The request was there, but wrapped in hedges."),
+                    Subscore(label: "Confidence", score: 46, note: "“Sorry to bother you” set a weak frame."),
+                    Subscore(label: "Assertiveness", score: 41, note: "You asked if it *could* come back, not when it will."),
+                    Subscore(label: "Warmth", score: 78, note: "Friendly and respectful throughout."),
+                ],
+                rewrites: [Rewrite(original: "Sorry to bother you, I was just wondering if maybe the deposit could come back soon?", better: "I'm calling about my £900 deposit. I'd like it returned by Friday — can you confirm that?")],
+                custom: situation
+            )
+            session.loadReviewStage(.report(PracticeReport(id: UUID(), transcript: lines, analysis: analysis)))
         case "retry":
             var retryContext = context
             retryContext.retry = RetryCheckpoint(
@@ -123,8 +194,25 @@ extension AppModel {
     func loadReviewFixture() {
         var answers = OnboardingAnswers.reviewFixture(before: .account)
         answers.language = "en"
-        setReviewProfile(answers.profile())
+        var profile = answers.profile()
+        let step = LaunchFlags.value("-review-plan-step")
+        if step == "done" {
+            profile.planReadiness = 7
+            profile.planCompletedAt = .now
+        }
+        setReviewProfile(profile)
+        history.setReviewRecords(Self.reviewRecords(for: step, practiceID: profile.moment?.firstPracticeID))
         if LaunchFlags.has("-review-plans") { subscriptions.useReviewPlans() }
+    }
+
+    /// A rehearsal of the plan's practice, then its retry — as far as the
+    /// reviewed step needs.
+    private static func reviewRecords(for step: String?, practiceID: String?) -> [PracticeRecord] {
+        guard let step, step != "rehearse" else { return [] }
+        let first = PracticeRecord(id: UUID(), activityID: practiceID, title: "First", date: .now.addingTimeInterval(-3600), score: nil, parentID: nil)
+        guard step != "retry" else { return [first] }
+        let retry = PracticeRecord(id: UUID(), activityID: practiceID, title: "Retry", date: .now, score: nil, parentID: first.id)
+        return [retry, first]
     }
 }
 
@@ -138,6 +226,47 @@ extension Subscriptions {
             Plan(id: "monthly", isAnnual: false, name: "Monthly", priceString: "$9.99", periodWord: "month",
                  perMonthString: nil, trialDays: 0, priceValue: 9.99),
         ])
+    }
+}
+#endif
+
+#if DEBUG
+extension PresentationStore {
+    /// A three-slide deck with one rehearsal, for reviewing the screens.
+    func loadReviewFixture() -> (PresentationDeck, PresentationRehearsal) {
+        if let deck = decks.first, let rehearsal = rehearsals[deck.id]?.first { return (deck, rehearsal) }
+        let slides = [
+            ("Q3 Growth Plan", "Where we are, and what we need"),
+            ("Retention is the lever", "Churn fell 18% after onboarding changes"),
+            ("The ask", "Two engineers for one quarter"),
+        ]
+        let bounds = CGRect(x: 0, y: 0, width: 960, height: 540)
+        let data = UIGraphicsPDFRenderer(bounds: bounds).pdfData { context in
+            for (title, subtitle) in slides {
+                context.beginPage()
+                UIColor(red: 0.13, green: 0.16, blue: 0.24, alpha: 1).setFill()
+                context.fill(bounds)
+                (title as NSString).draw(at: CGPoint(x: 64, y: 190), withAttributes: [.font: UIFont.boldSystemFont(ofSize: 54), .foregroundColor: UIColor.white])
+                (subtitle as NSString).draw(at: CGPoint(x: 64, y: 270), withAttributes: [.font: UIFont.systemFont(ofSize: 28), .foregroundColor: UIColor(white: 0.8, alpha: 1)])
+            }
+        }
+        var deck = try! importPDF(data, fileName: "Q3 Growth Plan.pdf")
+        deck.brief = PresentationBrief(audience: "the leadership team", purpose: "approve two engineers for Q3", instructions: "", questionStyle: .curious)
+        update(deck)
+        let questions = [
+            AudienceQuestion(id: "q1", question: "What happens to retention if we don't get the two engineers?", reason: "Tests the cost of inaction.", slideIndex: 2),
+            AudienceQuestion(id: "q2", question: "How confident are you that the 18% drop came from onboarding and not seasonality?", reason: "Tests the evidence.", slideIndex: 1),
+            AudienceQuestion(id: "q3", question: "What would you cut if we could only give you one engineer?", reason: "Tests priorities.", slideIndex: nil),
+        ]
+        let rehearsal = PresentationRehearsal(
+            id: UUID(), deckID: deck.id, startedAt: .now.addingTimeInterval(-600), durationMs: 262_000, audioFile: "missing.m4a",
+            transcript: String(repeating: "So the reason retention matters this quarter is that every point we keep is worth more than a new signup. ", count: 30),
+            slideEvents: [SlideEvent(slideIndex: 0, atMs: 0), SlideEvent(slideIndex: 1, atMs: 60_000), SlideEvent(slideIndex: 2, atMs: 180_000)],
+            questions: questions,
+            answers: [QuestionAnswer(questionId: "q1", transcript: "Um, I think it would probably go back up, because the onboarding work would stall and we'd lose what we gained.", feedback: "Lead with the number: say how much churn you'd expect to return, then name the one project that would stall.")]
+        )
+        save(rehearsal)
+        return (deck, rehearsal)
     }
 }
 #endif

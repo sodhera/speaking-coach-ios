@@ -28,6 +28,9 @@ final class AppModel {
     private(set) var profile: CoachProfile?
     let subscriptions = Subscriptions()
     let history = PracticeHistory()
+    let presentations = PresentationStore()
+    let preparation = PreparationStore()
+    let routine = RoutineStore()
 
     /// Answers finished on the commit step before an account existed. Saved
     /// to the account the moment one appears.
@@ -81,6 +84,16 @@ final class AppModel {
         Task { await ProfileService.save(profile, userID: userID) }
     }
 
+    /// The first plan's last step: readiness asked again, saved beside the
+    /// baseline it's read against.
+    func completePlan(readiness: Int) {
+        guard var profile, let userID else { return }
+        profile.planReadiness = readiness
+        profile.planCompletedAt = .now
+        self.profile = profile
+        Task { await ProfileService.save(profile, userID: userID) }
+    }
+
     /// Permanently deletes the account through the server, which removes the
     /// user and their data with the service role, then signs out locally.
     func deleteAccount(confirmation: String) async throws {
@@ -115,6 +128,9 @@ final class AppModel {
             email = nil
             profile = nil
             history.reset()
+            preparation.clearLocal()
+            // Signed out, nobody can speak to unlock — so nothing stays shut.
+            routine.clearOnSignOut()
             phase = .signedOut
             await subscriptions.identify(nil)
             return
@@ -127,6 +143,7 @@ final class AppModel {
         Task { await subscriptions.identify(user) }
 
         if user.id != history.userID { Task { await history.load(userID: user.id) } }
+        Task { await preparation.load(userID: user.id) }
 
         // A just-finished onboarding. A brand-new account takes the answers.
         // An existing one (Apple/Google are find-or-create, so "Get started"

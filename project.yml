@@ -29,6 +29,8 @@ targets:
     platform: iOS
     sources:
       - path: SpeakingCoach
+        excludes: ["*.entitlements"]
+      - path: Shared
     dependencies:
       - package: Supabase
         product: Supabase
@@ -36,12 +38,18 @@ targets:
         product: RevenueCat
       - package: ElevenLabs
         product: ElevenLabs
-    entitlements:
-      path: SpeakingCoach/SpeakingCoach.entitlements
-      properties:
-        com.apple.developer.applesignin: [Default]
+      - target: SpeakingCoachMonitor
+      - target: SpeakingCoachShieldConfig
+      - target: SpeakingCoachShieldAction
+      - sdk: FamilyControls.framework
+      - sdk: DeviceActivity.framework
+      - sdk: ManagedSettings.framework
     settings:
       base:
+        # Screen Time is a device capability; the simulator build leaves it
+        # out so it signs without the Family Controls profile (as SleepBlock).
+        CODE_SIGN_ENTITLEMENTS: SpeakingCoach/SpeakingCoach.entitlements
+        "CODE_SIGN_ENTITLEMENTS[sdk=iphoneos*]": SpeakingCoach/SpeakingCoach-device.entitlements
         PRODUCT_BUNDLE_IDENTIFIER: com.sodhera.speakingcoach
         PRODUCT_NAME: Speaking Coach
         PRODUCT_MODULE_NAME: SpeakingCoach
@@ -73,6 +81,65 @@ targets:
             CFBundleURLSchemes: [com.sodhera.speakingcoach]
         UIApplicationSceneManifest:
           UIApplicationSupportsMultipleScenes: false
+  SpeakingCoachMonitor:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: SpeakingCoachMonitor
+        excludes: ["*.entitlements"]
+      - path: Shared
+    dependencies:
+      - sdk: FamilyControls.framework
+      - sdk: DeviceActivity.framework
+      - sdk: ManagedSettings.framework
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.sodhera.speakingcoach.block-monitor
+        INFOPLIST_FILE: SpeakingCoachMonitor/Info.plist
+        CODE_SIGN_STYLE: Automatic
+        CODE_SIGN_ENTITLEMENTS: SpeakingCoachMonitor/SpeakingCoachMonitor.entitlements
+        "CODE_SIGN_ENTITLEMENTS[sdk=iphoneos*]": SpeakingCoachMonitor/SpeakingCoachMonitor-device.entitlements
+        TARGETED_DEVICE_FAMILY: "1"
+        SKIP_INSTALL: YES
+  SpeakingCoachShieldConfig:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: SpeakingCoachShieldConfig
+        excludes: ["*.entitlements"]
+      - path: Shared
+    dependencies:
+      - sdk: ManagedSettings.framework
+      - sdk: ManagedSettingsUI.framework
+      - sdk: DeviceActivity.framework
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.sodhera.speakingcoach.shield-config
+        INFOPLIST_FILE: SpeakingCoachShieldConfig/Info.plist
+        CODE_SIGN_STYLE: Automatic
+        CODE_SIGN_ENTITLEMENTS: SpeakingCoachShieldConfig/SpeakingCoachShieldConfig.entitlements
+        "CODE_SIGN_ENTITLEMENTS[sdk=iphoneos*]": SpeakingCoachShieldConfig/SpeakingCoachShieldConfig-device.entitlements
+        TARGETED_DEVICE_FAMILY: "1"
+        SKIP_INSTALL: YES
+  SpeakingCoachShieldAction:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: SpeakingCoachShieldAction
+        excludes: ["*.entitlements"]
+      - path: Shared
+    dependencies:
+      - sdk: ManagedSettings.framework
+      - sdk: DeviceActivity.framework
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.sodhera.speakingcoach.shield-action
+        INFOPLIST_FILE: SpeakingCoachShieldAction/Info.plist
+        CODE_SIGN_STYLE: Automatic
+        CODE_SIGN_ENTITLEMENTS: SpeakingCoachShieldAction/SpeakingCoachShieldAction.entitlements
+        "CODE_SIGN_ENTITLEMENTS[sdk=iphoneos*]": SpeakingCoachShieldAction/SpeakingCoachShieldAction-device.entitlements
+        TARGETED_DEVICE_FAMILY: "1"
+        SKIP_INSTALL: YES
   SpeakingCoachTests:
     type: bundle.unit-test
     platform: iOS

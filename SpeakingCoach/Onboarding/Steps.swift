@@ -272,13 +272,7 @@ struct PlanInstrument: View {
     private var practice: PracticeDefinition? { PracticeCatalog.definition(moment.firstPracticeID) }
 
     private var finish: String {
-        let outcome = SpeakingOutcome.allCases.first(where: answers.outcomes.contains)
-        let how = outcome.map { " \($0.phrase)" } ?? " ready"
-        if moment.isGeneral {
-            let manner = SpeakingOutcome.allCases.first(where: answers.outcomes.contains)?.adverb ?? "with ease"
-            return "Speak \(manner), every day"
-        }
-        return moment == .meetingPeople ? "Meet people\(how)" : "Walk in\(how)"
+        moment.planFinish(outcomes: SpeakingOutcome.allCases.filter(answers.outcomes.contains))
     }
 
     var body: some View {
@@ -301,8 +295,8 @@ struct PlanInstrument: View {
                 GlassRowDivider()
 
                 VStack(alignment: .leading, spacing: Space.lg) {
-                    PlanRow(number: 1, text: "Rehearse it out loud")
-                    PlanRow(number: 2, text: "Retry the moment that trips you up")
+                    PlanRow(number: 1, text: FirstPlan.Step.rehearse.title)
+                    PlanRow(number: 2, text: FirstPlan.Step.retry.title)
                     PlanRow(number: 3, text: finish)
                 }
                 .padding(Space.xl)

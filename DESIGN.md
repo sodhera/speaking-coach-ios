@@ -14,7 +14,7 @@ Speaking Coach is the daytime sibling of SleepBlock. SleepBlock is a quiet night
 
 ## The stage
 
-`MorningStage(depth:)` is a five-stop paper-to-peach sky with a sunrise glowing up from below the bottom edge, slow sound ripples rising off it, and a fine paper grain. `depth` (0 → 1) raises and warms the sun as the user moves through onboarding. Ripples freeze under Reduce Motion.
+`MorningStage(depth:)` is a five-stop paper-to-apricot sky (deliberately low-chroma, so coral fills keep their edge) with a sunrise glowing up from below the bottom edge, slow sound ripples rising off it, and a fine paper grain. `depth` (0 → 1) raises and warms the sun as the user moves through onboarding. Ripples freeze under Reduce Motion.
 
 ## The bloom
 
@@ -62,7 +62,7 @@ Apple uses the native sheet with a nonce, then `signInWithIdToken`. Google uses 
 
 ## The gate chain
 
-onboarding → account → (existing account?) → **paywall** → microphone primer → reminders primer → "You're all set!" → Home and Profile tabs.
+onboarding → account → (existing account?) → **paywall** → microphone primer → reminders primer → "You're all set!" (the plan) → Home and Profile tabs.
 
 - **Fade chain.** `RootView` renders a lagged `displayedScreen`. The outgoing screen fades out fully before the next one mounts, so no two screens ever overlap. The splash holds for 1.5s so the bloom is actually seen breathing.
 - **Existing accounts.** "Get started" can land on an Apple or Google identity that already has an account, because those sign-ins find the existing account or create a new one. When that happens, the account's plan is kept rather than overwritten, and `ExistingAccountView` says so.
@@ -99,9 +99,21 @@ Pass these as launch arguments (Debug builds only):
 - `-review-voice-level=0.8`: the gallery's bloom at a fixed voice level
 - `-review-onboarding-step=<step>`: lands on any step (`name`, `moment`, … `account`) with every earlier step answered and the reviewed step left unanswered
 - `-fresh-start`: clears the onboarding draft (UI tests use it)
-- `-review-screen=<welcome|signin|existing|paywall|microphone|reminders|setup|home|profile|library|briefing|settings>`: post-sign-in screens against a fixture profile. Add `-review-plans` for placeholder plans (layout only; real prices always come from the App Store).
+- `-review-screen=<welcome|signin|existing|paywall|microphone|reminders|setup|home|profile|library|briefing|settings|checkin>`: post-sign-in screens against a fixture profile. Add `-review-plans` for placeholder plans (layout only; real prices always come from the App Store).
 
 Review runs and UI tests never send analytics.
+
+## The first plan
+
+The plan the user holds their thumb on before paying (rehearse it out loud → retry the moment that trips you up → walk in *their outcome*) is kept after the paywall.
+
+- **The hand-off is the plan.** "You're all set, {name}." shows the same card with its progress. "Start my first rehearsal" goes to Home with the first briefing already open on top, so Back lands on Home. "I'll look around first" goes to Home, where the plan waits. Old-app accounts never saw a plan and get the settings hand-off instead.
+- **Home is the plan until it's done.** The plan card replaces the up-next capsule (the bloom steps aside on short screens). The primary action names the next step, with a one-line hint under it. The library and Profile stay one tap away.
+- **Progress is read, never guessed.** Step 1 is a rehearsal of the plan's own practice in `reports`. Step 2 is a retry of it. Step 3 is the check-in. A second phone shows the same progress. The card waits for history to load, so a step is never drawn undone and then ticked.
+- **Step 2 reopens the debrief**, not a bare retry, because "Try one change" and the quoted moment are what make the retry mean anything. A report with no moment to go back to gets the whole scene again.
+- **Step 3 is the readiness question again.** The app can't walk in with the user, so the honest close is their own number read against their onboarding baseline (`planReadiness`, `planCompletedAt` on the profile). The result states only what the two numbers say. Profile shows both.
+
+Review routes: `-review-screen=home|setup|checkin` with `-review-plan-step=retry|finish|done`.
 
 ## Main app
 
@@ -152,3 +164,41 @@ The fastest path from "try one change" to having actually tried it. After a rehe
 Profile's rows open the full saved report (the same debrief, retry included when it's still available). Retries carry a small RETRY tag. Bare scores are gone from the rows, because a number with no scale explained nothing. Old-app reports without a practice assessment show their summary and "What to work on".
 
 Review routes: `-review-screen=debrief|retry`.
+
+## Your own material
+
+Library opens with a **Your own** group: My own situation, Preparation plan, Practice routine, Presentations. The catalog follows.
+
+### Presentations
+
+Your slides, rehearsed out loud, then the audience's questions.
+
+- **Decks stay on the phone** (Application Support, complete file protection). Only the transcript, slide text and a spoken answer leave it, for coaching. PDF is the path. A `.pptx` goes through the server's converter, and when that can't run, the message says to export a PDF instead.
+- **Rehearsing** is full screen. The slide is the instrument: you swipe it like a clicker, and each change is logged with its time. A small bloom by the timer shows the mic is hearing you. Finishing is a hold. The recording is AAC mono at 32 kbps and capped at 40 minutes, which keeps it inside the transcription limit. A talk is saved before the questions are fetched, so a network failure never loses it.
+- **Afterwards, questions come first.** Q&A is the part people dread and never practise. You answer each question out loud, and each answer gets one specific note. Then comes the replay, with slides following the recording, then the transcript. Pace is shown as words a minute.
+
+Review routes: `presentations`, `deck`, `presentationreview`, `rehearsalready`.
+
+### Preparation plan
+
+Five rehearsals in the order that builds, from four programs (interview, work, boundaries, everyday). The program suggested first is the one that fits the onboarding answer. An optional event name and date come with one 9 am reminder the day before, and the reminder never names the event. Progress is read from history (first rehearsals since the plan began, not retries) and is never ticked by hand. A reflection is asked for once the day arrives. The plan is stored in `user_metadata.preparation_plan_v1`, so it follows the account and needs no table. While it's in progress, Home's "up next" is the plan's next rehearsal, with a one-line link to the plan.
+
+Review routes: `plan`, `planprogress`.
+
+### Practice routine
+
+- **Daily prompt:** a thirty-second speaking prompt on chosen days, as a notification that opens it. Prompts rotate daily and come in three kinds: say a line, answer a question, describe a scene. The check is kind. It asks only that you really spoke, and never judges accent or grammar. Non-English users get the open questions.
+- **Speak to unlock:** chosen apps are shielded during a window until you speak (15 minutes by default). This is SleepBlock's Screen Time architecture with three extensions: a monitor puts the shield up and down, the shield itself carries the bloom on cream, and "Open Speaking Coach" on the shield posts a notification that opens the prompt. `Shared/RoutineShared.swift` is the single rule all four processes read.
+- **Nobody can be locked out:**
+  - Turning it off clears the shield.
+  - Signing out turns it off.
+  - The app reconciles the shield every time it comes forward.
+  - The prompt opens for any signed-in user, even one whose plan has lapsed.
+  - **Skip** always exists. It's a slow door (ask, wait 10 s, then 5 minutes open). The wait is the mechanism.
+- **Signing:** the simulator build leaves Family Controls out, as SleepBlock does. Device builds carry it. Shipping it needs Apple's Family Controls *distribution* entitlement for `com.sodhera.speakingcoach` and its three extensions (`.block-monitor`, `.shield-config`, `.shield-action`).
+
+Review routes: `routine`, `prompt`.
+
+### Send feedback
+
+Settings → Help → Send feedback. It takes a few words and one optional screenshot, shrunk to 1600 pt. It lands where the old app's feedback did: a `feedback` row in `reports`, plus the `feedback_screenshots` bucket. App version and device model are included, and nothing else.

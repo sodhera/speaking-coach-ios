@@ -59,7 +59,11 @@ struct ProfileView: View {
                 .font(Typeface.hero(56))
                 .foregroundStyle(Palette.ink)
                 .contentTransition(.numericText(value: Double(history.lastSevenDays)))
-            if let readiness = model.profile?.readiness {
+            if let readiness = model.profile?.readiness, let after = model.profile?.planReadiness {
+                Text("Readiness \(readiness)/10 when you started · \(after)/10 after your plan")
+                    .font(Typeface.body(15))
+                    .foregroundStyle(Palette.dim)
+            } else if let readiness = model.profile?.readiness {
                 Text("You started at \(readiness)/10 readiness")
                     .font(Typeface.body(15))
                     .foregroundStyle(Palette.dim)

@@ -14,6 +14,11 @@ struct PracticeContext: Codable, Equatable {
     var startedAt: String
     var personaId: String?
     var retry: RetryCheckpoint?
+    /// Set only for a custom situation — who the partner plays and what the
+    /// user wants to say. Never sent to the practice server.
+    var custom: CustomSituation?
+
+    var isCustom: Bool { custom != nil }
 
     static func new(for setup: PracticeSetup, language: String) -> PracticeContext {
         PracticeContext(
@@ -126,8 +131,13 @@ struct PracticeReport: Codable, Equatable {
     struct Analysis: Codable, Equatable {
         var score: Int?
         var summary: String?
-        /// Older reports (before the practice assessment) carry these instead.
+        /// Custom situations and older reports carry these instead of a
+        /// practice assessment.
         var improvements: [String]?
+        var subscores: [Subscore]?
+        var rewrites: [Rewrite]?
+        /// Set on custom-situation reports.
+        var custom: CustomSituation?
         var practice: PracticeAssessment?
         var practiceContext: PracticeContext?
     }
@@ -135,6 +145,47 @@ struct PracticeReport: Codable, Equatable {
     var id: UUID
     var transcript: [TranscriptLine]
     var analysis: Analysis
+}
+
+struct Subscore: Codable, Equatable {
+    var label: String
+    var score: Int
+    var note: String
+}
+
+struct Rewrite: Codable, Equatable {
+    var original: String
+    var better: String
+}
+
+/// A conversation the user described themselves.
+struct CustomSituation: Codable, Equatable {
+    /// What they need to say, in their words.
+    var description: String
+    /// Who the partner plays — "my landlord", "a new manager".
+    var partner: String
+    /// A short title for history, e.g. "Talking to my landlord".
+    var title: String
+
+    /// A rehearsal definition the room and prompt can run, built from the
+    /// user's own words rather than the catalog.
+    var definition: PracticeDefinition {
+        PracticeDefinition(
+            id: "custom", version: 1, rubricVersion: "custom-v1", scenarioId: "custom",
+            title: title, category: "custom", format: "rehearsal", durationMinutes: 4,
+            partner: partner, objective: description, opening: "",
+            criteria: [], beats: [
+                "Open the scene naturally, in character, with one short line that sets it up.",
+                "React to what they actually say; push back once if it's realistic.",
+                "Close naturally in one sentence.",
+            ],
+            scaffold: "Start with what you want: “I'd like to talk about…”",
+            transfer: "Say your first line out loud once more before the real conversation.",
+            maxUserTurns: 4,
+            recovery: ["If they get stuck, ask a simpler version of your last question."],
+            variants: []
+        )
+    }
 }
 
 /// What survives a crash, a dropped call or a killed app: enough to ask for

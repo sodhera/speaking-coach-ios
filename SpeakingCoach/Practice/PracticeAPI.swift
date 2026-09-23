@@ -126,3 +126,108 @@ enum PracticeDrafts {
         try? FileManager.default.removeItem(at: url)
     }
 }
+
+// MARK: - Custom situations
+
+/// The existing endpoints the old app used for "My own situation": a
+/// legibility check that restates the situation, a voice token straight from
+/// the partner agent, and the general analysis. The report is saved by the
+/// app itself into `reports` (row-level security lets a user insert their own).
+enum CustomSituationAPI {
+    struct Evaluation: Decodable {
+        let isAppropriate: Bool
+        let message: String
+    }
+
+    static func evaluate(_ description: String, language: String) async throws -> Evaluation {
+        struct Body: Encodable { let customDescription: String; let language: String }
+        return try await post("api/evaluate-custom-scenario", Body(customDescription: description, language: language), timeout: 25)
+    }
+
+    static func token(persona: PracticeSetup.Persona) async throws -> String {
+        let agent = persona == .male ? AppConfig.maleAgentID : AppConfig.femaleAgentID
+        var components = URLComponents(url: AppConfig.apiBaseURL.appending(path: "api/elevenlabs-token"), resolvingAgainstBaseURL: false)!
+        components.queryItems = [URLQueryItem(name: "agent_id", value: agent)]
+        let (data, response) = try await URLSession.shared.data(from: components.url!)
+        guard (response as? HTTPURLResponse)?.statusCode == 200,
+              let token = (try? JSONDecoder().decode([String: String].self, from: data))?["token"] else {
+            throw PracticeAPIError.server(status: (response as? HTTPURLResponse)?.statusCode ?? 0, message: "Your partner couldn't connect. Try again in a moment.")
+        }
+        return token
+    }
+
+    struct Analysis: Decodable {
+        let score: Int
+        let summary: String
+        let subscores: [Subscore]
+        let improvements: [String]
+        let rewrites: [Rewrite]
+    }
+
+    static func analyze(_ transcript: [TranscriptLine], situation: CustomSituation, language: String) async throws -> Analysis {
+        struct Body: Encodable {
+            let scenarioId = "custom"
+            let scenarioDescription: String
+            let goal: String
+            let personaName: String
+            let language: String
+            let focusMetrics = ["Clarity", "Confidence", "Assertiveness", "Warmth"]
+            let transcript: [TranscriptLine]
+        }
+        let body = Body(
+            scenarioDescription: "\(situation.description) (The partner plays: \(situation.partner).)",
+            goal: "Say what I need to say clearly and confidently.",
+            personaName: situation.partner,
+            language: language,
+            transcript: transcript
+        )
+        return try await post("api/analyze", body, timeout: 90)
+    }
+
+    /// Saves the finished custom rehearsal to history and returns it in the
+    /// same shape as every other report.
+    static func save(_ analysis: Analysis, transcript: [TranscriptLine], context: PracticeContext, userID: UUID) async throws -> PracticeReport {
+        guard let custom = context.custom else { throw PracticeAPIError.server(status: 0, message: "Missing situation.") }
+        let report = PracticeReport(
+            id: context.attemptId,
+            transcript: transcript,
+            analysis: .init(
+                score: analysis.score, summary: analysis.summary, improvements: analysis.improvements,
+                subscores: analysis.subscores, rewrites: analysis.rewrites, custom: custom
+            )
+        )
+        struct Row: Encodable {
+            let id: UUID
+            let user_id: UUID
+            let persona_id: String
+            let scenario_id = "custom"
+            let goal_text: String
+            let transcript: [TranscriptLine]
+            let analysis: PracticeReport.Analysis
+            let score: Int
+        }
+        try await Backend.supabase.from("reports").insert(Row(
+            id: report.id, user_id: userID, persona_id: context.personaId ?? "female",
+            goal_text: String(custom.description.prefix(500)), transcript: transcript,
+            analysis: report.analysis, score: analysis.score
+        )).execute()
+        return report
+    }
+
+    private static func post<Body: Encodable, Response: Decodable>(_ path: String, _ body: Body, timeout: TimeInterval) async throws -> Response {
+        var request = URLRequest(url: AppConfig.apiBaseURL.appending(path: path))
+        request.httpMethod = "POST"
+        request.timeoutInterval = timeout
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try JSONEncoder().encode(body)
+        let data: Data
+        let response: URLResponse
+        do { (data, response) = try await URLSession.shared.data(for: request) } catch { throw PracticeAPIError.offline }
+        let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+        guard (200..<300).contains(status) else {
+            let message = (try? JSONDecoder().decode([String: String].self, from: data))?["error"]
+            throw PracticeAPIError.server(status: status, message: message ?? "That didn't work. Please try again.")
+        }
+        return try JSONDecoder().decode(Response.self, from: data)
+    }
+}

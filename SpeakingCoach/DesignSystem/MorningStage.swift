@@ -34,19 +34,20 @@ struct MorningStage: View {
                     endPoint: .bottom
                 )
 
-                // The sunrise. A radial wash anchored below the fold; its
-                // reach and warmth are the only things depth changes.
+                // The sunrise. A radial glow anchored below the fold; its
+                // reach and warmth are the only things depth changes. Painted
+                // normally, not multiplied — multiply compounds chroma and
+                // turned the bottom of the screen salmon.
                 RadialGradient(
                     stops: [
-                        .init(color: Palette.sun.opacity(0.95), location: 0),
-                        .init(color: Palette.peach.opacity(0.35 + 0.25 * depth), location: 0.45),
-                        .init(color: Palette.peach.opacity(0), location: 1),
+                        .init(color: Palette.sun.opacity(0.9), location: 0),
+                        .init(color: Palette.glow.opacity(0.30 + 0.20 * depth), location: 0.45),
+                        .init(color: Palette.glow.opacity(0), location: 1),
                     ],
                     center: UnitPoint(x: sunCenter.x / max(size.width, 1), y: sunCenter.y / max(size.height, 1)),
                     startRadius: 0,
                     endRadius: sunRadius
                 )
-                .blendMode(.multiply)
                 .opacity(0.55 + 0.45 * depth)
 
                 if ripples {

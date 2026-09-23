@@ -3,7 +3,7 @@ import SwiftUI
 import UserNotifications
 
 // The chain after the paywall, each on the same stage as the flow it closes:
-// microphone → reminders → "You're all set!" → Home. Same grammar as
+// microphone → reminders → "You're all set!" (the plan) → Home. Same grammar as
 // SleepBlock's primers: one headline, one line, and a mock of the real
 // system dialog so it's recognised on sight — the real request fires from
 // the mock's own "Allow".
@@ -133,11 +133,14 @@ private struct PrimerLayout<Dialog: View>: View {
 
 // MARK: - You're all set
 
-/// The hand-off before Home: not a permission ask, just the settings the
-/// user now has, each one a door, and a warm way in.
+/// The hand-off before Home. For anyone who committed to a plan, it *is* the
+/// plan again — the same card they held their thumb on before paying — and
+/// the way in is step one. Looking around first is always allowed; Home keeps
+/// the plan waiting either way.
 struct SetupCompleteView: View {
     let model: AppModel
-    let onDone: () -> Void
+    /// `startFirst`: straight to the first rehearsal's briefing.
+    let onDone: (_ startFirst: PracticeDefinition?) -> Void
 
     @State private var remindersOn = Reminders.isEnabled
 
@@ -145,7 +148,65 @@ struct SetupCompleteView: View {
         PracticeCatalog.definition(model.profile?.moment?.firstPracticeID ?? "interview_tell_me_about_yourself")
     }
 
+    private var plan: FirstPlan? { FirstPlan(profile: model.profile, records: model.history.records) }
+
     var body: some View {
+        Group {
+            if let plan {
+                planHandOff(plan)
+            } else {
+                settingsHandOff
+            }
+        }
+        .onAppear { Analytics.enter("setup_complete") }
+    }
+
+    private func planHandOff(_ plan: FirstPlan) -> some View {
+        VStack(spacing: 0) {
+            Spacer()
+            VStack(alignment: .leading, spacing: Space.sm) {
+                Text(model.profile?.firstName.isEmpty == false ? "You're all set, \(model.profile!.firstName)." : "You're all set.")
+                    .font(Typeface.title(28))
+                    .foregroundStyle(Palette.ink)
+                    .fixedSize(horizontal: false, vertical: true)
+                Text("Here's the plan you committed to. Step one takes about \(plan.practice.durationMinutes) minutes.")
+                    .font(Typeface.body(15))
+                    .foregroundStyle(Palette.dim)
+                    .lineSpacing(4)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .revealIn(after: 0.1)
+
+            Spacer(minLength: Space.xxl)
+
+            PlanCard(plan: plan)
+                .revealIn(after: 0.35, rise: 14)
+
+            Spacer(minLength: Space.xxl)
+
+            VStack(spacing: Space.xs) {
+                PrimaryButton(title: "Start my first rehearsal", systemImage: "mic.fill") {
+                    Analytics.action("setup_complete")
+                    finish(startFirst: plan.practice)
+                }
+                QuietButton(title: "I'll look around first") {
+                    finish(startFirst: nil)
+                }
+            }
+        }
+        .padding(.horizontal, Space.xxl)
+        .padding(.bottom, Space.sm)
+    }
+
+    private func finish(startFirst: PracticeDefinition?) {
+        SetupChain.markComplete(userID: model.userID)
+        onDone(startFirst)
+    }
+
+    /// Accounts from the old app never saw a plan: the settings they now
+    /// have, each one a door, and a warm way in.
+    private var settingsHandOff: some View {
         VStack(spacing: 0) {
             Spacer()
             VStack(alignment: .leading, spacing: Space.sm) {
@@ -201,13 +262,9 @@ struct SetupCompleteView: View {
 
             Spacer(minLength: Space.xxl)
 
-            PrimaryButton(title: "Perfect!") {
-                SetupChain.markComplete(userID: model.userID)
-                onDone()
-            }
+            PrimaryButton(title: "Perfect!") { finish(startFirst: nil) }
         }
         .padding(.horizontal, Space.xxl)
         .padding(.bottom, Space.xxl)
-        .onAppear { Analytics.enter("setup_complete") }
     }
 }

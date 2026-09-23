@@ -6,6 +6,8 @@ import Supabase
 /// old app wrote too, so a returning user's history comes with them).
 struct PracticeRecord: Identifiable, Equatable {
     let id: UUID
+    /// The catalog id it was rehearsed from; nil for old-app reports.
+    let activityID: String?
     let title: String
     let date: Date
     let score: Int?
@@ -30,7 +32,7 @@ final class PracticeHistory {
         self.userID = userID
         do {
             let rows: [Row] = try await Backend.supabase.from("reports")
-                .select("id, scenario_id, score, created_at, activityId:analysis->practiceContext->>activityId, parentId:analysis->practiceContext->retry->>parentAttemptId")
+                .select("id, scenario_id, score, created_at, activityId:analysis->practiceContext->>activityId, parentId:analysis->practiceContext->retry->>parentAttemptId, customTitle:analysis->custom->>title")
                 .eq("user_id", value: userID)
                 .neq("scenario_id", value: "feedback")
                 .order("created_at", ascending: false)
@@ -60,6 +62,13 @@ final class PracticeHistory {
         return count
     }
 
+    #if DEBUG
+    func setReviewRecords(_ records: [PracticeRecord]) {
+        self.records = records
+        loaded = true
+    }
+    #endif
+
     /// Rehearsals whose one focused retry has already been used — the server
     /// allows exactly one per rehearsal.
     var retriedIDs: Set<UUID> { Set(records.compactMap(\.parentID)) }
@@ -87,12 +96,13 @@ final class PracticeHistory {
         let created_at: Date
         let activityId: String?
         let parentId: String?
+        let customTitle: String?
 
         var record: PracticeRecord {
-            let title = activityId.flatMap { PracticeCatalog.definition($0)?.title }
+            let title = customTitle ?? activityId.flatMap { PracticeCatalog.definition($0)?.title }
                 ?? scenario_id.replacingOccurrences(of: "_", with: " ").capitalized
             return PracticeRecord(
-                id: id, title: title, date: created_at,
+                id: id, activityID: activityId, title: title, date: created_at,
                 score: (score ?? 0) > 0 ? score : nil,
                 parentID: parentId.flatMap(UUID.init(uuidString:))
             )

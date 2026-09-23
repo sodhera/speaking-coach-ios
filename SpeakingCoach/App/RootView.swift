@@ -16,6 +16,10 @@ struct RootView: View {
     @State private var remindersNeeded: Bool?
     @State private var remindersDone = false
     @State private var setupDone = false
+    /// The hand-off's "Start my first rehearsal": Home opens on its briefing.
+    @State private var pendingBriefing: PracticeDefinition?
+    @State private var links = DeepLinks.shared
+    @Environment(\.scenePhase) private var scenePhase
 
     /// A deliberately lagged copy of `screen`. The outgoing screen fades to
     /// nothing, the swap happens behind a blank frame, then the new one
@@ -91,6 +95,12 @@ struct RootView: View {
         .fullScreenCover(item: $launch) { launch in
             sessionView(for: launch)
         }
+        .onOpenURL { links.pending = $0 }
+        .onChange(of: links.pending) { _, _ in openPendingLink() }
+        .onChange(of: model.userID) { _, _ in openPendingLink() }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active { model.routine.reconcile() }
+        }
         // A rehearsal cut short (crash, dropped call, killed app) is offered
         // back the next time Home appears, so spoken words are never lost.
         .onChange(of: displayedScreen) { _, screen in
@@ -124,9 +134,12 @@ struct RootView: View {
                 case .reminders:
                     RemindersPrimerView(practiceTitle: upNextTitle) { remindersDone = true }
                 case .setupComplete:
-                    SetupCompleteView(model: model) { setupDone = true }
+                    SetupCompleteView(model: model) { startFirst in
+                        pendingBriefing = startFirst
+                        setupDone = true
+                    }
                 case .main:
-                    MainShellView(model: model, onStart: { launch = .new($0) }, onOpenReport: { launch = .report($0) })
+                    MainShellView(model: model, pendingBriefing: $pendingBriefing, onStart: { launch = .new($0) }, onOpenReport: { launch = .report($0) }, onStartCustom: { launch = .custom($0, $1) })
                 }
             }
             .transition(.identity)
@@ -158,7 +171,27 @@ struct RootView: View {
                     canRetry: canRetry,
                     onClose: { self.launch = nil }
                 )
+            case .custom(let situation, let setup):
+                PracticeSessionView(
+                    session: PracticeSession(custom: situation, setup: setup, language: model.profile?.language ?? "en", userID: userID) { _ = finished() },
+                    onClose: { self.launch = nil }
+                )
+            case .prompt(let source):
+                PromptView(routine: model.routine, source: source, language: model.profile?.language ?? "en") { self.launch = nil }
             }
+        }
+    }
+
+    /// Today's prompt, from its reminder or a shielded app. It opens for any
+    /// signed-in user — even one whose plan has lapsed — because it's also
+    /// the way back into their own apps.
+    private func openPendingLink() {
+        guard let url = links.pending, model.userID != nil, launch == nil else { return }
+        links.pending = nil
+        switch url.host() {
+        case "unlock": launch = .prompt(.unlock)
+        case "prompt": launch = .prompt(.reminder)
+        default: break
         }
     }
 
@@ -178,12 +211,18 @@ enum SessionLaunch: Identifiable {
     case recover(PracticeDraft)
     /// Reopening a past rehearsal's debrief (and, from there, its retry).
     case report(PracticeReport)
+    /// A situation the user described.
+    case custom(CustomSituation, PracticeSetup)
+    /// Today's speaking prompt.
+    case prompt(PromptView.Source)
 
     var id: String {
         switch self {
         case .new(let setup): "new-\(setup.id)"
         case .recover(let draft): "recover-\(draft.context.attemptId)"
         case .report(let report): "report-\(report.id)"
+        case .custom(let situation, _): "custom-\(situation.title)"
+        case .prompt(let source): "prompt-\(source.rawValue)"
         }
     }
 }
