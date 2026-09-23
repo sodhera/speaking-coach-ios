@@ -170,7 +170,8 @@ struct CustomSituation: Codable, Equatable {
     /// A rehearsal definition the room and prompt can run, built from the
     /// user's own words rather than the catalog.
     var definition: PracticeDefinition {
-        PracticeDefinition(
+        if self == .ieltsSpeaking { return Self.ieltsDefinition }
+        return PracticeDefinition(
             id: "custom", version: 1, rubricVersion: "custom-v1", scenarioId: "custom",
             title: title, category: "custom", format: "rehearsal", durationMinutes: 4,
             partner: partner, objective: description, opening: "",
@@ -186,6 +187,47 @@ struct CustomSituation: Codable, Equatable {
             variants: []
         )
     }
+}
+
+// MARK: - Built-in scenes
+
+extension CustomSituation {
+    /// IELTS Speaking Part 1, played by an examiner. Built into the app until
+    /// the server's catalog has IELTS rehearsals of its own: it runs on the
+    /// custom-situation endpoints, so the debrief is the general one, not a
+    /// band score.
+    static let ieltsSpeaking = CustomSituation(
+        description: "I'm preparing for the IELTS Speaking test. Play the examiner for Part 1: ask short questions about familiar topics (my home, my work or studies, my free time), one at a time, the way the real test does.",
+        partner: "An IELTS Speaking examiner",
+        title: "IELTS Speaking · Part 1"
+    )
+
+    /// The built-in scene a definition was made from, if any. Built-in
+    /// scenes start through the custom path, never `/api/practice/start`.
+    static func builtIn(for definition: PracticeDefinition) -> CustomSituation? {
+        guard definition.id == "custom" else { return nil }
+        return [CustomSituation.ieltsSpeaking].first { $0.title == definition.title }
+    }
+
+    fileprivate static let ieltsDefinition = PracticeDefinition(
+        id: "custom", version: 1, rubricVersion: "custom-v1", scenarioId: "custom",
+        title: ieltsSpeaking.title, category: "custom", format: "rehearsal", durationMinutes: 4,
+        partner: ieltsSpeaking.partner,
+        objective: "Answer the examiner's Part 1 questions in full: answer, then extend with a reason or an example.",
+        opening: "Good morning. My name is Alex, and I'll be your examiner today. Can you tell me your full name, please?",
+        criteria: [],
+        beats: [
+            "Ask for their full name, then where they're from.",
+            "Ask two or three short questions on one familiar topic: work or studies, home, or free time.",
+            "Move to a second familiar topic with two short questions.",
+            "Close as the examiner does: “Thank you. That's the end of Part 1.”",
+        ],
+        scaffold: "Answer, then add why: “Yes, I really enjoy it, because…”",
+        transfer: "In the test, give every answer a reason or an example — never just yes or no.",
+        maxUserTurns: 7,
+        recovery: ["If they stall, repeat the question once, slowly, exactly as an examiner would. Never help with the answer."],
+        variants: []
+    )
 }
 
 /// What survives a crash, a dropped call or a killed app: enough to ask for

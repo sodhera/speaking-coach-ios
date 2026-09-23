@@ -17,6 +17,12 @@ final class OnboardingFlowUITests: XCTestCase {
     func testFullOnboardingReachesAccountStep() {
         tap("Get started")
 
+        // Practice language: the device's own leads; English here.
+        XCTAssertTrue(app.staticTexts["Which language do you want to practice?"].waitForExistence(timeout: 5))
+        tap("English")
+        snap("00-language")
+        tap("Continue")
+
         // Name
         let field = app.textFields.firstMatch
         XCTAssertTrue(field.waitForExistence(timeout: 5))
@@ -24,7 +30,10 @@ final class OnboardingFlowUITests: XCTestCase {
         snap("01-name")
         tap("Continue")
 
-        // Moment and timing: one answer, then the one button.
+        // Category, then the situation inside it.
+        tapRow("Work")
+        snap("02-category")
+        tap("Continue")
         tap("A job interview")
         snap("02-moment")
         tap("Continue")
@@ -59,24 +68,28 @@ final class OnboardingFlowUITests: XCTestCase {
         tap("Continue")
 
         // Reframe — three typed lines.
-        tap("Show me how", timeout: 15)
+        tap("Continue", timeout: 15)
 
         // Outcome
         tap("I stay calm")
         tap("Continue")
 
-        // How it works
-        XCTAssertTrue(app.staticTexts["Practice it before it's real."].waitForExistence(timeout: 5))
-        snap("06-how")
-        tap("Continue", timeout: 6)
+        // Promise — typed, in their own moment and outcome.
+        tap("Show me how", timeout: 15)
+        snap("06-promise")
 
-        // Try it
-        let best = app.buttons.containing(NSPredicate(format: "label CONTAINS %@", "turns messy problems")).firstMatch
-        XCTAssertTrue(best.waitForExistence(timeout: 5))
-        best.tap()
-        XCTAssertTrue(app.staticTexts["Exactly."].waitForExistence(timeout: 3))
-        snap("07-try-it")
-        tap("Continue")
+        // Demo: hold the bloom through the first take, watch the fillers
+        // lift, then hold again for the retry.
+        XCTAssertTrue(app.staticTexts["Practice it before it's real."].waitForExistence(timeout: 5))
+        let answer = app.buttons["Hold to answer"].firstMatch
+        XCTAssertTrue(answer.waitForExistence(timeout: 5))
+        answer.press(forDuration: 6)
+        let retry = app.buttons["Hold to try again"].firstMatch
+        XCTAssertTrue(retry.waitForExistence(timeout: 12))
+        snap("07-demo-heard-back")
+        retry.press(forDuration: 6)
+        snap("07-demo-done")
+        tap("Continue", timeout: 6)
 
         // Plan
         XCTAssertTrue(app.staticTexts["Your interview is this week."].waitForExistence(timeout: 5))
@@ -103,11 +116,12 @@ final class OnboardingFlowUITests: XCTestCase {
 
     func testDraftResumesAfterRelaunch() {
         tap("Get started")
+        tap("Continue")
         let field = app.textFields.firstMatch
         XCTAssertTrue(field.waitForExistence(timeout: 5))
         field.typeText("Maya")
         tap("Continue")
-        tap("A presentation or pitch")
+        tapRow("Presentations")
         tap("Continue")
         XCTAssertTrue(app.staticTexts["When is it?"].waitForExistence(timeout: 5))
 
@@ -136,6 +150,13 @@ final class OnboardingFlowUITests: XCTestCase {
         let expectation = XCTNSPredicateExpectation(predicate: enabled, object: button)
         XCTAssertEqual(XCTWaiter().wait(for: [expectation], timeout: timeout), .completed, "Button never enabled: \(label)", file: file, line: line)
         button.tap()
+    }
+
+    /// Answer rows with a detail line read as "Title, detail".
+    private func tapRow(_ title: String, file: StaticString = #filePath, line: UInt = #line) {
+        let row = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", title)).firstMatch
+        XCTAssertTrue(row.waitForExistence(timeout: 5), "Missing row: \(title)", file: file, line: line)
+        row.tap()
     }
 
     private func snap(_ name: String) {

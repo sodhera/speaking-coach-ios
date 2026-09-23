@@ -23,6 +23,8 @@ struct CoachProfile: Codable, Equatable {
     /// True for an account that onboarded in the old app, whose profile only
     /// carries a name and language.
     var isLegacy = false
+    /// "How did you hear about us?", asked once after the paywall.
+    var heardFrom: AcquisitionSource?
 
     var pattern: SpeakingPattern { SpeakingPattern.from(statements) }
     var firstName: String {
@@ -35,6 +37,7 @@ struct CoachProfile: Codable, Equatable {
 struct OnboardingAnswers: Codable, Equatable {
     var name = ""
     var language = PracticeLanguage.deviceDefault
+    var category: SpeakingCategory?
     var moment: SpeakingMoment?
     var timing: MomentTiming?
     var readiness = 5
@@ -42,9 +45,12 @@ struct OnboardingAnswers: Codable, Equatable {
     var statements: [PainStatement: Agreement] = [:]
     var costs: Set<SpeakingCost> = []
     var outcomes: Set<SpeakingOutcome> = []
-    var quizChoice: Int?
 
     var pattern: SpeakingPattern { SpeakingPattern.from(statements) }
+
+    /// Any "That's me" or "Sometimes" in the deck. Without one there's no
+    /// cost to ask about.
+    var reportsPain: Bool { statements.values.contains { $0 != .no } }
 
     func profile(at date: Date = .now) -> CoachProfile {
         CoachProfile(

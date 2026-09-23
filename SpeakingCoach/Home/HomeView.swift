@@ -49,7 +49,8 @@ struct HomeView: View {
     private var profile: CoachProfile? { model.profile }
     private var upNext: PracticeDefinition? {
         preparation?.next
-            ?? PracticeCatalog.definition(profile?.moment?.firstPracticeID ?? "interview_tell_me_about_yourself")
+            ?? profile?.moment?.firstPractice
+            ?? PracticeCatalog.definition("interview_tell_me_about_yourself")
     }
 
     /// A preparation plan still in progress leads what's up next.
@@ -496,7 +497,8 @@ enum PracticeCategory: String, CaseIterable, Identifiable {
         case .hardConversation: .difficult
         case .presentation: .big_moments
         case .meetingPeople, .everyday: .social
-        case nil: nil
+        // The IELTS scene is built in, not a catalog category.
+        case .ielts, nil: nil
         }
         guard let lead else { return allCases }
         return [lead] + allCases.filter { $0 != lead }

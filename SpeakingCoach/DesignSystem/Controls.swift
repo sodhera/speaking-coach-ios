@@ -18,7 +18,7 @@ import UIKit
 /// all but vanishes (measured: a barely-tinted ring). Content drawn inside
 /// the glass stays crisp, and the glass itself — its tint — never changes.
 struct OptionRow: View {
-    let icon: String
+    let icon: String?
     let title: String
     let isSelected: Bool
     let action: () -> Void
@@ -29,11 +29,13 @@ struct OptionRow: View {
             action()
         } label: {
             HStack(spacing: Space.md) {
-                Image(systemName: icon)
-                    .font(.system(size: 17, weight: .regular))
-                    .foregroundStyle(isSelected ? Palette.coralDeep : Palette.muted)
-                    .frame(width: 24)
-                    .accessibilityHidden(true)
+                if let icon {
+                    Image(systemName: icon)
+                        .font(.system(size: 17, weight: .regular))
+                        .foregroundStyle(isSelected ? Palette.coralDeep : Palette.muted)
+                        .frame(width: 24)
+                        .accessibilityHidden(true)
+                }
                 Text(title)
                     .font(Typeface.label(16))
                     .foregroundStyle(Palette.ink)

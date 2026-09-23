@@ -51,6 +51,19 @@ final class FirstPlanTests: XCTestCase {
         XCTAssertNil(FirstPlan(profile: nil, records: []))
     }
 
+    func testIELTSPlanCountsItsBuiltInSceneAndASecondRunAsTheRetry() {
+        let title = CustomSituation.ieltsSpeaking.title
+        func scene() -> PracticeRecord {
+            PracticeRecord(id: UUID(), activityID: nil, title: title, date: .now, score: nil, parentID: nil)
+        }
+        XCTAssertEqual(FirstPlan(profile: profile(.ielts), records: [])?.current, .rehearse)
+        XCTAssertEqual(FirstPlan(profile: profile(.ielts), records: [record("interview_tell_me_about_yourself")])?.current, .rehearse)
+        let once = FirstPlan(profile: profile(.ielts), records: [scene()])
+        XCTAssertEqual(once?.current, .retry)
+        XCTAssertNil(once?.retryFrom, "A built-in scene has no focused retry; step two runs the scene again")
+        XCTAssertEqual(FirstPlan(profile: profile(.ielts), records: [scene(), scene()])?.current, .finish)
+    }
+
     func testGeneralFinishNeverPromisesWalkingIn() {
         XCTAssertEqual(SpeakingMoment.everyday.planFinish(outcomes: [.calm]), "Speak calmly, every day")
     }

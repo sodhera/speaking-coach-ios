@@ -102,15 +102,7 @@ struct PaywallView: View {
             let how = profile.outcomes.prefix(2).map(\.adverb).joined(separator: " and ")
             return "Speak \(how), every day."
         }
-        let phrases = profile.outcomes.prefix(2).map { outcome -> String in
-            switch outcome {
-            case .calm: "calm"
-            case .clear: "clear"
-            case .myself: "sounding like yourself"
-            case .getTheYes: "ready to get the yes"
-            }
-        }
-        let how = phrases.joined(separator: " and ")
+        let how = profile.outcomes.prefix(2).map(\.headlinePhrase).joined(separator: " and ")
         return moment == .meetingPeople ? "Walk into any room \(how)." : "Walk into \(moment.noun) \(how)."
     }
 
@@ -128,6 +120,7 @@ struct PaywallView: View {
         case .speakingUp: "Your point, out loud, in a meeting that keeps moving."
         case .meetingPeople: "First conversations, out loud, with someone new."
         case .everyday: "Everyday conversations, out loud, with a partner who plays the other side."
+        case .ielts: "Your speaking test, out loud, with an examiner who asks the real questions."
         case nil: "Real conversations, out loud, with a partner who plays the other side."
         }
         return VStack(alignment: .leading, spacing: 18) {

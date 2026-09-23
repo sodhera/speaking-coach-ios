@@ -32,7 +32,22 @@ This lives in `Glass.swift`. On iOS 26+ it is native `glassEffect`. On iOS 17–
 
 The goal is conversion. It makes the user aware of real pain, then shows how practice fixes it:
 
-welcome → name → the moment → when → readiness baseline → "does this sound like you?" deck → **the mirror** (their pattern) → the cost → **the reframe** ("a practice problem, not a talent problem") → the outcome → how it helps (mapped to their pattern) → try it (micro-demo) → your plan → hold to commit → account → paywall (personalized, hard)
+welcome → **practice language** → name → **category** → the situation → when → readiness baseline → "does this sound like you?" deck → **the mirror** (their pattern) → the cost → **the reframe** ("a practice problem, not a talent problem") → the outcome → **the promise** → **the demo** (the loop, under their thumb) → your plan → hold to commit → account → paywall (personalized, hard)
+
+### Categories
+
+The four categories are how the app is marketed, and they're the first real question: **Work** (interviews, meetings, raises, hard conversations), **Presentations** (talks, pitches, speeches), **IELTS Speaking**, and **Everyday conversations** (meeting people, speaking with ease). The boundary between the two work categories: Presentations is speaking to a room, Work is one-to-one or a meeting. A category with one situation (Presentations, IELTS) skips the situation question. IELTS appears only when the practice language is English.
+
+**IELTS is a built-in scene.** The server's catalog has no IELTS rehearsals yet, so `CustomSituation.ieltsSpeaking` (a Part 1 examiner) runs on the custom-situation endpoints. Its debrief is the general one, not a band score. Its briefing looks like any rehearsal's, and `RootView` routes it down the custom path. In the first plan, a second run of the scene counts as the retry. When IELTS content lands in the server catalog, point `SpeakingMoment.ielts` at it and delete the built-in scene.
+
+### Language
+
+The practice language is asked first, because the partner, the scenes and IELTS all depend on it. The device's language leads a short list and is already selected, and each option is written in its own language ("Deutsch", "Español"). The app's own language is never asked: iOS already shows the app in the phone's language, and the user can change it per app in Settings. No location is asked for either; nothing uses it.
+
+### The promise and the demo
+
+- **The promise** is a typewriter page in the user's own words: "Sulav, here's our promise. / Rehearse it with us first, / and you'll walk into your interview calm and clear." It is strong on purpose, but it never names a result we can't measure (no band scores, no "you'll get the job").
+- **The demo** is the product's loop played under the thumb. Holding the bloom streams a first take word by word, with a haptic on each word and the petals opening with the "voice". Then the fillers light up and lift off one by one, and the sentence closes up. Holding again lands the better take, and the fix for the user's own pattern settles underneath. Letting go pauses the take. The card reserves its full height up front, so the bloom never moves under the finger. VoiceOver's activate plays a whole take.
 
 ### Onboarding rules
 
@@ -48,6 +63,8 @@ welcome → name → the moment → when → readiness baseline → "does this s
 - **One button, one gesture.** Every step moves forward with the same primary button, including single-select answers (no auto-advance). The fingerprint hold is the only gesture.
 - **Buttons.** Question steps keep their button on screen but dimmed through the 900ms settle, which only applies going forward. Reveal steps keep theirs absent until the reveal lands.
 - **The mirror quotes the user.** Its pattern is computed only from the deck (`SpeakingPattern.from`). No "that's me" anywhere means *The Steady One*, never a problem the user didn't report.
+- **No pain, no cost question.** If every statement in the deck gets "Not me", the cost step is skipped and "Nothing yet" is recorded. If they go back and report pain, it's cleared so they answer it themselves.
+- **Outcomes fit the situation.** IELTS and everyday conversations offer "I keep going, without freezing". Work and presentations offer "I get what I asked for".
 - **The sun peaks on the commitment.** Stage depth is the step position divided by the commit step's position.
 - **Drafts resume.** Answers and the current step persist on every change. A relaunch lands on the same step, except that commit and account resume on the plan, so the user re-reads what they're committing to. The draft is cleared only once the answers are saved to an account.
 - **Analytics:** each step is page `ob_<step>` in `product_page_events`, with its index, enter/leave/action and duration. Answers, names and free text are never sent.
@@ -62,7 +79,9 @@ Apple uses the native sheet with a nonce, then `signInWithIdToken`. Google uses 
 
 ## The gate chain
 
-onboarding → account → (existing account?) → **paywall** → microphone primer → reminders primer → "You're all set!" (the plan) → Home and Profile tabs.
+onboarding → account → (existing account?) → **paywall** → "How did you hear about us?" → microphone primer → reminders primer → "You're all set!" (the plan) → Home and Profile tabs.
+
+- **Attribution after the paywall.** "How did you hear about us?" is asked once per account, after they've paid, and saved to the profile (`heardFrom`). Old-app accounts are never asked.
 
 - **Fade chain.** `RootView` renders a lagged `displayedScreen`. The outgoing screen fades out fully before the next one mounts, so no two screens ever overlap. The splash holds for 1.5s so the bloom is actually seen breathing.
 - **Existing accounts.** "Get started" can land on an Apple or Google identity that already has an account, because those sign-ins find the existing account or create a new one. When that happens, the account's plan is kept rather than overwritten, and `ExistingAccountView` says so.
@@ -97,9 +116,9 @@ Pass these as launch arguments (Debug builds only):
 
 - `-review-gallery`: every component on one screen
 - `-review-voice-level=0.8`: the gallery's bloom at a fixed voice level
-- `-review-onboarding-step=<step>`: lands on any step (`name`, `moment`, … `account`) with every earlier step answered and the reviewed step left unanswered
+- `-review-onboarding-step=<step>`: lands on any step (`language`, `name`, `category`, … `account`) with every earlier step answered and the reviewed step left unanswered
 - `-fresh-start`: clears the onboarding draft (UI tests use it)
-- `-review-screen=<welcome|signin|existing|paywall|microphone|reminders|setup|home|profile|library|briefing|settings|checkin>`: post-sign-in screens against a fixture profile. Add `-review-plans` for placeholder plans (layout only; real prices always come from the App Store).
+- `-review-screen=<welcome|signin|existing|paywall|attribution|microphone|reminders|setup|home|profile|library|briefing|settings|checkin>`: post-sign-in screens against a fixture profile. Add `-review-plans` for placeholder plans (layout only; real prices always come from the App Store).
 
 Review runs and UI tests never send analytics.
 
@@ -143,7 +162,8 @@ Not everyone has an event coming up. The first question ("What's coming up?", su
 | --- | --- |
 | Readiness | "How confident do you feel speaking day to day?" |
 | Outcome | "Picture yourself speaking at your best. What's different?" |
-| Quiz | "What do you think?" (say your view, then one reason) |
+| Demo | A friend asks "What do you think?" (say your view, then one reason) |
+| Promise | "and you'll speak calmly and clearly, every day." |
 | Plan | "Your plan is ready.", with the first rehearsal *Introduce yourself* and the final step "Speak calmly, every day" |
 | Commit | "Ready to start speaking better, every day?" |
 | Paywall | "Speak calmly and clearly, every day." (the user's outcomes as adverbs), with "Rehearse it: Everyday conversations, out loud…" |

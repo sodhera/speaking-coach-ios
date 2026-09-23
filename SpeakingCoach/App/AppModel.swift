@@ -73,6 +73,14 @@ final class AppModel {
         await AuthService.signOut()
     }
 
+    /// "How did you hear about us?" — saved once, on the account.
+    func saveAttribution(_ source: AcquisitionSource) {
+        guard var profile, let userID else { return }
+        profile.heardFrom = source
+        self.profile = profile
+        Task { await ProfileService.save(profile, userID: userID) }
+    }
+
     func acknowledgeExistingAccount() {
         phase = .ready
     }

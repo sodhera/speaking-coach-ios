@@ -3,7 +3,7 @@ import SwiftUI
 import UserNotifications
 
 // The chain after the paywall, each on the same stage as the flow it closes:
-// microphone → reminders → "You're all set!" (the plan) → Home. Same grammar as
+// where they heard of us → microphone → reminders → "You're all set!" (the plan) → Home. Same grammar as
 // SleepBlock's primers: one headline, one line, and a mock of the real
 // system dialog so it's recognised on sight — the real request fires from
 // the mock's own "Allow".
@@ -31,6 +31,48 @@ enum SetupChain {
     static func markMicrophoneShown() { UserDefaults.standard.set(true, forKey: micShownKey) }
     static func markRemindersShown() { UserDefaults.standard.set(true, forKey: remindersShownKey) }
     static func markComplete(userID: UUID?) { UserDefaults.standard.set(true, forKey: completeKey(userID)) }
+}
+
+// MARK: - Where they heard of us
+
+/// One question, after the paywall rather than at step four: by now they've
+/// paid, and an answer costs the business nothing. The flow's own grammar —
+/// centred question, capsule answers, one button.
+struct AttributionView: View {
+    let onDone: (AcquisitionSource) -> Void
+    @State private var choice: AcquisitionSource?
+
+    var body: some View {
+        VStack(spacing: 0) {
+            GeometryReader { viewport in
+                ScrollView {
+                    QuestionLayout(title: "How did you hear about us?", subtitle: "It helps us find people like you.") {
+                        GlassGroup(spacing: Space.md) {
+                            VStack(spacing: Space.md) {
+                                ForEach(AcquisitionSource.allCases) { source in
+                                    OptionRow(icon: source.icon, title: source.title, isSelected: choice == source) { choice = source }
+                                }
+                            }
+                        }
+                    }
+                    .frame(maxWidth: .infinity, minHeight: viewport.size.height - Space.xxxl, alignment: .top)
+                    .padding(.horizontal, Space.xxl)
+                    .padding(.top, Space.xxxl)
+                }
+                .scrollBounceBehavior(.basedOnSize)
+                .scrollIndicators(.hidden)
+            }
+            PrimaryButton(title: "Continue") {
+                guard let choice else { return }
+                Analytics.action("attribution")
+                onDone(choice)
+            }
+            .disabled(choice == nil)
+            .padding(.horizontal, Space.xxl)
+            .padding(.bottom, Space.lg)
+        }
+        .onAppear { Analytics.enter("attribution") }
+    }
 }
 
 // MARK: - Microphone
@@ -145,7 +187,7 @@ struct SetupCompleteView: View {
     @State private var remindersOn = Reminders.isEnabled
 
     private var firstPractice: PracticeDefinition? {
-        PracticeCatalog.definition(model.profile?.moment?.firstPracticeID ?? "interview_tell_me_about_yourself")
+        model.profile?.moment?.firstPractice ?? PracticeCatalog.definition("interview_tell_me_about_yourself")
     }
 
     private var plan: FirstPlan? { FirstPlan(profile: model.profile, records: model.history.records) }

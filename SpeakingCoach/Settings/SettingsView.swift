@@ -61,7 +61,7 @@ struct SettingsView: View {
                                 Haptics.heavy()
                                 if on {
                                     Task {
-                                        let title = PracticeCatalog.definition(model.profile?.moment?.firstPracticeID ?? "")?.title
+                                        let title = model.profile?.moment?.firstPractice?.title
                                         remindersOn = await Reminders.enable(practiceTitle: title)
                                         if !remindersOn { notice = "Turn on notifications for Speaking Coach in the Settings app." }
                                     }

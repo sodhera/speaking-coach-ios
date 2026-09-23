@@ -114,7 +114,7 @@ enum ProfileService {
             let mapped = profile.outcomes.map { outcome -> String in
                 switch outcome {
                 case .calm, .myself: "Confidence"
-                case .clear: "Clarity"
+                case .clear, .fluent: "Clarity"
                 case .getTheYes: "Assertiveness"
                 }
             }

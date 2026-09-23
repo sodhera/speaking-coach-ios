@@ -32,16 +32,26 @@ struct FirstPlan: Equatable {
     /// one), or a profile without a moment.
     init?(profile: CoachProfile?, records: [PracticeRecord]) {
         guard let profile, !profile.isLegacy, let moment = profile.moment,
-              let practice = PracticeCatalog.definition(moment.firstPracticeID) else { return nil }
+              let practice = moment.firstPractice else { return nil }
         self.practice = practice
         self.moment = moment
         finish = moment.planFinish(outcomes: profile.outcomes)
         baseline = profile.readiness
 
-        let rehearsals = records.filter { $0.activityID == practice.id && $0.parentID == nil }
         let retried = Set(records.compactMap(\.parentID))
-        let didRetry = rehearsals.contains { retried.contains($0.id) }
-        retryFrom = rehearsals.first { !retried.contains($0.id) }
+        let rehearsals: [PracticeRecord]
+        let didRetry: Bool
+        if let situation = moment.builtInSituation {
+            // A built-in scene saves as a custom report: no catalog id, and
+            // no focused retry — the second run of the scene is the retry.
+            rehearsals = records.filter { $0.activityID == nil && $0.title == situation.title }
+            didRetry = rehearsals.count > 1
+            retryFrom = nil
+        } else {
+            rehearsals = records.filter { $0.activityID == practice.id && $0.parentID == nil }
+            didRetry = rehearsals.contains { retried.contains($0.id) }
+            retryFrom = rehearsals.first { !retried.contains($0.id) }
+        }
 
         if profile.planCompletedAt != nil {
             current = nil

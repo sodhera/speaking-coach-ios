@@ -3,7 +3,7 @@ import SwiftUI
 
 /// `-review-screen=<name>` renders a screen against a fixture profile, with
 /// no account or purchase needed: `welcome`, `signin`, `existing`, `paywall`,
-/// `microphone`, `reminders`, `setup`, `home`, `profile`, `library`,
+/// `attribution`, `microphone`, `reminders`, `setup`, `home`, `profile`, `library`,
 /// `briefing`, `settings`, `checkin`. Add `-review-plan-step=retry|finish|done`
 /// to see Home (or the hand-off) partway through the first plan.
 struct ReviewScreens: View {
@@ -17,6 +17,11 @@ struct ReviewScreens: View {
                 ZStack {
                     MorningStage(depth: 1)
                     PaywallView(model: model)
+                }
+            case "attribution":
+                ZStack {
+                    MorningStage(depth: 1)
+                    AttributionView { _ in }
                 }
             case "microphone":
                 ZStack {
@@ -201,17 +206,22 @@ extension AppModel {
             profile.planCompletedAt = .now
         }
         setReviewProfile(profile)
-        history.setReviewRecords(Self.reviewRecords(for: step, practiceID: profile.moment?.firstPracticeID))
+        history.setReviewRecords(Self.reviewRecords(for: step, moment: profile.moment))
         if LaunchFlags.has("-review-plans") { subscriptions.useReviewPlans() }
     }
 
     /// A rehearsal of the plan's practice, then its retry — as far as the
     /// reviewed step needs.
-    private static func reviewRecords(for step: String?, practiceID: String?) -> [PracticeRecord] {
+    private static func reviewRecords(for step: String?, moment: SpeakingMoment?) -> [PracticeRecord] {
         guard let step, step != "rehearse" else { return [] }
-        let first = PracticeRecord(id: UUID(), activityID: practiceID, title: "First", date: .now.addingTimeInterval(-3600), score: nil, parentID: nil)
+        // A built-in scene saves like a custom one: no catalog id, its own
+        // title, and a second run in place of a focused retry.
+        let builtIn = moment?.builtInSituation
+        let practiceID = builtIn == nil ? moment?.firstPractice?.id : nil
+        let title = builtIn?.title ?? "First"
+        let first = PracticeRecord(id: UUID(), activityID: practiceID, title: title, date: .now.addingTimeInterval(-3600), score: nil, parentID: nil)
         guard step != "retry" else { return [first] }
-        let retry = PracticeRecord(id: UUID(), activityID: practiceID, title: "Retry", date: .now, score: nil, parentID: first.id)
+        let retry = PracticeRecord(id: UUID(), activityID: practiceID, title: builtIn?.title ?? "Retry", date: .now, score: nil, parentID: builtIn == nil ? first.id : nil)
         return [retry, first]
     }
 }

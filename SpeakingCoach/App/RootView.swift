@@ -1,7 +1,7 @@
 import SwiftUI
 
-/// The gate chain: onboarding → account → **paywall** → microphone →
-/// reminders → "You're all set!" → Home.
+/// The gate chain: onboarding → account → **paywall** → "how did you hear
+/// about us?" → microphone → reminders → "You're all set!" → Home.
 ///
 /// Nothing past the paywall is reachable without access — the practice
 /// server enforces the same rule, so this is the experience, not the lock.
@@ -12,6 +12,7 @@ struct RootView: View {
     @State private var launch: SessionLaunch?
 
     @State private var splashHoldDone = false
+    @State private var attributionDone = false
     @State private var micDone = !SetupChain.needsMicrophone
     @State private var remindersNeeded: Bool?
     @State private var remindersDone = false
@@ -34,7 +35,7 @@ struct RootView: View {
     private static let splashHold: Duration = .seconds(1.5)
 
     fileprivate enum Screen: Equatable {
-        case splash, onboarding, existingAccount, paywall, microphone, reminders, setupComplete, main
+        case splash, onboarding, existingAccount, paywall, attribution, microphone, reminders, setupComplete, main
     }
 
     private var screen: Screen {
@@ -48,6 +49,7 @@ struct RootView: View {
             case .unknown: return .splash
             case .notEntitled: return .paywall
             case .entitled:
+                if needsAttribution { return .attribution }
                 if !micDone { return .microphone }
                 guard let remindersNeeded else { return .splash }
                 if remindersNeeded, !remindersDone { return .reminders }
@@ -129,6 +131,11 @@ struct RootView: View {
                     ExistingAccountView { model.acknowledgeExistingAccount() }
                 case .paywall:
                     PaywallView(model: model)
+                case .attribution:
+                    AttributionView { source in
+                        model.saveAttribution(source)
+                        attributionDone = true
+                    }
                 case .microphone:
                     MicrophonePrimerView { micDone = true }
                 case .reminders:
@@ -139,7 +146,7 @@ struct RootView: View {
                         setupDone = true
                     }
                 case .main:
-                    MainShellView(model: model, pendingBriefing: $pendingBriefing, onStart: { launch = .new($0) }, onOpenReport: { launch = .report($0) }, onStartCustom: { launch = .custom($0, $1) })
+                    MainShellView(model: model, pendingBriefing: $pendingBriefing, onStart: { launch = Self.launch(for: $0) }, onOpenReport: { launch = .report($0) }, onStartCustom: { launch = .custom($0, $1) })
                 }
             }
             .transition(.identity)
@@ -195,13 +202,28 @@ struct RootView: View {
         }
     }
 
+    /// Asked once per account, after the paywall. Old-app accounts never
+    /// went through this onboarding, so they're never asked.
+    private var needsAttribution: Bool {
+        guard !attributionDone, let profile = model.profile else { return false }
+        return !profile.isLegacy && profile.heardFrom == nil
+    }
+
+    /// A built-in scene (IELTS) looks like any rehearsal on its briefing,
+    /// but runs on the custom-situation path — the catalog server doesn't
+    /// know it.
+    private static func launch(for setup: PracticeSetup) -> SessionLaunch {
+        if let situation = CustomSituation.builtIn(for: setup.practice) { return .custom(situation, setup) }
+        return .new(setup)
+    }
+
     /// One focused retry per rehearsal, as the server enforces.
     private func canRetry(_ reportID: UUID) -> Bool {
         !model.history.retriedIDs.contains(reportID)
     }
 
     private var upNextTitle: String? {
-        PracticeCatalog.definition(model.profile?.moment?.firstPracticeID ?? "")?.title
+        model.profile?.moment?.firstPractice?.title
     }
 }
 

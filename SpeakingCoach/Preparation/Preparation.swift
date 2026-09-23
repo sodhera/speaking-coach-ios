@@ -33,7 +33,7 @@ struct PreparationProgram: Identifiable, Equatable {
         case .interview: "interview"
         case .raise, .hardConversation: "boundaries"
         case .speakingUp, .presentation: "work"
-        case .meetingPeople, .everyday, nil: "everyday"
+        case .meetingPeople, .everyday, .ielts, nil: "everyday"
         }
         return find(id) ?? all[0]
     }
