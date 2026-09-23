@@ -1,0 +1,916 @@
+[
+  {
+    "id": "first_gentle_introduction",
+    "version": 1,
+    "rubricVersion": "real-life-v1",
+    "scenarioId": "friendly_introduction",
+    "title": "Introduce yourself",
+    "category": "social",
+    "format": "guided",
+    "durationMinutes": 2,
+    "partner": "A warm new acquaintance",
+    "objective": "Give a simple three-part introduction in your own words.",
+    "opening": "Hi, it is nice to meet you. Tell me your name, where you are from, and one thing you enjoy.",
+    "criteria": [
+      { "id": "first_gentle_introduction.1", "label": "Say your name clearly.", "levels": ["Not yet observed", "Partly demonstrated", "Clearly demonstrated"] },
+      { "id": "first_gentle_introduction.2", "label": "Share where you are from or live.", "levels": ["Not yet observed", "Partly demonstrated", "Clearly demonstrated"] },
+      { "id": "first_gentle_introduction.3", "label": "Add one personal detail you enjoy sharing.", "levels": ["Not yet observed", "Partly demonstrated", "Clearly demonstrated"] }
+    ],
+    "beats": [
+      "Hi, it is nice to meet you. Tell me your name, where you are from, and one thing you enjoy.",
+      "Ask one easy follow-up about the personal detail.",
+      "Thank the learner and close warmly."
+    ],
+    "objections": [],
+    "scaffold": "You can say: My name is ___. I am from ___. I enjoy ___.",
+    "transfer": "Use the same three-part introduction the next time you meet someone new.",
+    "synonyms": ["introduce myself", "first practice", "beginner introduction"],
+    "maxUserTurns": 2,
+    "recovery": [
+      "If the learner pauses, show the three sentence starter and invite them to fill the blanks.",
+      "Never challenge, score, or pressure the learner during this first practice."
+    ],
+    "variants": [
+      "What do you enjoy about that?",
+      "How did you first become interested in it?",
+      "What would you like someone new to know about you?"
+    ],
+    "reviewStatus": "authored-awaiting-human-review"
+  },
+  {
+    "id": "interview_tell_me_about_yourself",
+    "version": 1,
+    "rubricVersion": "real-life-v1",
+    "scenarioId": "job_interview",
+    "title": "Tell me about yourself",
+    "category": "interviews",
+    "format": "rehearsal",
+    "durationMinutes": 4,
+    "partner": "A hiring manager",
+    "objective": "Introduce yourself with a relevant story and one concrete strength.",
+    "opening": "Tell me about yourself and what interests you about this role.",
+    "criteria": [
+      {
+        "id": "interview_tell_me_about_yourself.1",
+        "label": "Connect your experience to the role.",
+        "levels": [
+          "Not yet observed",
+          "Partly demonstrated",
+          "Clearly demonstrated"
+        ]
+      },
+      {
+        "id": "interview_tell_me_about_yourself.2",
+        "label": "Give a specific example of your contribution.",
+        "levels": [
+          "Not yet observed",
+          "Partly demonstrated",
+          "Clearly demonstrated"
+        ]
+      },
+      {
+        "id": "interview_tell_me_about_yourself.3",
+        "label": "Finish with why this opportunity fits.",
+        "levels": [
+          "Not yet observed",
+          "Partly demonstrated",
+          "Clearly demonstrated"
+        ]
+      }
+    ],
+    "beats": [
+      "Tell me about yourself and what interests you about this role.",
+      "What did you personally contribute?",
+      "How would that help you in this role?",
+      "What would you need to learn first?",
+      "Close naturally after the user proposes a next step."
+    ],
+    "objections": [
+      "What did you personally contribute?",
+      "How would that help you in this role?",
+      "What would you need to learn first?"
+    ],
+    "scaffold": "Present → evidence → why this role. Use your own facts.",
+    "transfer": "Practice your opening before your next interview.",
+    "synonyms": [
+      "interview tomorrow",
+      "introduce myself",
+      "opening answer"
+    ],
+    "maxUserTurns": 6,
+    "recovery": [
+      "If the user gets stuck, ask one simpler question without answering for them.",
+      "If the user asks for clarification, explain the question and let them try again."
+    ],
+    "variants": [
+      "What did you personally contribute?",
+      "How would that help you in this role?",
+      "What would you need to learn first?"
+    ],
+    "reviewStatus": "authored-awaiting-human-review"
+  },
+  {
+    "id": "interview_evidence",
+    "version": 1,
+    "rubricVersion": "real-life-v1",
+    "scenarioId": "job_interview",
+    "title": "Explain your experience with an example",
+    "category": "interviews",
+    "format": "guided",
+    "durationMinutes": 4,
+    "partner": "A hiring manager",
+    "objective": "Explain a specific situation, your action, and the result.",
+    "opening": "Tell me about a time you solved a difficult problem.",
+    "criteria": [
+      {
+        "id": "interview_evidence.1",
+        "label": "Establish the situation briefly.",
+        "levels": [
+          "Not yet observed",
+          "Partly demonstrated",
+          "Clearly demonstrated"
+        ]
+      },
+      {
+        "id": "interview_evidence.2",
+        "label": "Distinguish your own action from the team's.",
+        "levels": [
+          "Not yet observed",
+          "Partly demonstrated",
+          "Clearly demonstrated"
+        ]
+      },
+      {
+        "id": "interview_evidence.3",
+        "label": "Describe a result without inventing numbers.",
+        "levels": [
+          "Not yet observed",
+          "Partly demonstrated",
+          "Clearly demonstrated"
+        ]
+      }
+    ],
+    "beats": [
+      "Tell me about a time you solved a difficult problem.",
+      "What part was your responsibility?",
+      "What changed because of your action?",
+      "What would you do differently now?",
+      "Close naturally after the user proposes a next step."
+    ],
+    "objections": [
+      "What part was your responsibility?",
+      "What changed because of your action?",
+      "What would you do differently now?"
+    ],
+    "scaffold": "Situation → your action → result. A small real example is enough.",
+    "transfer": "Write down one real example you can use in an interview.",
+    "synonyms": [
+      "star answer",
+      "experience",
+      "example",
+      "achievements"
+    ],
+    "maxUserTurns": 4,
+    "recovery": [
+      "If the user gets stuck, ask one simpler question without answering for them.",
+      "If the user asks for clarification, explain the question and let them try again."
+    ],
+    "variants": [
+      "What part was your responsibility?",
+      "What changed because of your action?",
+      "What would you do differently now?"
+    ],
+    "reviewStatus": "authored-awaiting-human-review"
+  },
+  {
+    "id": "interview_pressure",
+    "version": 1,
+    "rubricVersion": "real-life-v1",
+    "scenarioId": "job_interview",
+    "title": "Think under interview pressure",
+    "category": "interviews",
+    "format": "challenge",
+    "durationMinutes": 4,
+    "partner": "A skeptical interviewer",
+    "objective": "Clarify an unexpected question and answer honestly.",
+    "opening": "You are given a project you have never done before. How would you begin?",
+    "criteria": [
+      {
+        "id": "interview_pressure.1",
+        "label": "Clarify the uncertainty or name an assumption.",
+        "levels": [
+          "Not yet observed",
+          "Partly demonstrated",
+          "Clearly demonstrated"
+        ]
+      },
+      {
+        "id": "interview_pressure.2",
+        "label": "Explain a reasonable approach.",
+        "levels": [
+          "Not yet observed",
+          "Partly demonstrated",
+          "Clearly demonstrated"
+        ]
+      },
+      {
+        "id": "interview_pressure.3",
+        "label": "Acknowledge what you do not yet know.",
+        "levels": [
+          "Not yet observed",
+          "Partly demonstrated",
+          "Clearly demonstrated"
+        ]
+      }
+    ],
+    "beats": [
+      "You are given a project you have never done before. How would you begin?",
+      "What if that first step fails?",
+      "Why would you choose that approach?",
+      "What information would change your answer?",
+      "Close naturally after the user proposes a next step."
+    ],
+    "objections": [
+      "What if that first step fails?",
+      "Why would you choose that approach?",
+      "What information would change your answer?"
+    ],
+    "scaffold": "Pause. Name what you know, then one sensible next step.",
+    "transfer": "Use a brief thinking pause before your next unfamiliar question.",
+    "synonyms": [
+      "freeze",
+      "unexpected question",
+      "nervous",
+      "thinking on my feet"
+    ],
+    "maxUserTurns": 6,
+    "recovery": [
+      "If the user gets stuck, ask one simpler question without answering for them.",
+      "If the user asks for clarification, explain the question and let them try again."
+    ],
+    "variants": [
+      "What if that first step fails?",
+      "Why would you choose that approach?",
+      "What information would change your answer?"
+    ],
+    "reviewStatus": "authored-awaiting-human-review"
+  },
+  {
+    "id": "clear_work_update",
+    "version": 1,
+    "rubricVersion": "real-life-v1",
+    "scenarioId": "work_update",
+    "title": "Give a clear work update",
+    "category": "work",
+    "format": "drill",
+    "durationMinutes": 2,
+    "partner": "A busy coworker",
+    "objective": "Give the headline, the blocker, and a useful next step.",
+    "opening": "What changed, and do you need anything from me?",
+    "criteria": [
+      {
+        "id": "clear_work_update.1",
+        "label": "Lead with the current status.",
+        "levels": [
+          "Not yet observed",
+          "Partly demonstrated",
+          "Clearly demonstrated"
+        ]
+      },
+      {
+        "id": "clear_work_update.2",
+        "label": "Include only the relevant change or blocker.",
+        "levels": [
+          "Not yet observed",
+          "Partly demonstrated",
+          "Clearly demonstrated"
+        ]
+      },
+      {
+        "id": "clear_work_update.3",
+        "label": "Name an owner and next action.",
+        "levels": [
+          "Not yet observed",
+          "Partly demonstrated",
+          "Clearly demonstrated"
+        ]
+      }
+    ],
+    "beats": [
+      "What changed, and do you need anything from me?",
+      "I only have thirty seconds. What matters most?",
+      "What do you need from me?",
+      "What happens next, and who owns it?",
+      "Close naturally after the user proposes a next step."
+    ],
+    "objections": [
+      "I only have thirty seconds. What matters most?",
+      "What do you need from me?",
+      "What happens next, and who owns it?"
+    ],
+    "scaffold": "Headline → blocker → next step.",
+    "transfer": "Bring a three-line cue card to your next standup.",
+    "synonyms": [
+      "stop rambling",
+      "standup",
+      "status",
+      "get to the point"
+    ],
+    "maxUserTurns": 2,
+    "recovery": [
+      "If the user gets stuck, ask one simpler question without answering for them.",
+      "If the user asks for clarification, explain the question and let them try again."
+    ],
+    "variants": [
+      "I only have thirty seconds. What matters most?",
+      "What do you need from me?",
+      "What happens next, and who owns it?"
+    ],
+    "reviewStatus": "authored-awaiting-human-review"
+  },
+  {
+    "id": "disagree_in_meeting",
+    "version": 1,
+    "rubricVersion": "real-life-v1",
+    "scenarioId": "assertive_bold",
+    "title": "Disagree in a meeting",
+    "category": "work",
+    "format": "guided",
+    "durationMinutes": 4,
+    "partner": "A senior colleague",
+    "objective": "Acknowledge a view, explain your concern, and offer an alternative.",
+    "opening": "I think we should ship this week and deal with the remaining issues later. What do you think?",
+    "criteria": [
+      {
+        "id": "disagree_in_meeting.1",
+        "label": "Acknowledge the reason behind the other view.",
+        "levels": [
+          "Not yet observed",
+          "Partly demonstrated",
+          "Clearly demonstrated"
+        ]
+      },
+      {
+        "id": "disagree_in_meeting.2",
+        "label": "State a specific concern respectfully.",
+        "levels": [
+          "Not yet observed",
+          "Partly demonstrated",
+          "Clearly demonstrated"
+        ]
+      },
+      {
+        "id": "disagree_in_meeting.3",
+        "label": "Offer an alternative with a reason.",
+        "levels": [
+          "Not yet observed",
+          "Partly demonstrated",
+          "Clearly demonstrated"
+        ]
+      }
+    ],
+    "beats": [
+      "I think we should ship this week and deal with the remaining issues later. What do you think?",
+      "We cannot afford another delay. What do you suggest?",
+      "Why is your alternative better?",
+      "What compromise could we try?",
+      "Close naturally after the user proposes a next step."
+    ],
+    "objections": [
+      "We cannot afford another delay. What do you suggest?",
+      "Why is your alternative better?",
+      "What compromise could we try?"
+    ],
+    "scaffold": "I understand ___; my concern is ___; could we try ___?",
+    "transfer": "Prepare one alternative before raising a concern in your next meeting.",
+    "synonyms": [
+      "speak up",
+      "challenge boss",
+      "disagree",
+      "meeting"
+    ],
+    "maxUserTurns": 4,
+    "recovery": [
+      "If the user gets stuck, ask one simpler question without answering for them.",
+      "If the user asks for clarification, explain the question and let them try again."
+    ],
+    "variants": [
+      "We cannot afford another delay. What do you suggest?",
+      "Why is your alternative better?",
+      "What compromise could we try?"
+    ],
+    "reviewStatus": "authored-awaiting-human-review"
+  },
+  {
+    "id": "salary_raise",
+    "version": 1,
+    "rubricVersion": "real-life-v1",
+    "scenarioId": "negotiation",
+    "title": "Ask for a raise",
+    "category": "work",
+    "format": "rehearsal",
+    "durationMinutes": 6,
+    "partner": "Your manager",
+    "objective": "Make a clear request, support it with evidence, and agree on a next step.",
+    "opening": "What did you want to discuss about your role?",
+    "criteria": [
+      {
+        "id": "salary_raise.1",
+        "label": "State a specific request.",
+        "levels": [
+          "Not yet observed",
+          "Partly demonstrated",
+          "Clearly demonstrated"
+        ]
+      },
+      {
+        "id": "salary_raise.2",
+        "label": "Support it with a relevant contribution.",
+        "levels": [
+          "Not yet observed",
+          "Partly demonstrated",
+          "Clearly demonstrated"
+        ]
+      },
+      {
+        "id": "salary_raise.3",
+        "label": "Respond to the objection and propose a next step.",
+        "levels": [
+          "Not yet observed",
+          "Partly demonstrated",
+          "Clearly demonstrated"
+        ]
+      }
+    ],
+    "beats": [
+      "What did you want to discuss about your role?",
+      "The budget is tight this quarter. What would you suggest?",
+      "Your role has not changed. Why an adjustment now?",
+      "What evidence should we review together?",
+      "Close naturally after the user proposes a next step."
+    ],
+    "objections": [
+      "The budget is tight this quarter. What would you suggest?",
+      "Your role has not changed. Why an adjustment now?",
+      "What evidence should we review together?"
+    ],
+    "scaffold": "Request → result of your work → question about a workable next step.",
+    "transfer": "Write one real achievement and one question for your manager.",
+    "synonyms": [
+      "salary",
+      "pay rise",
+      "promotion",
+      "raise",
+      "negotiate"
+    ],
+    "maxUserTurns": 6,
+    "recovery": [
+      "If the user gets stuck, ask one simpler question without answering for them.",
+      "If the user asks for clarification, explain the question and let them try again."
+    ],
+    "variants": [
+      "The budget is tight this quarter. What would you suggest?",
+      "Your role has not changed. Why an adjustment now?",
+      "What evidence should we review together?"
+    ],
+    "reviewStatus": "authored-awaiting-human-review"
+  },
+  {
+    "id": "set_a_boundary",
+    "version": 1,
+    "rubricVersion": "real-life-v1",
+    "scenarioId": "set_boundary",
+    "title": "Set a boundary",
+    "category": "difficult",
+    "format": "guided",
+    "durationMinutes": 4,
+    "partner": "A colleague asking too much",
+    "objective": "State a clear limit and hold it through one objection.",
+    "opening": "Could you take over my work again this evening? I know it is short notice.",
+    "criteria": [
+      {
+        "id": "set_a_boundary.1",
+        "label": "State the limit clearly.",
+        "levels": [
+          "Not yet observed",
+          "Partly demonstrated",
+          "Clearly demonstrated"
+        ]
+      },
+      {
+        "id": "set_a_boundary.2",
+        "label": "Give a brief reason without undermining the limit.",
+        "levels": [
+          "Not yet observed",
+          "Partly demonstrated",
+          "Clearly demonstrated"
+        ]
+      },
+      {
+        "id": "set_a_boundary.3",
+        "label": "Maintain the limit after pushback.",
+        "levels": [
+          "Not yet observed",
+          "Partly demonstrated",
+          "Clearly demonstrated"
+        ]
+      }
+    ],
+    "beats": [
+      "Could you take over my work again this evening? I know it is short notice.",
+      "It would only take you an hour. Could you make an exception?",
+      "What can you help with instead?",
+      "Who else could I ask?",
+      "Close naturally after the user proposes a next step."
+    ],
+    "objections": [
+      "It would only take you an hour. Could you make an exception?",
+      "What can you help with instead?",
+      "Who else could I ask?"
+    ],
+    "scaffold": "I cannot ___; I can ___ if useful. You do not owe an elaborate explanation.",
+    "transfer": "Choose one small boundary to state clearly this week.",
+    "synonyms": [
+      "tell my boss no",
+      "say no",
+      "people pleasing",
+      "boundary"
+    ],
+    "maxUserTurns": 4,
+    "recovery": [
+      "If the user gets stuck, ask one simpler question without answering for them.",
+      "If the user asks for clarification, explain the question and let them try again."
+    ],
+    "variants": [
+      "It would only take you an hour. Could you make an exception?",
+      "What can you help with instead?",
+      "Who else could I ask?"
+    ],
+    "reviewStatus": "authored-awaiting-human-review"
+  },
+  {
+    "id": "explain_a_mistake",
+    "version": 1,
+    "rubricVersion": "real-life-v1",
+    "scenarioId": "work_update",
+    "title": "Explain a mistake",
+    "category": "work",
+    "format": "rehearsal",
+    "durationMinutes": 4,
+    "partner": "Your manager",
+    "objective": "Own a mistake, explain the impact, and propose a repair.",
+    "opening": "I noticed a problem with the handover. Can you explain what happened?",
+    "criteria": [
+      {
+        "id": "explain_a_mistake.1",
+        "label": "Own your part without shifting blame.",
+        "levels": [
+          "Not yet observed",
+          "Partly demonstrated",
+          "Clearly demonstrated"
+        ]
+      },
+      {
+        "id": "explain_a_mistake.2",
+        "label": "State the known impact without guessing.",
+        "levels": [
+          "Not yet observed",
+          "Partly demonstrated",
+          "Clearly demonstrated"
+        ]
+      },
+      {
+        "id": "explain_a_mistake.3",
+        "label": "Propose a repair and prevention step.",
+        "levels": [
+          "Not yet observed",
+          "Partly demonstrated",
+          "Clearly demonstrated"
+        ]
+      }
+    ],
+    "beats": [
+      "I noticed a problem with the handover. Can you explain what happened?",
+      "Who was affected?",
+      "How can we fix it now?",
+      "How will you prevent a repeat?",
+      "Close naturally after the user proposes a next step."
+    ],
+    "objections": [
+      "Who was affected?",
+      "How can we fix it now?",
+      "How will you prevent a repeat?"
+    ],
+    "scaffold": "What happened → my part → impact → repair.",
+    "transfer": "Bring a concrete repair proposal when you raise a problem.",
+    "synonyms": [
+      "mistake",
+      "apologize",
+      "bad news",
+      "accountability"
+    ],
+    "maxUserTurns": 6,
+    "recovery": [
+      "If the user gets stuck, ask one simpler question without answering for them.",
+      "If the user asks for clarification, explain the question and let them try again."
+    ],
+    "variants": [
+      "Who was affected?",
+      "How can we fix it now?",
+      "How will you prevent a repeat?"
+    ],
+    "reviewStatus": "authored-awaiting-human-review"
+  },
+  {
+    "id": "ask_for_clarity",
+    "version": 1,
+    "rubricVersion": "real-life-v1",
+    "scenarioId": "assertive_bold",
+    "title": "Ask for clarity",
+    "category": "work",
+    "format": "drill",
+    "durationMinutes": 2,
+    "partner": "An impatient colleague",
+    "objective": "Identify what is unclear and confirm an actionable expectation.",
+    "opening": "Please get the usual materials ready for the meeting.",
+    "criteria": [
+      {
+        "id": "ask_for_clarity.1",
+        "label": "Name the specific missing information.",
+        "levels": [
+          "Not yet observed",
+          "Partly demonstrated",
+          "Clearly demonstrated"
+        ]
+      },
+      {
+        "id": "ask_for_clarity.2",
+        "label": "Ask a direct, useful question.",
+        "levels": [
+          "Not yet observed",
+          "Partly demonstrated",
+          "Clearly demonstrated"
+        ]
+      },
+      {
+        "id": "ask_for_clarity.3",
+        "label": "Confirm the next action or expectation.",
+        "levels": [
+          "Not yet observed",
+          "Partly demonstrated",
+          "Clearly demonstrated"
+        ]
+      }
+    ],
+    "beats": [
+      "Please get the usual materials ready for the meeting.",
+      "You have done this before. What is unclear?",
+      "What do you need to know first?",
+      "How will you confirm we mean the same thing?",
+      "Close naturally after the user proposes a next step."
+    ],
+    "objections": [
+      "You have done this before. What is unclear?",
+      "What do you need to know first?",
+      "How will you confirm we mean the same thing?"
+    ],
+    "scaffold": "To get this right, do you mean ___ or ___?",
+    "transfer": "Ask one specific clarification instead of guessing in your next task.",
+    "synonyms": [
+      "clarify",
+      "confused",
+      "instructions",
+      "ask a question"
+    ],
+    "maxUserTurns": 2,
+    "recovery": [
+      "If the user gets stuck, ask one simpler question without answering for them.",
+      "If the user asks for clarification, explain the question and let them try again."
+    ],
+    "variants": [
+      "You have done this before. What is unclear?",
+      "What do you need to know first?",
+      "How will you confirm we mean the same thing?"
+    ],
+    "reviewStatus": "authored-awaiting-human-review"
+  },
+  {
+    "id": "pitch_big_idea",
+    "version": 1,
+    "rubricVersion": "real-life-v1",
+    "scenarioId": "elevator_pitch",
+    "title": "Pitch your big idea",
+    "category": "big_moments",
+    "format": "challenge",
+    "durationMinutes": 5,
+    "partner": "A potential supporter",
+    "objective": "Explain the problem, proposal, value, and next step.",
+    "opening": "You have my attention. What is your idea, and why should it matter?",
+    "criteria": [
+      {
+        "id": "pitch_big_idea.1",
+        "label": "Define a concrete problem.",
+        "levels": [
+          "Not yet observed",
+          "Partly demonstrated",
+          "Clearly demonstrated"
+        ]
+      },
+      {
+        "id": "pitch_big_idea.2",
+        "label": "Explain the proposal and its value.",
+        "levels": [
+          "Not yet observed",
+          "Partly demonstrated",
+          "Clearly demonstrated"
+        ]
+      },
+      {
+        "id": "pitch_big_idea.3",
+        "label": "Ask for a clear next step.",
+        "levels": [
+          "Not yet observed",
+          "Partly demonstrated",
+          "Clearly demonstrated"
+        ]
+      }
+    ],
+    "beats": [
+      "You have my attention. What is your idea, and why should it matter?",
+      "I do not see the benefit yet. Who needs this?",
+      "How is that different from what exists?",
+      "What small test would you run first?",
+      "Close naturally after the user proposes a next step."
+    ],
+    "objections": [
+      "I do not see the benefit yet. Who needs this?",
+      "How is that different from what exists?",
+      "What small test would you run first?"
+    ],
+    "scaffold": "Problem → idea → value → small next step.",
+    "transfer": "Test your opening with a peer and ask what they understood.",
+    "synonyms": [
+      "investor",
+      "pitch",
+      "big idea",
+      "persuade"
+    ],
+    "maxUserTurns": 6,
+    "recovery": [
+      "If the user gets stuck, ask one simpler question without answering for them.",
+      "If the user asks for clarification, explain the question and let them try again."
+    ],
+    "variants": [
+      "I do not see the benefit yet. Who needs this?",
+      "How is that different from what exists?",
+      "What small test would you run first?"
+    ],
+    "reviewStatus": "authored-awaiting-human-review"
+  },
+  {
+    "id": "meet_someone_new",
+    "version": 1,
+    "rubricVersion": "real-life-v1",
+    "scenarioId": "approachable_friendly",
+    "title": "Meet someone new",
+    "category": "social",
+    "format": "guided",
+    "durationMinutes": 4,
+    "partner": "Someone at a social event",
+    "objective": "Introduce yourself, share something specific, and ask a genuine question.",
+    "opening": "Hi, I do not think we have met. What brought you here?",
+    "criteria": [
+      {
+        "id": "meet_someone_new.1",
+        "label": "Offer a brief, specific introduction.",
+        "levels": [
+          "Not yet observed",
+          "Partly demonstrated",
+          "Clearly demonstrated"
+        ]
+      },
+      {
+        "id": "meet_someone_new.2",
+        "label": "Respond to something the partner actually said.",
+        "levels": [
+          "Not yet observed",
+          "Partly demonstrated",
+          "Clearly demonstrated"
+        ]
+      },
+      {
+        "id": "meet_someone_new.3",
+        "label": "Ask a genuine follow-up and respect their time.",
+        "levels": [
+          "Not yet observed",
+          "Partly demonstrated",
+          "Clearly demonstrated"
+        ]
+      }
+    ],
+    "beats": [
+      "Hi, I do not think we have met. What brought you here?",
+      "I am just here with a friend. How about you?",
+      "That sounds interesting. What got you into it?",
+      "I need to head off soon. It was nice meeting you.",
+      "Close naturally after the user proposes a next step."
+    ],
+    "objections": [
+      "I am just here with a friend. How about you?",
+      "That sounds interesting. What got you into it?",
+      "I need to head off soon. It was nice meeting you."
+    ],
+    "scaffold": "Share one thing about yourself, then ask about something they mentioned.",
+    "transfer": "Introduce yourself to one relevant peer this week.",
+    "synonyms": [
+      "small talk",
+      "networking",
+      "shy",
+      "make friends"
+    ],
+    "maxUserTurns": 4,
+    "recovery": [
+      "If the user gets stuck, ask one simpler question without answering for them.",
+      "If the user asks for clarification, explain the question and let them try again."
+    ],
+    "variants": [
+      "I am just here with a friend. How about you?",
+      "That sounds interesting. What got you into it?",
+      "I need to head off soon. It was nice meeting you."
+    ],
+    "reviewStatus": "authored-awaiting-human-review"
+  },
+  {
+    "id": "presentation_opening",
+    "version": 1,
+    "rubricVersion": "real-life-v1",
+    "scenarioId": "elevator_pitch",
+    "title": "Open a presentation or toast",
+    "category": "big_moments",
+    "format": "rehearsal",
+    "durationMinutes": 4,
+    "partner": "An attentive listener",
+    "objective": "Open with a clear point and a reason the audience should care.",
+    "opening": "Imagine your audience is ready. How would you begin?",
+    "criteria": [
+      {
+        "id": "presentation_opening.1",
+        "label": "Make the main point clear.",
+        "levels": [
+          "Not yet observed",
+          "Partly demonstrated",
+          "Clearly demonstrated"
+        ]
+      },
+      {
+        "id": "presentation_opening.2",
+        "label": "Connect it to the audience.",
+        "levels": [
+          "Not yet observed",
+          "Partly demonstrated",
+          "Clearly demonstrated"
+        ]
+      },
+      {
+        "id": "presentation_opening.3",
+        "label": "Give the opening a clear direction.",
+        "levels": [
+          "Not yet observed",
+          "Partly demonstrated",
+          "Clearly demonstrated"
+        ]
+      }
+    ],
+    "beats": [
+      "Imagine your audience is ready. How would you begin?",
+      "Why should this matter to this audience?",
+      "Could you make that more specific?",
+      "What would you want us to remember?",
+      "Close naturally after the user proposes a next step."
+    ],
+    "objections": [
+      "Why should this matter to this audience?",
+      "Could you make that more specific?",
+      "What would you want us to remember?"
+    ],
+    "scaffold": "One point → why it matters here → where you are taking us.",
+    "transfer": "Say your opening aloud once before the real event.",
+    "synonyms": [
+      "toast",
+      "wedding",
+      "presentation",
+      "public speaking"
+    ],
+    "maxUserTurns": 6,
+    "recovery": [
+      "If the user gets stuck, ask one simpler question without answering for them.",
+      "If the user asks for clarification, explain the question and let them try again."
+    ],
+    "variants": [
+      "Why should this matter to this audience?",
+      "Could you make that more specific?",
+      "What would you want us to remember?"
+    ],
+    "reviewStatus": "authored-awaiting-human-review"
+  }
+]

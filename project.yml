@@ -1,0 +1,111 @@
+name: SpeakingCoach
+options:
+  bundleIdPrefix: com.sodhera
+  deploymentTarget:
+    iOS: "17.0"
+  createIntermediateGroups: true
+  developmentLanguage: en
+settings:
+  base:
+    SWIFT_VERSION: "5.10"
+    DEVELOPMENT_TEAM: 6LYZDNCM4M
+    MARKETING_VERSION: "2.0.0"
+    CURRENT_PROJECT_VERSION: "18"
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+    SWIFT_STRICT_CONCURRENCY: targeted
+packages:
+  Supabase:
+    url: https://github.com/supabase/supabase-swift
+    majorVersion: 2.0.0
+  RevenueCat:
+    url: https://github.com/RevenueCat/purchases-ios-spm
+    majorVersion: 5.0.0
+  ElevenLabs:
+    url: https://github.com/elevenlabs/elevenlabs-swift-sdk
+    majorVersion: 2.0.0
+targets:
+  SpeakingCoach:
+    type: application
+    platform: iOS
+    sources:
+      - path: SpeakingCoach
+    dependencies:
+      - package: Supabase
+        product: Supabase
+      - package: RevenueCat
+        product: RevenueCat
+      - package: ElevenLabs
+        product: ElevenLabs
+    entitlements:
+      path: SpeakingCoach/SpeakingCoach.entitlements
+      properties:
+        com.apple.developer.applesignin: [Default]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.sodhera.speakingcoach
+        PRODUCT_NAME: Speaking Coach
+        PRODUCT_MODULE_NAME: SpeakingCoach
+        TARGETED_DEVICE_FAMILY: "1"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        CODE_SIGN_STYLE: Automatic
+        GENERATE_INFOPLIST_FILE: NO
+        INFOPLIST_FILE: SpeakingCoach/Info.plist
+    info:
+      path: SpeakingCoach/Info.plist
+      properties:
+        CFBundleDisplayName: Speaking Coach
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        LSRequiresIPhoneOS: true
+        ITSAppUsesNonExemptEncryption: false
+        NSMicrophoneUsageDescription: Speaking Coach uses your microphone only while you practice, so your partner can hear you and give feedback on your words.
+        UIAppFonts:
+          - DMSans.ttf
+          - DMSans-Italic.ttf
+        UILaunchScreen:
+          UIColorName: LaunchBackground
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        UIUserInterfaceStyle: Light
+        CFBundleURLTypes:
+          - CFBundleURLName: com.sodhera.speakingcoach.auth
+            CFBundleURLSchemes: [com.sodhera.speakingcoach]
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+  SpeakingCoachTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: SpeakingCoachTests
+    dependencies:
+      - target: SpeakingCoach
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_BUNDLE_IDENTIFIER: com.sodhera.speakingcoach.tests
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/Speaking Coach.app/Speaking Coach"
+        BUNDLE_LOADER: "$(TEST_HOST)"
+  SpeakingCoachUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: SpeakingCoachUITests
+    dependencies:
+      - target: SpeakingCoach
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_BUNDLE_IDENTIFIER: com.sodhera.speakingcoach.uitests
+        TEST_TARGET_NAME: SpeakingCoach
+schemes:
+  SpeakingCoach:
+    build:
+      targets:
+        SpeakingCoach: all
+        SpeakingCoachTests: [test]
+        SpeakingCoachUITests: [test]
+    test:
+      targets:
+        - SpeakingCoachTests
+        - SpeakingCoachUITests
