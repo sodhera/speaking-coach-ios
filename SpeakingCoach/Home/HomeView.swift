@@ -146,14 +146,26 @@ struct HomeView: View {
                         if index > 0 { GlassRowDivider() }
                         practiceRow(practice)
                     }
+                    if selectedCategory == .big_moments {
+                        GlassRowDivider()
+                        Button { showsPresentations = true } label: {
+                            HStack(spacing: Space.md) {
+                                VStack(alignment: .leading, spacing: 3) {
+                                    Text("Rehearse with my slides")
+                                        .font(Typeface.label(16)).foregroundStyle(Palette.ink)
+                                    Text("Use your own presentation")
+                                        .font(Typeface.body(13)).foregroundStyle(Palette.muted)
+                                }
+                                Spacer(minLength: 8)
+                                Image(systemName: "chevron.right").font(.system(size: 12)).foregroundStyle(Palette.faint)
+                            }
+                            .padding(.vertical, Space.sm)
+                            .frame(minHeight: 58)
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                    }
                 }
-                Button { showsCustom = true } label: {
-                    Label("Describe my own situation", systemImage: "square.and.pencil")
-                        .font(Typeface.label(15))
-                        .foregroundStyle(Palette.coralDeep)
-                        .frame(minHeight: 44)
-                }
-                .buttonStyle(.plain)
             }
 
             if let plan {
@@ -212,8 +224,8 @@ struct HomeView: View {
                 .buttonStyle(.plain)
                 .accessibilityAddTraits(selectedCategory == category ? .isSelected : [])
             }
-            Button { showsPresentations = true } label: {
-                Text("My slides")
+            Button { showsCustom = true } label: {
+                Text("My own situation")
                     .font(Typeface.label(14))
                     .foregroundStyle(Palette.ink)
                     .frame(maxWidth: .infinity, minHeight: 48)
@@ -263,7 +275,7 @@ struct HomeView: View {
     private func actionTitle(_ step: FirstPlan.Step) -> String {
         switch step {
         case .rehearse: model.history.records.isEmpty ? "Start your first rehearsal" : "Rehearse it out loud"
-        case .retry: "Retry the moment · 90 sec"
+        case .retry: "Try one change"
         case .finish: "Check in on how you feel"
         }
     }
@@ -280,7 +292,7 @@ struct HomeView: View {
     private func hint(_ plan: FirstPlan, _ step: FirstPlan.Step) -> String {
         switch step {
         case .rehearse: "Your partner asks. You answer out loud."
-        case .retry: "Back to the one moment from your feedback."
+        case .retry: "Revisit your feedback, then try it again."
         case .finish: plan.baseline.map { "One question. You started at \($0)/10." } ?? "One question, and your plan is done."
         }
     }
@@ -503,7 +515,7 @@ enum PracticeCategory: String, CaseIterable, Identifiable {
         case .interviews: "Interviews"
         case .work: "Work"
         case .difficult: "Difficult conversations"
-        case .big_moments: "Big moments"
+        case .big_moments: "Presentations"
         case .social: "Social"
         }
     }
