@@ -141,6 +141,7 @@ private struct PracticeRoom: View {
 
     @State private var showsHelp = false
     @State private var confirmingLeave = false
+    @State private var confirmingFinish = false
 
     private var voice: VoiceSession { session.voice }
 
@@ -163,7 +164,7 @@ private struct PracticeRoom: View {
             Spacer(minLength: Space.xl)
 
             VStack(spacing: Space.xxl) {
-                BloomMark(size: 210, color: voice.isPaused ? Palette.muted : Palette.coral, level: level)
+                BloomMark(size: 120, color: voice.isPaused ? Palette.muted : Palette.coral, level: level)
                     .animation(.easeInOut(duration: 0.4), value: voice.isPaused)
                 VStack(spacing: Space.md) {
                     Kicker(text: status, color: voice.partnerSpeaking ? Palette.coralDeep : Palette.dim)
@@ -274,8 +275,20 @@ private struct PracticeRoom: View {
                     }
                 }
             }
-            HoldCapsuleButton(title: voice.userTurns == 0 ? "Hold to end" : "Hold to finish & get feedback", systemImage: "checkmark") {
-                Task { await session.finish() }
+            Button {
+                confirmingFinish = true
+            } label: {
+                Label(voice.userTurns == 0 ? "End rehearsal" : "Finish and get feedback", systemImage: "checkmark")
+                    .font(Typeface.label(16))
+                    .foregroundStyle(Palette.ink)
+                    .frame(maxWidth: .infinity, minHeight: 54)
+                    .contentShape(Capsule())
+            }
+            .buttonStyle(.plain)
+            .glassSurface(cornerRadius: 999, interactive: true)
+            .confirmationDialog(voice.userTurns == 0 ? "End this rehearsal?" : "Ready for feedback?", isPresented: $confirmingFinish, titleVisibility: .visible) {
+                Button(voice.userTurns == 0 ? "End rehearsal" : "Finish and get feedback") { Task { await session.finish() } }
+                Button("Keep speaking", role: .cancel) { }
             }
         }
         .animation(.easeInOut(duration: 0.25), value: voice.isPaused)
@@ -300,95 +313,6 @@ private struct SmallCapsuleButton: View {
         }
         .buttonStyle(.plain)
         .glassSurface(cornerRadius: 999, interactive: true)
-    }
-}
-
-/// A capsule you hold for 1.2s: coral fills it as you hold, heavy ticks
-/// ratchet up, a double knock lands at the end, and letting go early springs
-/// the fill back. Zero precision needed, and no stray tap can fire it.
-struct HoldCapsuleButton: View {
-    let title: String
-    var systemImage: String?
-    var duration: Double = 1.2
-    let onComplete: () -> Void
-
-    @State private var progress: Double = 0
-    @State private var isHolding = false
-    @State private var isComplete = false
-    @State private var lastTick = -1
-    @State private var holdTask: Task<Void, Never>?
-
-    var body: some View {
-        GeometryReader { geo in
-            ZStack {
-                Capsule(style: .continuous).fill(.clear).glassSurface(cornerRadius: 999, tint: Palette.glassCoral, interactive: true)
-                Capsule(style: .continuous)
-                    .fill(LinearGradient(colors: [Palette.peach, Palette.coral], startPoint: .leading, endPoint: .trailing))
-                    .frame(width: max(0, geo.size.width * progress))
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .clipShape(Capsule(style: .continuous))
-                Label {
-                    Text(title).font(Typeface.label(16))
-                } icon: {
-                    if let systemImage { Image(systemName: systemImage) }
-                }
-                .foregroundStyle(progress > 0.55 || isComplete ? .white : Palette.ink)
-            }
-            .shadow(color: Palette.coral.opacity(0.1 + progress * 0.35), radius: 12 + progress * 10, y: 4)
-            .scaleEffect(isHolding ? 0.98 : 1)
-            .animation(.snappy(duration: 0.18), value: isHolding)
-            .contentShape(Capsule(style: .continuous))
-            .gesture(
-                DragGesture(minimumDistance: 0)
-                    .onChanged { _ in startHold() }
-                    .onEnded { _ in endHold() }
-            )
-        }
-        .frame(height: 58)
-        .onDisappear { holdTask?.cancel() }
-        .accessibilityElement()
-        .accessibilityLabel(title)
-        .accessibilityAddTraits(.isButton)
-        .accessibilityHint("Touch and hold to confirm.")
-        .accessibilityAction { complete() }
-    }
-
-    private func startHold() {
-        guard !isHolding, !isComplete else { return }
-        isHolding = true
-        lastTick = -1
-        Haptics.rigid()
-        holdTask = Task { @MainActor in
-            let start = Date()
-            while !Task.isCancelled {
-                let p = min(1, Date().timeIntervalSince(start) / duration)
-                progress = p
-                let step = Int(p * 5)
-                if step != lastTick {
-                    lastTick = step
-                    if step > 0 { Haptics.tick(0.7 + p * 0.3) }
-                }
-                if p >= 1 { complete(); break }
-                try? await Task.sleep(for: .milliseconds(33))
-            }
-        }
-    }
-
-    private func complete() {
-        guard !isComplete else { return }
-        holdTask?.cancel()
-        isComplete = true
-        progress = 1
-        Haptics.doubleHeavy()
-        onComplete()
-    }
-
-    private func endHold() {
-        holdTask?.cancel()
-        isHolding = false
-        guard !isComplete else { return }
-        if progress > 0.02 { Haptics.soft() }
-        withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) { progress = 0 }
     }
 }
 

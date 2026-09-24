@@ -3,7 +3,7 @@ import SwiftUI
 
 /// Giving the talk, full screen. The slide is the instrument — big, swiped
 /// like the real clicker — and a small bloom by the timer shows the
-/// microphone is hearing you. Finishing is a hold, like the voice room.
+/// microphone is hearing you. Finishing uses a clear confirmation.
 struct RehearsalView: View {
     let store: PresentationStore
     let deck: PresentationDeck
@@ -26,6 +26,7 @@ struct RehearsalView: View {
     @State private var startedAt = Date.now
     @State private var durationMs = 0
     @State private var confirmingLeave = false
+    @State private var confirmingFinish = false
     @Environment(\.scenePhase) private var scenePhase
 
     /// 32 kbps keeps 40 minutes inside the 10 MB transcription limit.
@@ -188,9 +189,21 @@ struct RehearsalView: View {
 
             Spacer(minLength: Space.lg)
 
-            HoldCapsuleButton(title: "Hold to finish", systemImage: "checkmark") { finish() }
+            Button { confirmingFinish = true } label: {
+                Label("Finish and get questions", systemImage: "checkmark")
+                    .font(Typeface.label(16))
+                    .foregroundStyle(Palette.ink)
+                    .frame(maxWidth: .infinity, minHeight: 54)
+                    .contentShape(Capsule())
+            }
+                .buttonStyle(.plain)
+                .glassSurface(cornerRadius: 999, interactive: true)
                 .padding(.horizontal, Space.xxl)
                 .padding(.bottom, Space.lg)
+                .confirmationDialog("Finish this presentation?", isPresented: $confirmingFinish, titleVisibility: .visible) {
+                    Button("Finish and get questions") { finish() }
+                    Button("Keep speaking", role: .cancel) { }
+                }
         }
     }
 
