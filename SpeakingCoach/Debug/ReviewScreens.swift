@@ -102,9 +102,7 @@ struct ReviewScreens: View {
             case "rehearsalready":
                 let (deck, _) = model.presentations.loadReviewFixture()
                 RehearsalView(store: model.presentations, deck: deck, language: "en", onClose: {})
-            case "progress":
-                ProgressScreen(model: model)
-            case "profile":
+            case "progress", "profile":
                 ProfileView(model: model)
             case "welcome":
                 ZStack {
@@ -115,6 +113,10 @@ struct ReviewScreens: View {
                 MainShellView(model: model, onStart: { _ in })
             }
         }
+        // RootView's routed screens carry this; match what users see.
+        .statusBarScrim()
+        // Onboarding-side screens keep the sunrise; the app's are flat.
+        .environment(\.stageStyle, LaunchFlags.value("-stage") == "morning" || ["welcome", "paywall", "attribution", "microphone", "reminders", "setup", "existing"].contains(name) ? .morning : .flat)
         .onAppear { model.loadReviewFixture() }
     }
 }

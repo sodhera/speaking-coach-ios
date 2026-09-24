@@ -3,7 +3,7 @@ import SwiftUI
 /// The payoff, as two views of the same rehearsal.
 ///
 /// **Feedback** reads as one argument, top to bottom: the read in a sentence,
-/// then the rehearsal's criteria at a glance (so a summary that mentions
+/// then the session's criteria at a glance (so a summary that mentions
 /// "situation, action and result" points at something on screen), one thing
 /// to keep, and one thing to change with the exact moment to go back to.
 ///
@@ -112,12 +112,11 @@ struct DebriefView: View {
             VStack(alignment: .leading, spacing: Space.xxl) {
                 VStack(alignment: .leading, spacing: Space.md) {
                     titleLabel
-                    if comparison == nil { verdict.revealIn(after: 0.1) }
+                    verdict.revealIn(after: 0.1)
                 }
 
                 if let comparison {
-                    whatChanged(comparison).revealIn(after: 0.1)
-                    verdict.revealIn(after: 0.4)
+                    whatChanged(comparison).revealIn(after: 0.3)
                 }
 
                 if comparison == nil, let assessment, !assessment.criteria.isEmpty {
@@ -192,7 +191,7 @@ struct DebriefView: View {
 
     private var verdict: some View {
         Text(assessment?.summary ?? report.analysis.summary ?? "Your session is saved.")
-            .font(Typeface.title(22))
+            .font(Typeface.title(20))
             .foregroundStyle(Palette.ink)
             .lineSpacing(2)
             .fixedSize(horizontal: false, vertical: true)
@@ -205,7 +204,7 @@ struct DebriefView: View {
     /// below talk about are named, so the cards read as part of this.
     private func scorecard(_ assessment: PracticeAssessment) -> some View {
         VStack(alignment: .leading, spacing: Space.md) {
-            SectionTitle(text: "What we listened for")
+            SectionTitle(text: "How you did")
             VStack(spacing: 0) {
                 ForEach(Array(assessment.criteria.enumerated()), id: \.element.id) { index, criterion in
                     if index > 0 { GlassRowDivider() }
@@ -219,38 +218,23 @@ struct DebriefView: View {
 
     private func criterionRow(_ criterion: CriterionResult) -> some View {
         let isOpen = openCriteria.contains(criterion.id)
-        let role: (text: String, color: Color)? = criterion.id == focus?.id
-            ? ("Your focus", Palette.coralDeep)
-            : criterion.id == strength?.id ? ("Keep this", Palette.sage) : nil
         return VStack(alignment: .leading, spacing: 0) {
             Button {
                 Haptics.selection()
                 withAnimation(.easeInOut(duration: 0.28)) { openCriteria.formSymmetricDifference([criterion.id]) }
             } label: {
-                HStack(alignment: .top, spacing: Space.md) {
-                    LevelMark(level: criterion.level)
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text(criterionLabel(criterion.id))
-                            .font(Typeface.label(16))
-                            .foregroundStyle(Palette.ink)
-                            .multilineTextAlignment(.leading)
-                            .fixedSize(horizontal: false, vertical: true)
-                        HStack(spacing: 5) {
-                            Text(LevelMark.name(criterion.level))
-                                .foregroundStyle(LevelMark.color(criterion.level))
-                            if let role {
-                                Text("·").foregroundStyle(Palette.faint)
-                                Text(role.text).foregroundStyle(role.color)
-                            }
-                        }
-                        .font(Typeface.label(14))
-                    }
+                HStack(alignment: .firstTextBaseline, spacing: Space.md) {
+                    Text(criterionLabel(criterion.id))
+                        .font(Typeface.label(16))
+                        .foregroundStyle(Palette.ink)
+                        .multilineTextAlignment(.leading)
+                        .fixedSize(horizontal: false, vertical: true)
                     Spacer(minLength: Space.sm)
+                    LevelPill(level: criterion.level)
                     Image(systemName: "chevron.down")
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundStyle(Palette.muted)
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(Palette.faint)
                         .rotationEffect(.degrees(isOpen ? 180 : 0))
-                        .padding(.top, 5)
                 }
                 .padding(.vertical, Space.lg)
                 .contentShape(Rectangle())
@@ -266,7 +250,6 @@ struct DebriefView: View {
                         .fixedSize(horizontal: false, vertical: true)
                     ForEach(criterion.evidence, id: \.turnId) { quote($0) }
                 }
-                .padding(.leading, LevelMark.defaultSize + Space.md)
                 .padding(.bottom, Space.lg)
                 .transition(.opacity)
             }
@@ -458,22 +441,19 @@ struct DebriefView: View {
 
     // MARK: Actions
 
-    /// The retry leads when there's a moment to go back to — the fastest way
-    /// from "try one change" to having actually tried it.
+    /// One action at most, and never "Done": the ✕ already closes. The retry
+    /// leads when there's a moment to go back to — the fastest way from "try
+    /// one change" to having actually tried it.
     @ViewBuilder
     private var actions: some View {
         if checkpoint != nil, let onRetry {
-            VStack(spacing: Space.xs) {
-                PrimaryButton(title: "Retry this moment · 90 sec", systemImage: "arrow.counterclockwise", action: onRetry)
-                QuietButton(title: "Done", action: onDone)
-            }
+            PrimaryButton(title: "Retry this moment · 90 sec", systemImage: "arrow.counterclockwise", action: onRetry)
         } else if comparison != nil || report.analysis.custom != nil, let onRehearseAgain {
-            VStack(spacing: Space.xs) {
-                PrimaryButton(title: "Done", action: onDone)
-                QuietButton(title: report.analysis.custom == nil ? "Practise the whole scene again" : "Practise it again", color: Palette.coralDeep, action: onRehearseAgain)
-            }
-        } else {
-            PrimaryButton(title: "Done", action: onDone)
+            PrimaryButton(
+                title: report.analysis.custom == nil ? "Practise the whole scene again" : "Practise it again",
+                systemImage: "mic.fill",
+                action: onRehearseAgain
+            )
         }
     }
 
@@ -513,10 +493,7 @@ struct DebriefView: View {
                     .font(Typeface.label(14))
                     .foregroundStyle(faded ? Palette.muted : Palette.ink)
                 Spacer()
-                LevelMark(level: result.level, size: 18)
-                Text(LevelMark.name(result.level))
-                    .font(Typeface.label(13))
-                    .foregroundStyle(faded ? Palette.muted : LevelMark.color(result.level))
+                LevelPill(level: result.level, faded: faded)
             }
             if let quote = result.evidence.first?.quote {
                 SpeechBubble(text: AttributedString(quote), speaker: .user, size: 15)
@@ -684,17 +661,13 @@ private struct MarkLabel: View {
     }
 }
 
-/// A criterion's level at a glance: a sage check (clearly), a half-filled
-/// coral disc (partly), a dashed ring (not yet observed). Shape carries the
-/// level as well as colour. The debrief and Progress share it, with its
-/// words, so a level looks and reads the same everywhere.
-struct LevelMark: View {
-    static let defaultSize: CGFloat = 22
-
+/// A criterion's level in one plain word on a soft pill: Clearly (sage),
+/// Partly (coral), Not yet (grey). Words, not symbols: the dashed and
+/// half-filled marks this replaced needed a legend nobody had.
+struct LevelPill: View {
     let level: Int
-    var size: CGFloat = defaultSize
+    var faded = false
 
-    /// The level in a word, never a number.
     static func name(_ level: Int) -> String {
         ["Not yet", "Partly", "Clearly"][min(max(level, 0), 2)]
     }
@@ -704,27 +677,15 @@ struct LevelMark: View {
     }
 
     var body: some View {
-        // Strokes thin out with the mark, so a row-sized mark isn't all rim.
-        let line = max(1.5, size * 0.09)
-        ZStack {
-            switch level {
-            case 2...:
-                Circle().fill(Palette.sage)
-                Image(systemName: "checkmark")
-                    .font(.system(size: size * 0.46, weight: .bold))
-                    .foregroundStyle(.white)
-            case 1:
-                Circle().strokeBorder(Palette.coral, lineWidth: line)
-                Circle()
-                    .fill(Palette.coral)
-                    .mask(alignment: .leading) { Rectangle().frame(width: size / 2) }
-            default:
-                Circle().strokeBorder(Palette.muted.opacity(0.7), style: StrokeStyle(lineWidth: line, dash: [size * 0.14, size * 0.14]))
-            }
-        }
-        .frame(width: size, height: size)
-        .accessibilityElement()
-        .accessibilityLabel(["Not yet observed", "Partly demonstrated", "Clearly demonstrated"][min(max(level, 0), 2)])
+        let color = faded ? Palette.muted : Self.color(level)
+        Text(Self.name(level))
+            .font(Typeface.label(13))
+            .foregroundStyle(color)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 4)
+            .background(Capsule().fill(color.opacity(0.12)))
+            .fixedSize()
+            .accessibilityLabel(["Not yet shown", "Partly shown", "Clearly shown"][min(max(level, 0), 2)])
     }
 }
 

@@ -2,7 +2,9 @@ import StoreKit
 import SwiftUI
 
 /// Settings as a sheet over Profile: a hero title with the close ✕, then
-/// grouped glass rows. Rows name things; they don't explain them.
+/// grouped glass rows under quiet sentence-case labels, ending with the
+/// account's exits as rows of their own. Rows name things; they don't
+/// explain them.
 struct SettingsView: View {
     let model: AppModel
 
@@ -12,17 +14,27 @@ struct SettingsView: View {
     @State private var deleting = false
     @State private var remindersOn = Reminders.isEnabled
     @State private var sendingFeedback = false
+    @State private var showsRoutine = false
 
     private var subscriptions: Subscriptions { model.subscriptions }
 
     var body: some View {
+        NavigationStack {
+            content
+                .navigationDestination(isPresented: $showsRoutine) {
+                    RoutineView(routine: model.routine, language: model.profile?.language ?? "en", onBack: { showsRoutine = false })
+                }
+        }
+    }
+
+    private var content: some View {
         SceneScreen(depth: 0.1) {
             HStack {
                 Text("Settings")
                     .font(Typeface.hero(28))
                     .foregroundStyle(Palette.ink)
                 Spacer()
-                GlassIconButton(systemImage: "xmark", size: 56, iconSize: 18, color: Palette.dim, accessibilityLabel: "Close") { dismiss() }
+                GlassIconButton(systemImage: "xmark", size: 44, iconSize: 15, color: Palette.dim, accessibilityLabel: "Close") { dismiss() }
             }
             .padding(.top, Space.lg)
 
@@ -42,6 +54,8 @@ struct SettingsView: View {
                 }
 
                 section("Practice") {
+                    rowButton(GlassRow(icon: "alarm.fill", title: "Practice routine", value: routineSummary, showsChevron: true)) { showsRoutine = true }
+                    GlassRowDivider()
                     Menu {
                         Picker("Practice language", selection: Binding(
                             get: { model.profile?.language ?? "en" },
@@ -81,11 +95,9 @@ struct SettingsView: View {
                     .padding(.vertical, Space.md)
                 }
 
-                section("Help") {
+                section("Help and legal") {
                     rowButton(GlassRow(icon: "bubble.left.fill", title: "Send feedback", showsChevron: true)) { sendingFeedback = true }
-                }
-
-                section("About") {
+                    GlassRowDivider()
                     rowButton(GlassRow(icon: "hand.raised.fill", title: "Privacy policy", showsChevron: true)) { UIApplication.shared.open(AppConfig.privacyURL) }
                     GlassRowDivider()
                     rowButton(GlassRow(icon: "doc.text.fill", title: "Terms of use", showsChevron: true)) { UIApplication.shared.open(AppConfig.termsURL) }
@@ -95,9 +107,10 @@ struct SettingsView: View {
                     Text(notice).font(Typeface.body(14)).foregroundStyle(Palette.coralDeep)
                 }
 
-                VStack(spacing: Space.sm) {
-                    SecondaryButton(title: "Sign out") { confirmingSignOut = true }
-                    QuietButton(title: "Delete account", color: Palette.danger) { deleting = true }
+                GlassRowGroup {
+                    rowButton(GlassRow(icon: "rectangle.portrait.and.arrow.right", iconColor: Palette.dim, title: "Sign out")) { confirmingSignOut = true }
+                    GlassRowDivider()
+                    rowButton(GlassRow(icon: "trash", iconColor: Palette.danger, title: "Delete account", titleColor: Palette.danger)) { deleting = true }
                 }
 
                 Text("Version \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "")")
@@ -124,6 +137,17 @@ struct SettingsView: View {
         .onAppear { Analytics.enter("settings") }
     }
 
+    /// What the routine is set to, in a word or two: "8:00 AM", "8:00 AM ·
+    /// Unlock", "Unlock", or "Off".
+    private var routineSummary: String {
+        let settings = model.routine.settings
+        let parts = [
+            settings.promptEnabled ? RoutineStore.clock(settings.promptMinutes) : nil,
+            settings.unlockEnabled ? "Unlock" : nil,
+        ].compactMap { $0 }
+        return parts.isEmpty ? "Off" : parts.joined(separator: " · ")
+    }
+
     private var subscriptionStatus: String {
         switch subscriptions.access {
         case .entitled:
@@ -148,9 +172,14 @@ struct SettingsView: View {
             .buttonStyle(.plain)
     }
 
+    /// A quiet sentence-case label over one card. Settings has several small
+    /// groups, so full section titles would shout; the labels just sort.
     private func section<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: Space.sm) {
-            Kicker(text: title)
+            Text(title)
+                .font(Typeface.label(14))
+                .foregroundStyle(Palette.dim)
+                .padding(.leading, Space.xs)
             GlassRowGroup { content() }
         }
     }

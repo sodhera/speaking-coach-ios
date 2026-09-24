@@ -67,9 +67,9 @@ final class ProgressTests: XCTestCase {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = .current
         let now = try XCTUnwrap(calendar.date(from: DateComponents(year: 2026, month: 9, day: 24, hour: 12)))
-        XCTAssertTrue(ProgressScreen.when(now, now: now, calendar: calendar).hasPrefix("Today, "))
-        XCTAssertTrue(ProgressScreen.when(now.addingTimeInterval(-86_400), now: now, calendar: calendar).hasPrefix("Yesterday, "))
-        XCTAssertEqual(ProgressScreen.day(now, now: now, calendar: calendar), "today")
-        XCTAssertEqual(ProgressScreen.day(now.addingTimeInterval(-86_400), now: now, calendar: calendar), "yesterday")
+        XCTAssertTrue(SessionText.when(now, now: now, calendar: calendar).hasPrefix("Today, "))
+        XCTAssertTrue(SessionText.when(now.addingTimeInterval(-86_400), now: now, calendar: calendar).hasPrefix("Yesterday, "))
+        XCTAssertEqual(SessionText.day(now, now: now, calendar: calendar), "today")
+        XCTAssertEqual(SessionText.day(now.addingTimeInterval(-86_400), now: now, calendar: calendar), "yesterday")
     }
 }

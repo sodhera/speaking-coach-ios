@@ -1,7 +1,6 @@
 import SwiftUI
 
-/// **Progress — showing up, and what you've done.** Two reads, in the same
-/// language as Practice:
+/// **What you've done**, as Profile shows it under your name. Two reads:
 ///
 /// 1. **This week.** A disc per day, ticked when they practised. The
 ///    streak's number stays on Practice, where it asks for today.
@@ -9,7 +8,7 @@ import SwiftUI
 ///    feedback. Retries sit under the session they went back to.
 ///
 /// Honest by construction: every count is a saved report.
-struct ProgressScreen: View {
+struct ActivitySections: View {
     let model: AppModel
     var onOpenReport: (PracticeReport) -> Void = { _ in }
 
@@ -25,23 +24,14 @@ struct ProgressScreen: View {
     private var entries: [RehearsalEntry] { RehearsalEntry.entries(from: history.records) }
 
     var body: some View {
-        SceneScreen(depth: 0.2) {
-            Text("Progress")
-                .font(Typeface.hero(28))
-                .foregroundStyle(Palette.ink)
-                .padding(.top, Space.md)
-                .accessibilityAddTraits(.isHeader)
-
+        VStack(alignment: .leading, spacing: 0) {
             WeekCard(week: week, loaded: history.loaded, isNew: history.loaded && history.records.isEmpty)
-                .padding(.top, Space.lg)
 
             SectionTitle(text: "History")
                 .padding(.top, Space.xxxl)
             historyList
                 .padding(.top, Space.md)
         }
-        .refreshable { if let id = model.userID { await history.load(userID: id) } }
-        .onAppear { Analytics.enter("progress") }
     }
 
     // MARK: History
@@ -83,7 +73,7 @@ struct ProgressScreen: View {
     private func sessionRow(_ record: PracticeRecord) -> some View {
         Button { open(record) } label: {
             HStack(spacing: Space.md) {
-                GlassRowIcon(icon: record.parentID == nil ? Self.icon(for: record) : "arrow.counterclockwise")
+                GlassRowIcon(icon: record.parentID == nil ? SessionText.icon(for: record) : "arrow.counterclockwise")
                 VStack(alignment: .leading, spacing: 3) {
                     Text(record.title)
                         .font(Typeface.label(16))
@@ -92,7 +82,7 @@ struct ProgressScreen: View {
                         .fixedSize(horizontal: false, vertical: true)
                     // A retry whose session is too old to be listed stands
                     // alone, so it says what it is.
-                    Text(Self.when(record.date) + (record.parentID == nil ? "" : " · Retry"))
+                    Text(SessionText.when(record.date) + (record.parentID == nil ? "" : " · Retry"))
                         .font(Typeface.body(13))
                         .foregroundStyle(Palette.muted)
                         .lineLimit(1)
@@ -118,7 +108,7 @@ struct ProgressScreen: View {
                 Text("Retry")
                     .font(Typeface.label(14))
                     .foregroundStyle(Palette.ink)
-                Text(Self.when(retry.date))
+                Text(SessionText.when(retry.date))
                     .font(Typeface.body(13))
                     .foregroundStyle(Palette.muted)
                     .lineLimit(1)
@@ -155,9 +145,12 @@ struct ProgressScreen: View {
             opening = nil
         }
     }
+}
 
-    // MARK: Formatting
+// MARK: - Formatting
 
+/// How a session is named and dated wherever it's listed.
+enum SessionText {
     static func icon(for record: PracticeRecord) -> String {
         if let id = record.activityID, let practice = PracticeCatalog.definition(id),
            let category = PracticeCategory(rawValue: practice.category) {

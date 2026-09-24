@@ -1,6 +1,8 @@
 import SwiftUI
 
-/// One deck: its slides, who it's for, and every time you've rehearsed it.
+/// One deck, in the same language as the rest of the app: a quiet line of
+/// facts over the title, the slides, the audience as one card, then every
+/// session with it.
 struct DeckView: View {
     let store: PresentationStore
     let deck: PresentationDeck
@@ -40,75 +42,77 @@ struct DeckView: View {
         ZStack {
             MorningStage(depth: 0.3, ripples: false)
             VStack(spacing: 0) {
-                ScrollView(showsIndicators: false) {
-                    VStack(alignment: .leading, spacing: Space.xxl) {
-                        HStack {
-                            GlassBackButton { save(); onBack() }
-                            Spacer()
-                            Menu {
-                                Button("Delete presentation", systemImage: "trash", role: .destructive) { confirmingDelete = true }
-                            } label: {
-                                Image(systemName: "ellipsis")
-                                    .font(.system(size: 16, weight: .semibold))
-                                    .foregroundStyle(Palette.ink)
-                                    .frame(width: 44, height: 44)
-                                    .glassSurface(cornerRadius: 22, interactive: true)
-                            }
-                            .accessibilityLabel("More")
-                        }
+                // Pinned, so the controls never slide under the status bar's fade.
+                header
+                    .padding(.horizontal, Space.xxl)
+                    .padding(.top, Space.sm)
 
+                ScrollView(showsIndicators: false) {
+                    VStack(alignment: .leading, spacing: 0) {
+                        Text(summary)
+                            .font(Typeface.label(14))
+                            .foregroundStyle(Palette.muted)
                         TextField("", text: $title, prompt: Text("Presentation title"), axis: .vertical)
                             .font(Typeface.hero(28))
                             .foregroundStyle(Palette.ink)
                             .tint(Palette.coral)
+                            .lineLimit(1...4)
                             .focused($focus, equals: .title)
                             .submitLabel(.done)
+                            .padding(.top, Space.xs)
 
                         slides
+                            .padding(.top, Space.lg)
 
-                        VStack(alignment: .leading, spacing: Space.lg) {
-                            Kicker(text: "Your audience")
+                        SectionTitle(text: "Your audience")
+                            .padding(.top, Space.xxl)
+                        GlassRowGroup {
                             field("Who's listening?", text: $brief.audience, prompt: "e.g. the leadership team", focus: .audience)
+                            GlassRowDivider()
                             field("What should they do after?", text: $brief.purpose, prompt: "e.g. approve the budget for Q3", focus: .purpose)
-                            field("Anything they'd push on? (optional)", text: $brief.instructions, prompt: "e.g. they worry about timelines", focus: .instructions, multiline: true)
-                            Segmented(title: "How hard should they push?", options: PresentationBrief.QuestionStyle.allCases, selection: $brief.questionStyle) {
-                                switch $0 {
-                                case .supportive: "Gently"
-                                case .curious: "Curious"
-                                case .challenging: "Tough"
-                                }
+                            GlassRowDivider()
+                            field("Anything they'd push on?", text: $brief.instructions, prompt: "Optional · e.g. they worry about timelines", focus: .instructions, multiline: true)
+                        }
+                        .padding(.top, Space.md)
+
+                        Segmented(title: "How hard should they push?", options: PresentationBrief.QuestionStyle.allCases, selection: $brief.questionStyle) {
+                            switch $0 {
+                            case .supportive: "Gently"
+                            case .curious: "Curious"
+                            case .challenging: "Tough"
                             }
                         }
+                        .padding(.top, Space.xl)
 
                         if !rehearsals.isEmpty {
-                            VStack(alignment: .leading, spacing: Space.md) {
-                                Kicker(text: "Sessions")
-                                GlassRowGroup {
-                                    ForEach(Array(rehearsals.enumerated()), id: \.element.id) { index, rehearsal in
-                                        if index > 0 { GlassRowDivider() }
-                                        Button {
-                                            Haptics.heavy()
-                                            reviewing = rehearsal
-                                        } label: {
-                                            GlassRow(
-                                                icon: "waveform",
-                                                title: rehearsal.startedAt.formatted(.dateTime.month(.abbreviated).day().hour().minute()),
-                                                value: Self.duration(rehearsal.durationMs),
-                                                showsChevron: true
-                                            )
-                                        }
-                                        .buttonStyle(.plain)
+                            SectionTitle(text: "Sessions")
+                                .padding(.top, Space.xxl)
+                            GlassRowGroup {
+                                ForEach(Array(rehearsals.enumerated()), id: \.element.id) { index, rehearsal in
+                                    if index > 0 { GlassRowDivider() }
+                                    Button {
+                                        Haptics.heavy()
+                                        reviewing = rehearsal
+                                    } label: {
+                                        GlassRow(
+                                            icon: "waveform",
+                                            title: SessionText.when(rehearsal.startedAt),
+                                            value: Self.duration(rehearsal.durationMs),
+                                            showsChevron: true
+                                        )
                                     }
+                                    .buttonStyle(.plain)
                                 }
                             }
+                            .padding(.top, Space.md)
                         }
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, Space.xxl)
+                    .padding(.top, Space.lg)
                     .padding(.bottom, Space.huge)
                 }
                 .scrollDismissesKeyboard(.interactively)
-                .safeAreaPadding(.top)
                 .bottomEdgeFade()
 
                 PrimaryButton(title: rehearsals.isEmpty ? "Practise it" : "Practise again", systemImage: "mic.fill") {
@@ -120,8 +124,9 @@ struct DeckView: View {
                 .padding(.bottom, Space.sm)
             }
         }
-        .statusBarScrim()
         .toolbar(.hidden, for: .navigationBar)
+        // A page with its own action at the bottom: the tab bar steps aside.
+        .toolbar(.hidden, for: .tabBar)
         .swipeBack { save(); onBack() }
         .onDisappear(perform: save)
         .fullScreenCover(isPresented: $rehearsing) {
@@ -140,6 +145,34 @@ struct DeckView: View {
         }
     }
 
+    private var header: some View {
+        HStack {
+            GlassBackButton { save(); onBack() }
+            Spacer()
+            Menu {
+                Button("Delete presentation", systemImage: "trash", role: .destructive) { confirmingDelete = true }
+            } label: {
+                Image(systemName: "ellipsis")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(Palette.ink)
+                    .frame(width: 44, height: 44)
+                    .glassSurface(cornerRadius: 22, interactive: true)
+            }
+            .accessibilityLabel("More")
+        }
+    }
+
+    /// "12 slides · Practised twice", quietly above the title.
+    private var summary: String {
+        let slides = deck.slideCount == 1 ? "1 slide" : "\(deck.slideCount) slides"
+        switch rehearsals.count {
+        case 0: return "\(slides) · Not practised yet"
+        case 1: return "\(slides) · Practised once"
+        case 2: return "\(slides) · Practised twice"
+        default: return "\(slides) · Practised \(rehearsals.count) times"
+        }
+    }
+
     private var slides: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             LazyHStack(spacing: Space.md) {
@@ -154,14 +187,23 @@ struct DeckView: View {
         .frame(height: 150)
     }
 
+    /// A question and its answer as one row of the audience card.
     private func field(_ label: String, text: Binding<String>, prompt: String, focus field: Field, multiline: Bool = false) -> some View {
-        VStack(alignment: .leading, spacing: Space.sm) {
-            Text(label).font(Typeface.label(14)).foregroundStyle(Palette.dim)
-            TextField("", text: text, prompt: Text(prompt).foregroundStyle(Palette.muted), axis: multiline ? .vertical : .horizontal)
-                .lineLimit(multiline ? 2...5 : 1...1)
+        VStack(alignment: .leading, spacing: Space.xs) {
+            Text(label)
+                .font(Typeface.label(13))
+                .foregroundStyle(Palette.muted)
+            TextField("", text: text, prompt: Text(prompt).foregroundStyle(Palette.faint), axis: multiline ? .vertical : .horizontal)
+                .font(Typeface.body(16))
+                .foregroundStyle(Palette.ink)
+                .tint(Palette.coral)
+                .lineLimit(multiline ? 1...5 : 1...1)
                 .focused($focus, equals: field)
-                .modifier(InputChrome(focused: focus == field))
         }
+        .padding(.vertical, Space.md)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .contentShape(Rectangle())
+        .onTapGesture { focus = field }
     }
 
     private func save() {

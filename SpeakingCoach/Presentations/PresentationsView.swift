@@ -63,6 +63,8 @@ struct PresentationsView: View {
         }
         .statusBarScrim()
         .toolbar(.hidden, for: .navigationBar)
+        // A page with its own action at the bottom: the tab bar steps aside.
+        .toolbar(.hidden, for: .tabBar)
         .swipeBack(onBack)
         .navigationDestination(item: $selected) { id in
             if let deck = store.decks.first(where: { $0.id == id }) {

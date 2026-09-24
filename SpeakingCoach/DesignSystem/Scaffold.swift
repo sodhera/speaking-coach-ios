@@ -94,7 +94,6 @@ struct SceneScreen<Content: View>: View {
                     .padding(.horizontal, Space.xxl)
                     .padding(.bottom, 140)
             }
-            .safeAreaPadding(.top)
         }
         .statusBarScrim()
         .toolbar(.hidden, for: .navigationBar)

@@ -102,6 +102,7 @@ struct RootView: View {
         }
         .fullScreenCover(item: $launch) { launch in
             sessionView(for: launch)
+                .environment(\.stageStyle, .flat)
         }
         .onOpenURL { links.pending = $0 }
         .onChange(of: links.pending) { _, _ in openPendingLink() }
@@ -159,6 +160,9 @@ struct RootView: View {
             .opacity(contentVisible ? 1 : 0)
         }
         .statusBarScrim()
+        // This scrim sits over every screen, so it takes the app's flat
+        // ground once the user is in; the gates keep the sunrise's paper.
+        .environment(\.stageStyle, displayedScreen == .main ? .flat : .morning)
     }
 
     @ViewBuilder

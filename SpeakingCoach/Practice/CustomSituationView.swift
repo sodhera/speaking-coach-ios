@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// "My own situation": any conversation the catalog doesn't have. Two
+/// "Custom situation": any conversation the catalog doesn't have. Two
 /// questions — who, and what you need to say — then a quick check that
 /// hands the scene back in one friendly line before the partner plays it.
 struct CustomSituationView: View {
@@ -29,34 +29,55 @@ struct CustomSituationView: View {
             VStack(spacing: 0) {
                 ScrollView {
                     VStack(alignment: .leading, spacing: Space.xxl) {
-                        SubpageHeader(
-                            title: "My own situation",
-                            subtitle: "Describe the conversation you need to have. Your partner will play the other side.",
-                            onBack: onBack
-                        )
-
-                        field("Who will you be talking to?") {
-                            TextField("", text: $partner, prompt: Text("e.g. my landlord").foregroundStyle(Palette.muted))
-                                .focused($focus, equals: .partner)
-                                .submitLabel(.next)
-                                .onSubmit { focus = .description }
-                                .modifier(InputChrome(focused: focus == .partner))
+                        HStack {
+                            GlassBackButton(action: onBack)
+                            Spacer()
                         }
+                        .padding(.top, Space.sm)
 
-                        field("What do you need to say?") {
-                            TextField(
-                                "",
-                                text: $description,
-                                prompt: Text("e.g. I need my deposit back, and they keep avoiding the subject.").foregroundStyle(Palette.muted),
-                                axis: .vertical
-                            )
-                            .lineLimit(3...8)
-                            .focused($focus, equals: .description)
-                            .modifier(InputChrome(focused: focus == .description))
-                            .onChange(of: description) { _, text in
-                                if text.count > 1200 { description = String(text.prefix(1200)) }
-                                confirmation = nil
-                                problem = nil
+                        // Centred like the briefing, which this page is for
+                        // a scene the user writes themselves.
+                        VStack(spacing: 0) {
+                            SessionCover(symbol: "square.and.pencil", size: 88)
+                            Text("Custom situation")
+                                .font(Typeface.hero(28))
+                                .foregroundStyle(Palette.ink)
+                                .multilineTextAlignment(.center)
+                                .padding(.top, Space.xl)
+                            Text("Describe any conversation. Your partner plays the other side.")
+                                .font(Typeface.body(16))
+                                .foregroundStyle(Palette.dim)
+                                .multilineTextAlignment(.center)
+                                .fixedSize(horizontal: false, vertical: true)
+                                .padding(.top, Space.sm)
+                                .padding(.horizontal, Space.lg)
+                        }
+                        .frame(maxWidth: .infinity)
+
+                        // Both questions in one card, each asked inside it, like
+                        // the presentation's audience card.
+                        GlassRowGroup {
+                            question("Who will you be talking to?", focus: .partner) {
+                                TextField("", text: $partner, prompt: Text("e.g. my landlord").foregroundStyle(Palette.faint))
+                                    .focused($focus, equals: .partner)
+                                    .submitLabel(.next)
+                                    .onSubmit { focus = .description }
+                            }
+                            GlassRowDivider()
+                            question("What do you need to say?", focus: .description) {
+                                TextField(
+                                    "",
+                                    text: $description,
+                                    prompt: Text("e.g. I need my deposit back, and they keep avoiding the subject.").foregroundStyle(Palette.faint),
+                                    axis: .vertical
+                                )
+                                .lineLimit(2...8)
+                                .focused($focus, equals: .description)
+                                .onChange(of: description) { _, text in
+                                    if text.count > 1200 { description = String(text.prefix(1200)) }
+                                    confirmation = nil
+                                    problem = nil
+                                }
                             }
                         }
 
@@ -110,6 +131,8 @@ struct CustomSituationView: View {
         }
         .statusBarScrim()
         .toolbar(.hidden, for: .navigationBar)
+        // A page with its own action at the bottom: the tab bar steps aside.
+        .toolbar(.hidden, for: .tabBar)
         .animation(.easeInOut(duration: 0.25), value: confirmation)
         .onAppear { Analytics.enter("custom_situation") }
     }
@@ -155,11 +178,21 @@ struct CustomSituationView: View {
         return "Talking to \(lowered)"
     }
 
-    private func field<Content: View>(_ label: String, @ViewBuilder content: () -> Content) -> some View {
-        VStack(alignment: .leading, spacing: Space.sm) {
-            Text(label).font(Typeface.label(15)).foregroundStyle(Palette.ink)
+    /// One question of the card: asked small and grey, answered below it.
+    private func question<Content: View>(_ label: String, focus field: Field, @ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: Space.xs) {
+            Text(label)
+                .font(Typeface.label(13))
+                .foregroundStyle(Palette.muted)
             content()
+                .font(Typeface.body(16))
+                .foregroundStyle(Palette.ink)
+                .tint(Palette.coral)
         }
+        .padding(.vertical, Space.md)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .contentShape(Rectangle())
+        .onTapGesture { focus = field }
     }
 }
 

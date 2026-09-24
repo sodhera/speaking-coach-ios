@@ -15,7 +15,17 @@ struct MorningStage: View {
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
+    @Environment(\.stageStyle) private var style
+
     var body: some View {
+        if style == .flat {
+            AppGround()
+        } else {
+            sunrise
+        }
+    }
+
+    private var sunrise: some View {
         GeometryReader { proxy in
             let size = proxy.size
             let sunCenter = CGPoint(x: size.width / 2, y: size.height * (1.12 - 0.10 * depth))
@@ -70,7 +80,17 @@ extension MorningStage {
 /// so a slice of it lies pixel-for-pixel over the real stage. The sun never
 /// reaches the top of the screen, which is the only place this is used.
 struct MorningPaper: View {
+    @Environment(\.stageStyle) private var style
+
     var body: some View {
+        if style == .flat {
+            AppGround()
+        } else {
+            paper
+        }
+    }
+
+    private var paper: some View {
         ZStack {
             MorningStage.sky
             GrainOverlay()
@@ -80,6 +100,53 @@ struct MorningPaper: View {
         .ignoresSafeArea()
         .accessibilityHidden(true)
     }
+}
+
+/// Which ground a screen stands on. Onboarding, the paywall and the setup
+/// gates keep the sunrise: it tells their story, warming as the user
+/// commits. The app itself stands on flat ground, so its cards carry the
+/// screen and nothing drifts behind the content.
+enum StageStyle { case morning, flat }
+
+private struct StageStyleKey: EnvironmentKey {
+    static let defaultValue = StageStyle.morning
+}
+
+extension EnvironmentValues {
+    var stageStyle: StageStyle {
+        get { self[StageStyleKey.self] }
+        set { self[StageStyleKey.self] = newValue }
+    }
+}
+
+/// The app's ground: one flat warm tone, no gradient, grain or ripples.
+struct AppGround: View {
+    var body: some View {
+        ground
+            .ignoresSafeArea()
+            .accessibilityHidden(true)
+    }
+
+    @ViewBuilder
+    private var ground: some View {
+        #if DEBUG
+        if LaunchFlags.value("-ground-style") == "flat" {
+            Palette.ground
+        } else {
+            AppGround.warmLight
+        }
+        #else
+        AppGround.warmLight
+        #endif
+    }
+
+    /// Warm paper lit faintly from above: a touch lighter at the top than
+    /// the bottom, never reaching the old sunrise's tan.
+    static let warmLight = LinearGradient(
+        colors: [Color(hex: 0xFAF6F2), Color(hex: 0xF3ECE5)],
+        startPoint: .top,
+        endPoint: .bottom
+    )
 }
 
 /// Concentric rings expanding off the sun and fading as they travel —

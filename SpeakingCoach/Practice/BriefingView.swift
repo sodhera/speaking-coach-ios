@@ -49,19 +49,27 @@ struct BriefingView: View {
 
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
-                        SessionCover(symbol: PracticeCategory(rawValue: practice.category)?.icon ?? "mic.fill", size: 88)
+                        // Centred like an album page, so the cover, title
+                        // and goal balance the full-width card below.
+                        VStack(spacing: 0) {
+                            SessionCover(symbol: PracticeCategory(rawValue: practice.category)?.icon ?? "mic.fill", size: 112)
 
-                        Text(practice.title)
-                            .font(Typeface.hero(30))
-                            .foregroundStyle(Palette.ink)
-                            .fixedSize(horizontal: false, vertical: true)
-                            .padding(.top, Space.xl)
-                        Text(practice.objective)
-                            .font(Typeface.body(16))
-                            .foregroundStyle(Palette.dim)
-                            .lineSpacing(2)
-                            .fixedSize(horizontal: false, vertical: true)
-                            .padding(.top, Space.sm)
+                            Text(practice.title)
+                                .font(Typeface.hero(28))
+                                .foregroundStyle(Palette.ink)
+                                .multilineTextAlignment(.center)
+                                .fixedSize(horizontal: false, vertical: true)
+                                .padding(.top, Space.xl)
+                            Text(practice.objective)
+                                .font(Typeface.body(16))
+                                .foregroundStyle(Palette.dim)
+                                .multilineTextAlignment(.center)
+                                .lineSpacing(2)
+                                .fixedSize(horizontal: false, vertical: true)
+                                .padding(.top, Space.sm)
+                                .padding(.horizontal, Space.lg)
+                        }
+                        .frame(maxWidth: .infinity)
 
                         details
                             .padding(.top, Space.xxl)
@@ -84,6 +92,8 @@ struct BriefingView: View {
             }
         }
         .toolbar(.hidden, for: .navigationBar)
+        // A page with its own action at the bottom: the tab bar steps aside.
+        .toolbar(.hidden, for: .tabBar)
         .onAppear { Analytics.enter("briefing") }
         .sheet(isPresented: $adjusting) {
             SceneScreen(depth: 0.4) {
@@ -97,10 +107,11 @@ struct BriefingView: View {
                         adjusting = false
                     }
                     .font(Typeface.label(16))
-                    .foregroundStyle(Palette.coralDeep)
+                    .foregroundStyle(Palette.ink)
+                    .frame(minWidth: 44, minHeight: 44)
                 }
                 .padding(.top, Space.lg)
-                .padding(.bottom, Space.xxl)
+                .padding(.bottom, Space.xl)
                 adjustments
             }
             .presentationDragIndicator(.visible)
@@ -172,12 +183,16 @@ struct BriefingView: View {
 
     private var adjustments: some View {
         VStack(alignment: .leading, spacing: Space.xl) {
-            VStack(alignment: .leading, spacing: Space.sm) {
-                label("Your situation")
+            // The situation as one card, its question inside, like the
+            // presentation's audience card.
+            VStack(alignment: .leading, spacing: Space.xs) {
+                Text("Your situation")
+                    .font(Typeface.label(13))
+                    .foregroundStyle(Palette.muted)
                 TextField(
                     "",
                     text: $setup.situation,
-                    prompt: Text("e.g. It's a product role at a startup").foregroundStyle(Palette.muted),
+                    prompt: Text("Optional · e.g. it's a product role at a startup").foregroundStyle(Palette.faint),
                     axis: .vertical
                 )
                 .lineLimit(2...5)
@@ -185,12 +200,15 @@ struct BriefingView: View {
                 .foregroundStyle(Palette.ink)
                 .tint(Palette.coral)
                 .focused($situationFocused)
-                .padding(Space.lg)
-                .glassSurface(cornerRadius: Corner.md, interactive: true)
                 .onChange(of: setup.situation) { _, text in
                     if text.count > 1200 { setup.situation = String(text.prefix(1200)) }
                 }
             }
+            .padding(Space.lg)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
+            .onTapGesture { situationFocused = true }
+            .glassSurface(cornerRadius: Corner.lg)
             Segmented(title: "Pressure", options: PracticeSetup.Pressure.allCases, selection: $setup.pressure, label: pressureName)
             Segmented(title: "Pace", options: PracticeSetup.Pacing.allCases, selection: $setup.pacing) {
                 $0 == .patient ? "Time to think" : "Natural"
@@ -200,56 +218,61 @@ struct BriefingView: View {
             }
         }
     }
-
-    private func label(_ text: String) -> some View {
-        Text(text).font(Typeface.label(14)).foregroundStyle(Palette.dim)
-    }
 }
 
-/// A row of glass capsules, one selected — the app's segmented control.
+/// The app's segmented control is Apple's own, so on iOS 26 the choice is
+/// the system's Liquid Glass thumb. You can hold it and drag it across, and
+/// it stretches and ticks as it goes; a custom look-alike could never do
+/// that. We only restyle its words: DM Sans, and the chosen word in coral,
+/// the control's one accent. The thumb stays the system's own; a tinted
+/// thumb read as pink.
 struct Segmented<Option: Hashable>: View {
     let title: String
     let options: [Option]
     @Binding var selection: Option
     let label: (Option) -> String
 
+    init(title: String, options: [Option], selection: Binding<Option>, label: @escaping (Option) -> String) {
+        self.title = title
+        self.options = options
+        _selection = selection
+        self.label = label
+        _ = SegmentedAppearance.applied
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: Space.sm) {
-            Text(title).font(Typeface.label(14)).foregroundStyle(Palette.dim)
-            GlassGroup(spacing: Space.sm) {
-                HStack(spacing: Space.sm) {
-                    ForEach(options, id: \.self) { option in
-                        let isSelected = option == selection
-                        Button {
-                            Haptics.selection()
-                            selection = option
-                        } label: {
-                            Text(label(option))
-                                .font(Typeface.label(15))
-                                .foregroundStyle(isSelected ? .white : Palette.ink)
-                                .frame(maxWidth: .infinity, minHeight: 44)
-                                // Selection is drawn inside the glass: inside
-                                // a glass container, overlays get absorbed.
-                                .background(Capsule().fill(Palette.coral.opacity(isSelected ? 1 : 0)))
-                                .contentShape(Capsule())
-                        }
-                        .buttonStyle(SegmentStyle(isSelected: isSelected))
-                        .accessibilityAddTraits(isSelected ? .isSelected : [])
-                    }
+            Text(title)
+                .font(Typeface.label(14))
+                .foregroundStyle(Palette.dim)
+                .padding(.leading, Space.xs)
+            Picker(title, selection: $selection) {
+                ForEach(options, id: \.self) { option in
+                    Text(label(option)).tag(option)
                 }
             }
+            .pickerStyle(.segmented)
+            .labelsHidden()
+            .controlSize(.large)
+            .sensoryFeedback(.selection, trigger: selection)
         }
     }
 }
 
-private struct SegmentStyle: ButtonStyle {
-    let isSelected: Bool
-
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .glassSurface(cornerRadius: 22, interactive: true)
-            .animation(.easeOut(duration: 0.18), value: isSelected)
-            .scaleEffect(configuration.isPressed ? 0.96 : 1)
-            .animation(Motion.press, value: configuration.isPressed)
-    }
+/// DM Sans on every segmented control, set once. The system draws the rest.
+private enum SegmentedAppearance {
+    static let applied: Void = {
+        let control = UISegmentedControl.appearance()
+        // Warm paper, not the system's bright white: a pure-white thumb
+        // glared against the warm ground.
+        control.selectedSegmentTintColor = UIColor(Palette.skyHigh)
+        control.setTitleTextAttributes([
+            .font: Typeface.uiFont(size: 15, weight: 450),
+            .foregroundColor: UIColor(Palette.dim),
+        ], for: .normal)
+        control.setTitleTextAttributes([
+            .font: Typeface.uiFont(size: 15, weight: 550),
+            .foregroundColor: UIColor(Palette.coralDeep),
+        ], for: .selected)
+    }()
 }

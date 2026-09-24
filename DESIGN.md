@@ -136,23 +136,29 @@ Review routes: `-review-screen=home|setup|checkin` with `-review-plan-step=retry
 
 ## Main app
 
+**Custom situation** mirrors the briefing: a centred cover (the ✎ from its tile), title and one short line, then both questions in one card and the two choices. **A primary button that can't be tapped yet is neutral**, a grey glass pill with muted words that turns coral once it can go. A faded coral read as broken. This lives in `PrimaryButton`, so every screen gets it.
+
+**Pushed pages hide the tab bar.** The briefing, Custom situation, presentations, a deck, a presentation review and the preparation plan end in their own action at the bottom, so the tab bar steps aside rather than stacking under it.
+
+**Ground.** Everything after onboarding stands on warm paper lit faintly from above (`AppGround.warmLight`, #FAF6F2 at the top to #F3ECE5 at the bottom), with no grain or ripples. `MorningStage` draws it when the environment's `stageStyle` is `.flat`, which is set on the tab shell and the session cover. The sunrise stays for onboarding, the paywall and the setup gates, where it tells the story of committing. Behind real content it went muddy tan at the bottom, and its grain and ripples added noise. A flat grey (#EFEBE7) was tried in between: it was clean but read cold and dull next to the coral.
+
 **Wording.** Everything the user reads says *session* for one go at a scene and *practise* for the verb ("Start my first session", "Practise with my slides", "Your next session is ready"). "Rehearsal" read oddly in headings and counts. Code names (`RehearsalView`, `rehearsals.json`), analytics events and the content file's `format: "rehearsal"` keep the old word, because none of them reach the screen.
 
-Three tabs: Practice, Progress, Profile.
+Two tabs: Practice and Profile. Progress and Profile were separate tabs, each too thin to earn one, and both were about the user rather than what to do next, so they merged.
 
 - **Practice: a shelf of rehearsals.** Laid out like a music library (Spotify's home was the reference), because that is what it is. Earlier versions tried a near-wordless hero, a full catalog of pills and lists, and a three-card stack with a bottom button. Each one either hid the choices or crowded them. Top to bottom:
   1. **Situation and streak.** The situation is a dropdown at the top left ("Work ⌄"), a popover rather than a system menu, because iOS 26 morphs a menu back into its label and clipped the new name. It opens on the user's last pick (`practice.selectedCategory`), or their own kind of moment on first run. The menu also holds the 30-second prompt and the preparation plan. The streak chip sits top right: zero wears a hollow flame and never celebrates nothing.
-  2. **The situation's rehearsals** as compact two-column text tiles. The title gets the width, and a mark on the right appears only where it means something: a coral tick once a rehearsal is done, or the glyph of a tile that isn't a rehearsal. A repeated situation icon said nothing and cut titles short. "Practise with my slides" joins Presentations, and "My own situation" always closes the grid.
+  2. **The situation's rehearsals** as compact two-column text tiles. The title gets the width, and a mark on the right appears only where it means something: a coral tick once a rehearsal is done, or the glyph of a tile that isn't a rehearsal. A repeated situation icon said nothing and cut titles short. "Practise with my slides" joins Presentations, and "Custom situation" always closes the grid.
   3. **Up next.** One large card, the whole card a button with a chevron: a coral cover panel, a label only when it adds something ("Your plan · step 1 of 3" with three step marks, "Your event · 2 of 5 done", or a situation other than the chosen one), the title, and partner · length. Order: the first plan, then a preparation plan in progress, then the first rehearsal not yet done in the chosen situation, then anywhere.
-  4. **Recently practised.** A horizontal row of the last ten rehearsals and retries, each with its level marks, reopening its feedback.
+  4. **Recently practised.** A horizontal row of the last ten sessions and retries, as compact glass cards in the style of the tiles above: the title, the day under it, and a small situation symbol (or the retry arrow) in the corner. Cover-art squares were tried and dropped. Coral ones drowned Up next, the one coral block on the screen, and glass ones with a lone big icon looked empty. Done ticks on the tiles are sage so they don't add red. Each reopens its feedback.
 
-  There is no bottom action button. Weekly days live on Progress.
-- **Progress: showing up, and what you've done.** Same language as Practice: a hero title, one card, then a section title and a list. Two reads:
+  There is no bottom action button. Weekly days live on Profile.
+- **Profile: you, and what you've done.** The user's name is the title, with the gear beside it. Under it:
   1. **This week.** A disc per day under "This week · N sessions": ticked coral discs for days with a session, today ringed, the rest faint. It replaced a five-week calendar, which was more history than a glance needs. The streak's number stays on Practice, where it asks for today. With nothing practised yet, one line says what the card is for.
   2. **History.** Every session, newest first. Each row has a situation icon, the title and a relative date, and reopens that session's feedback. Retries sit under the session they went back to, and eight rows show before "Show more".
 
-  Removed on purpose: a Skills card (the best level reached on every rubric criterion) and a "How ready you feel" track. They were accurate but hard to read at a glance, and the per-criterion level dots on each row went with them. Feedback detail lives in each session's debrief.
-- **Profile.** A hero title with the gear, the account name, a useful next step, and practice preferences (the routine). Rehearsal activity lives in Progress. Settings is a sheet of grouped glass rows.
+  Removed on purpose: a Skills card and a "How ready you feel" track, which were accurate but hard to read at a glance; an identity card (the email lives in Settings); and "A good next step", which repeated Up next.
+- **Settings** is a sheet from the gear: a hero title with a 44pt ✕, then grouped glass rows under quiet sentence-case labels (Account, Subscription, Practice, Help and legal). Practice holds the practice routine (its row's value says what it's set to: "8:00 AM · Unlock", or "Off"), language and the daily reminder. Sign out and Delete account close the list as rows of their own, not loose buttons. The Practice routine page uses section titles.
 
 Review route: `-review-screen=progress` brings four weeks of fixture practice.
 
@@ -160,9 +166,10 @@ Review route: `-review-screen=progress` brings four weeks of fixture practice.
 
 The screens after a tap on Practice use its language, so the flow reads as one app: sentence-case labels instead of tracked uppercase kickers, section titles above plain glass cards (as "Up next" sits over its card), and `Corner.lg` cards.
 
-- **Briefing** is laid out like a track's page. The session cover (the coral gradient with the situation's symbol, shared with the Up next card as `SessionCover`) sits above the title and goal. The setup follows as a short list (Partner, Length, Pressure, and the user's situation once written), and its last row is "Adjust session". "Start speaking" is the one button.
+- **Briefing** is laid out like an album page, centred: the session cover (112pt) (the coral gradient with the situation's symbol, shared with the Up next card as `SessionCover`) sits above the centred title and goal. A left-aligned hero left the right half empty over a full-width card. The setup follows as a short list (Partner, Length, Pressure, and the user's situation once written), and its last row is "Adjust session". "Start speaking" is the one button. The Adjust sheet holds the situation as one card with its question inside, then Pressure, Pace and Partner's voice. "Done" is ink.
+- **Choices** (`Segmented`, used on the Adjust sheet, Custom situation, the presentation deck and the routine) are Apple's own segmented control, so on iOS 26 the choice is the system's Liquid Glass thumb: you can hold it and drag it across, and it stretches and ticks as it goes. We restyle only its words: DM Sans, with the chosen word in coral (the control's one accent) and the rest dim. The thumb stays the system's own white. Custom look-alikes were tried and dropped: solid coral pills were a wall of red, a coral-tinted glass capsule read as pink, and none of them could be dragged. Free-text questions sit together in one card, each asked small and grey inside it (the audience card, Custom situation, the Adjust sheet).
 - **Live session.** Status lines ("Your partner is speaking") are small sentence-case labels.
-- **Feedback.** A quiet label names the session. The verdict is the headline, then sections: What we listened for, Keep this, Try one change, Take it into real life (What changed leads a retry). Each section is a title over one card, with no icon chip in a card header.
+- **Feedback.** A quiet label names the session. The verdict is the headline, then sections: How you did, Keep this, Try one change, Take it into real life (on a retry, What changed comes right after the verdict). There is no "Done": the ✕ closes, so the bottom holds one action at most (Retry this moment, or Practise again). Each section is a title over one card, with no icon chip in a card header.
 
 ## The rehearsal room
 
@@ -197,7 +204,7 @@ Review with `-review-moment=everyday` alongside `-review-onboarding-step=…` or
 
 Two views of the same rehearsal, switched by a **Feedback | Conversation** capsule pinned beside the ✕. The transcript used to wait behind a link below the fold, so people didn't know it existed.
 
-- **Feedback reads as one argument.** The summary comes first. Under it, **What we listened for** shows every criterion as a mark (a sage check for clearly, a half coral disc for partly, a dashed ring for not yet) and a level word. Summaries often say "the three parts we're checking", so those parts now appear on screen. Tapping a row shows its note and quote. The rows tagged *Keep this* and *Your focus* are the ones the two cards below discuss. *Try one change* gets the faint coral tint and shows the moment to retry as the partner's own bubble.
+- **Feedback reads as one argument.** The summary comes first. Under it, **How you did** lists every criterion with one plain word on a soft pill: Clearly (sage), Partly (coral), Not yet (grey). The dashed and half-filled marks it replaced needed a legend, and the rows' *Keep this* / *Your focus* tags repeated the sections below, so both went. Summaries often say "the three parts we're checking", so those parts now appear on screen. Tapping a row shows its note and quote. *Try one change* gets the faint coral tint and shows the moment to retry as the partner's own bubble.
 - **Quotes look like speech.** The user's words sit in right-hand coral bubbles and the partner's in left-hand paper ones, in the cards and in the conversation. A quote cut from a longer line gets an ellipsis at each cut end.
 - **The conversation is marked, not annotated.** Only the lines the cards quote carry a tag (*Keep this*, *Your focus*, *The moment to retry*). Inside a marked line, the quoted words stay in ink and the rest dims. A background tint read as mud on the coral bubble.
 - **Quotes link to the conversation.** Tapping a quote opens the Conversation view, scrolls to that line and outlines it for a moment. Both views stay mounted, so each keeps its scroll position.
@@ -213,13 +220,13 @@ The fastest path from "try one change" to having actually tried it. After a rehe
 
 ## Past rehearsals
 
-Progress's rows open the full saved report (the same debrief, retry included when it's still available). Retries sit under the rehearsal they retried. Bare scores are gone from the rows, because a number with no scale explained nothing. The rubric's marks replace them, since each one has a word behind it. Old-app reports without a practice assessment show their summary and "What to work on".
+History rows on Profile open the full saved report (the same debrief, retry included when it's still available). Retries sit under the rehearsal they retried. Bare scores are gone from the rows, because a number with no scale explained nothing. The rubric's marks replace them, since each one has a word behind it. Old-app reports without a practice assessment show their summary and "What to work on".
 
 Review routes: `-review-screen=debrief|retry`.
 
 ## Your own material
 
-Library opens with a **Your own** group: My own situation, Preparation plan, Practice routine, Presentations. The catalog follows.
+Library opens with a **Your own** group: Custom situation, Preparation plan, Practice routine, Presentations. The catalog follows.
 
 ### Presentations
 

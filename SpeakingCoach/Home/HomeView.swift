@@ -12,13 +12,13 @@ struct MainShellView: View {
     var body: some View {
         TabView {
             HomeView(model: model, pendingBriefing: pendingBriefing, onStart: onStart, onOpenReport: onOpenReport, onStartCustom: onStartCustom)
-                .tabItem { Label("Practice", systemImage: "mic.fill") }
-            ProgressScreen(model: model, onOpenReport: onOpenReport)
-                .tabItem { Label("Progress", systemImage: "chart.bar.fill") }
-            ProfileView(model: model)
+                // The brand's petals, as a template image the tab bar tints.
+                .tabItem { Label("Practice", image: "TabBloom") }
+            ProfileView(model: model, onOpenReport: onOpenReport)
                 .tabItem { Label("Profile", systemImage: "person.crop.circle") }
         }
         .tint(Palette.coral)
+        .environment(\.stageStyle, .flat)
     }
 }
 
@@ -29,7 +29,7 @@ struct MainShellView: View {
 /// 1. **Situation and streak.** The situation is a dropdown at the top left
 ///    ("Work ⌄"), remembered between visits; the streak sits top right.
 /// 2. **The situation's rehearsals** as a grid of compact text tiles, a
-///    tick on the ones already done, then "My own situation".
+///    tick on the ones already done, then "Custom situation".
 /// 3. **Up next.** One large card, the whole card a button with a chevron.
 /// 4. **Recently practised.** A row of tiles, each reopening its feedback.
 ///
@@ -97,12 +97,13 @@ struct HomeView: View {
         NavigationStack(path: $path) {
             ZStack {
                 MorningStage(depth: 0.2)
+                // The scroll view already clears the status bar; one small
+                // step more is all the header needs.
                 ScrollView(showsIndicators: false) {
                     content
-                        .padding(.top, Space.md)
+                        .padding(.top, Space.sm)
                         .padding(.bottom, Space.xxxl)
                 }
-                .safeAreaPadding(.top)
             }
             .statusBarScrim()
             .toolbar(.hidden, for: .navigationBar)
@@ -250,7 +251,7 @@ struct HomeView: View {
             if category == .big_moments {
                 RehearsalTile(title: "Practise with my slides", glyph: "rectangle.on.rectangle") { showsPresentations = true }
             }
-            RehearsalTile(title: "My own situation", glyph: "square.and.pencil") { showsCustom = true }
+            RehearsalTile(title: "Custom situation", glyph: "square.and.pencil") { showsCustom = true }
         }
         .id(category)
         .transition(.opacity)
@@ -261,7 +262,7 @@ struct HomeView: View {
 
     private func recentRow(_ records: [PracticeRecord]) -> some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: Space.md) {
+            HStack(alignment: .top, spacing: Space.md) {
                 ForEach(records) { record in
                     RecentTile(record: record, isLoading: opening == record.id) { open(record) }
                         .disabled(opening != nil)
@@ -496,9 +497,11 @@ private struct RehearsalTile: View {
                     .fixedSize(horizontal: false, vertical: true)
                 Spacer(minLength: 0)
                 if done {
+                    // Sage, as "Clearly" in feedback: done reads as progress,
+                    // and coral stays for the one thing to do next.
                     Image(systemName: "checkmark.circle.fill")
                         .font(.system(size: 16))
-                        .foregroundStyle(Palette.coral)
+                        .foregroundStyle(Palette.sage)
                 } else if let glyph {
                     Image(systemName: glyph)
                         .font(.system(size: 14, weight: .medium))
@@ -635,8 +638,10 @@ private struct PlanSteps: View {
     }
 }
 
-/// A session already done: its situation, its title, and when.
-/// Opens the feedback it got.
+/// A session already done, as a compact card in the same style as the
+/// tiles above: the title first, the day under it, and a small symbol in
+/// the corner (the situation's, or the retry arrow). No cover art: a big
+/// square with one icon in it looked empty.
 private struct RecentTile: View {
     let record: PracticeRecord
     var isLoading = false
@@ -647,33 +652,38 @@ private struct RecentTile: View {
             Haptics.selection()
             action()
         } label: {
-            VStack(alignment: .leading, spacing: 0) {
-                HStack(alignment: .center) {
-                    GlassRowIcon(icon: record.parentID == nil ? ProgressScreen.icon(for: record) : "arrow.counterclockwise")
-                    Spacer(minLength: Space.sm)
-                    if isLoading {
-                        ProgressView().tint(Palette.coral).controlSize(.small)
+            VStack(alignment: .leading, spacing: Space.xs) {
+                HStack(alignment: .top, spacing: Space.sm) {
+                    Text(record.title)
+                        .font(Typeface.label(15))
+                        .foregroundStyle(Palette.ink)
+                        .multilineTextAlignment(.leading)
+                        .lineLimit(2, reservesSpace: true)
+                    Spacer(minLength: 0)
+                    Group {
+                        if isLoading {
+                            ProgressView().tint(Palette.coral).controlSize(.mini)
+                        } else {
+                            Image(systemName: record.parentID == nil ? SessionText.icon(for: record) : "arrow.counterclockwise")
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundStyle(Palette.coralDeep)
+                        }
                     }
+                    .frame(width: 16, height: 16)
                 }
-                Spacer(minLength: Space.md)
-                Text(record.title)
-                    .font(Typeface.label(15))
-                    .foregroundStyle(Palette.ink)
-                    .multilineTextAlignment(.leading)
-                    .lineLimit(2)
-                    .fixedSize(horizontal: false, vertical: true)
-                Text(ProgressScreen.day(record.date).capitalizedFirst + (record.parentID == nil ? "" : " · Retry"))
-                    .font(Typeface.body(12))
+                Text(SessionText.day(record.date).capitalizedFirst + (record.parentID == nil ? "" : " · Retry"))
+                    .font(Typeface.body(13))
                     .foregroundStyle(Palette.muted)
                     .lineLimit(1)
-                    .padding(.top, 2)
             }
-            .padding(Space.lg)
-            .frame(width: 156, height: 144, alignment: .topLeading)
-            .contentShape(RoundedRectangle(cornerRadius: Corner.lg))
+            .padding(.horizontal, Space.lg)
+            .padding(.vertical, Space.md)
+            .frame(width: 176, alignment: .leading)
+            .contentShape(RoundedRectangle(cornerRadius: Corner.sm, style: .continuous))
         }
         .buttonStyle(.plain)
-        .glassSurface(cornerRadius: Corner.lg, interactive: true)
+        .glassSurface(cornerRadius: Corner.sm, interactive: true)
+        .accessibilityElement(children: .combine)
     }
 }
 
@@ -718,7 +728,7 @@ struct LibraryView: View {
                     VStack(alignment: .leading, spacing: Space.md) {
                         Kicker(text: "Your own")
                         GlassRowGroup {
-                            ownRow(icon: "square.and.pencil", title: "My own situation", detail: "Describe any conversation you need to have.") {
+                            ownRow(icon: "square.and.pencil", title: "Custom situation", detail: "Describe any conversation you need to have.") {
                                 composing = true
                             }
                             if let model {

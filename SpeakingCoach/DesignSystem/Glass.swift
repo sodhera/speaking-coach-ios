@@ -88,7 +88,7 @@ struct PrimaryButton: View {
                 .opacity(isLoading ? 0 : 1)
                 if isLoading { ProgressView().tint(.white) }
             }
-            .foregroundStyle(.white)
+            .foregroundStyle(isEnabled ? Color.white : Palette.muted)
         }
         .buttonStyle(CapsuleActionStyle(prominent: true))
         .shadow(color: Palette.coral.opacity(isEnabled ? 0.32 : 0), radius: 18, y: 8)
@@ -150,9 +150,11 @@ struct CapsuleActionStyle: ButtonStyle {
             .frame(maxWidth: .infinity, minHeight: 58)
             .padding(.horizontal, Space.lg)
             .contentShape(Capsule())
-            .modifier(CapsuleChrome(prominent: prominent))
+            // Not yet tappable, the primary goes neutral rather than faded
+            // coral: a washed-out pink read as broken, not as "not yet".
+            .modifier(CapsuleChrome(prominent: prominent && isEnabled))
             .scaleEffect(pressed ? 0.965 : 1)
-            .opacity(isEnabled ? 1 : 0.45)
+            .opacity(isEnabled || prominent ? 1 : 0.45)
             .animation(Motion.press, value: pressed)
             .animation(.easeInOut(duration: 0.2), value: isEnabled)
     }

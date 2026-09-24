@@ -68,7 +68,7 @@ struct RoutineView: View {
 
     private var unlockSection: some View {
         VStack(alignment: .leading, spacing: Space.md) {
-            Kicker(text: "Speak to unlock")
+            SectionTitle(text: "Speak to unlock")
             if !routine.isSupported {
                 note("Speak to unlock uses Screen Time, so it's set up on your iPhone.")
             } else if routine.authorization != .approved {
@@ -158,7 +158,7 @@ struct RoutineView: View {
 
     private var promptSection: some View {
         VStack(alignment: .leading, spacing: Space.md) {
-            Kicker(text: "Daily prompt")
+            SectionTitle(text: "Daily prompt")
             GlassRowGroup {
                 Toggle(isOn: Binding(get: { routine.settings.promptEnabled }, set: { on in savePrompt(enabled: on) })) {
                     rowLabel("Remind me", icon: "bell.fill")

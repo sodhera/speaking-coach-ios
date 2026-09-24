@@ -129,7 +129,7 @@ enum PracticeDrafts {
 
 // MARK: - Custom situations
 
-/// The existing endpoints the old app used for "My own situation": a
+/// The existing endpoints the old app used for "Custom situation": a
 /// legibility check that restates the situation, a voice token straight from
 /// the partner agent, and the general analysis. The report is saved by the
 /// app itself into `reports` (row-level security lets a user insert their own).

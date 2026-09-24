@@ -34,6 +34,10 @@ enum Palette {
     static let skyBase = Color(hex: 0xF1DCCB)
     static let paper = skyCrown
 
+    /// The app's flat ground, behind every screen after onboarding. A warm
+    /// light grey, a step darker than the glass cards so they lift off it.
+    static let ground = Color(hex: 0xEFEBE7)
+
     // Brand. `coral` is the icon's own color. On paper it is a *fill* color —
     // glyphs and text that need contrast use `coralDeep`.
     static let coral = Color(hex: 0xFF5A5F)

@@ -177,34 +177,30 @@ struct ProgressBar: View {
 
 // MARK: - Status bar scrim
 
-/// A slice of the stage's own paper — sky and grain, aligned to the real
-/// stage — laid over the status bar, so scrolling content dissolves under
-/// the clock instead of running through it. A flat painted colour showed as
-/// a smooth band against the grain. Solid through the status bar, gone
-/// `fade` points below it. Never takes touches.
+/// Keeps scrolling content from running through the clock and signal
+/// icons: a slice of the stage's own paper (sky and grain, aligned to the
+/// real stage) over the status bar only, softening out across its lower
+/// edge. Nothing below the status bar is touched — a taller fade ate into
+/// the page. (The iOS 26 scroll edge effect needs a real top bar; these
+/// screens hide theirs.) Never takes touches.
 struct StatusBarScrim: ViewModifier {
-    var fade: CGFloat = 28
-
     func body(content: Content) -> some View {
         content.overlay {
             GeometryReader { proxy in
                 let inset = proxy.safeAreaInsets.top
                 MorningPaper()
                     .mask(alignment: .top) {
-                        VStack(spacing: 0) {
-                            Color.black.frame(height: inset)
-                            LinearGradient(
-                                stops: [
-                                    .init(color: .black, location: 0),
-                                    .init(color: .black.opacity(0.6), location: 0.45),
-                                    .init(color: .black.opacity(0), location: 1),
-                                ],
-                                startPoint: .top,
-                                endPoint: .bottom
-                            )
-                            .frame(height: fade)
-                            Spacer(minLength: 0)
-                        }
+                        LinearGradient(
+                            stops: [
+                                .init(color: .black, location: 0),
+                                .init(color: .black, location: 0.7),
+                                .init(color: .black.opacity(0), location: 1),
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                        .frame(height: inset)
+                        .frame(maxHeight: .infinity, alignment: .top)
                         .ignoresSafeArea()
                     }
             }
