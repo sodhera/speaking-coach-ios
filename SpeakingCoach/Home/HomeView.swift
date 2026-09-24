@@ -169,15 +169,7 @@ struct HomeView: View {
             }
 
             if let plan {
-                VStack(alignment: .leading, spacing: Space.md) {
-                    Kicker(text: "Continue your plan")
-                    Text("\(plan.practice.title) · step \((plan.current?.rawValue ?? 0) + 1) of 3")
-                        .font(Typeface.label(16))
-                        .foregroundStyle(Palette.ink)
-                    planAction(plan)
-                }
-                .padding(Space.lg)
-                .glassSurface(cornerRadius: Corner.lg)
+                continuePlan(plan)
             }
 
             if let preparation {
@@ -253,19 +245,36 @@ struct HomeView: View {
         .buttonStyle(.plain)
     }
 
-    private func planAction(_ plan: FirstPlan) -> some View {
-        VStack(spacing: Space.sm) {
-            if let step = plan.current {
-                PrimaryButton(title: actionTitle(step), systemImage: actionIcon(step), isLoading: openingRetry) {
-                    advance(plan, step)
+    @ViewBuilder
+    private func continuePlan(_ plan: FirstPlan) -> some View {
+        if let step = plan.current {
+            Button { advance(plan, step) } label: {
+                HStack(spacing: Space.md) {
+                    Image(systemName: actionIcon(step))
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundStyle(Palette.coralDeep)
+                        .frame(width: 34)
+                    VStack(alignment: .leading, spacing: 3) {
+                        Kicker(text: "Your plan · step \(step.rawValue + 1) of 3")
+                        Text(actionTitle(step))
+                            .font(Typeface.label(16))
+                            .foregroundStyle(Palette.ink)
+                        Text(planError ?? "\(plan.practice.title) · \(hint(plan, step))")
+                            .font(Typeface.body(13))
+                            .foregroundStyle(planError == nil ? Palette.muted : Palette.danger)
+                            .lineLimit(2)
+                    }
+                    Spacer(minLength: 4)
+                    if openingRetry { ProgressView().tint(Palette.coral) }
+                    else { Image(systemName: "chevron.right").font(.system(size: 12)).foregroundStyle(Palette.faint) }
                 }
-                .disabled(openingRetry)
-                Text(planError ?? hint(plan, step))
-                    .font(Typeface.body(14))
-                    .foregroundStyle(planError == nil ? Palette.muted : Palette.danger)
-                    .multilineTextAlignment(.center)
-                    .fixedSize(horizontal: false, vertical: true)
+                .padding(Space.lg)
+                .frame(maxWidth: .infinity, minHeight: 76)
+                .contentShape(RoundedRectangle(cornerRadius: Corner.lg))
             }
+            .buttonStyle(.plain)
+            .glassSurface(cornerRadius: Corner.lg, interactive: true)
+            .disabled(openingRetry)
         }
     }
 
