@@ -14,14 +14,14 @@ struct OnboardingGate: View {
 
     private enum Route: Equatable { case welcome, flow, signIn }
 
-    init(model: AppModel) {
+    init(model: AppModel, startAtSignIn: Bool = false) {
         self.model = model
         #if DEBUG
         let reviewing = LaunchFlags.value("-review-onboarding-step") != nil
         #else
         let reviewing = false
         #endif
-        _route = State(initialValue: model.phase == .needsSetup || reviewing || OnboardingFlow.hasDraft ? .flow : .welcome)
+        _route = State(initialValue: startAtSignIn ? .signIn : model.phase == .needsSetup || reviewing || OnboardingFlow.hasDraft ? .flow : .welcome)
     }
 
     var body: some View {

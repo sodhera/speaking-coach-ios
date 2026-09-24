@@ -3,9 +3,9 @@ import SwiftUI
 /// The sign-up flow. Its arc is the argument:
 ///
 /// **language** → name → **category** (the door they came in through) →
-/// situation → **pain** (the deck) → **mirror** (their pattern) → **cost**
+/// situation → **pain** (the deck) → **support** → **cost**
 /// → **reframe** (a practice problem, not a talent problem) → **outcome** →
-/// **promise** → **demo** (the loop, under their thumb) → **plan** →
+/// **promise** → **demo** (a tap-through example) → **plan** →
 /// **commit** → account.
 ///
 /// Structure mirrors SleepBlock's questionnaire: one primary button per step
@@ -234,12 +234,8 @@ struct OnboardingFlow: View {
             }
 
         case .mirror:
-            QuestionLayout(title: trimmedName.isEmpty ? "Here's your pattern." : "\(trimmedName), here's your pattern.") {
-                MirrorInstrument(
-                    pattern: answers.pattern,
-                    evidence: PainStatement.allCases.filter { answers.statements[$0] == .yes && $0.pattern == answers.pattern },
-                    ready: $revealReady
-                )
+            QuestionLayout(title: trimmedName.isEmpty ? "We'll work through this together." : "\(trimmedName), we'll work through this together.") {
+                MirrorInstrument(pattern: answers.pattern, ready: $revealReady)
             }
 
         case .cost:
@@ -280,8 +276,8 @@ struct OnboardingFlow: View {
             ], ready: $revealReady)
 
         case .demo:
-            QuestionLayout(title: "Practice it before it's real.") {
-                DemoInstrument(script: DemoScript.for(moment), fix: answers.pattern.fix, ready: $revealReady)
+            QuestionLayout(title: "See how practice works.") {
+                DemoInstrument(script: DemoScript.for(moment), ready: $revealReady)
             }
 
         case .plan:
@@ -355,7 +351,7 @@ struct OnboardingFlow: View {
             // The hold is the commit step's action; the deck's rows are its own.
             Color.clear.frame(height: 58)
         case .mirror:
-            revealGatedButton("That's me")
+            revealGatedButton("Continue")
         case .reframe:
             revealGatedButton("Continue")
         case .promise:

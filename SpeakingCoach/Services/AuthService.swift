@@ -50,6 +50,10 @@ enum AuthService {
                 session.prefersEphemeralWebBrowserSession = false
             }
         } catch {
+            if (error as? ASWebAuthenticationSessionError)?.code != .canceledLogin {
+                let failure = error as NSError
+                AppLog.error("Google OAuth failed: \(failure.domain) (\(failure.code))")
+            }
             throw map(error)
         }
     }
@@ -123,6 +127,10 @@ private final class AppleSignInSheet: NSObject, ASAuthorizationControllerDelegat
     nonisolated func authorizationController(controller: ASAuthorizationController, didCompleteWithError error: Error) {
         MainActor.assumeIsolated {
             let cancelled = (error as? ASAuthorizationError)?.code == .canceled
+            if !cancelled {
+                let failure = error as NSError
+                AppLog.error("Apple authorization failed: \(failure.domain) (\(failure.code))")
+            }
             continuation?.resume(throwing: cancelled ? AuthFailure.cancelled : AuthFailure.message("Apple sign-in didn't finish. Please try again."))
             continuation = nil
         }

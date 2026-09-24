@@ -91,67 +91,47 @@ struct DeckInstrument: View {
     }
 }
 
-// MARK: - The mirror
+// MARK: - Support
 
-/// The user's own answers handed back as a named pattern. Every quote under
-/// it is something they said "That's me" to — nothing asserted they didn't
-/// tell us. The diagnosis types out; Continue waits for it.
+/// A caring response and a concrete next step, tailored privately from the
+/// answers without labeling the person or repeating their selections.
 struct MirrorInstrument: View {
     let pattern: SpeakingPattern
-    let evidence: [PainStatement]
     @Binding var ready: Bool
 
     var body: some View {
-        VStack(spacing: Space.xxl) {
-            Text(pattern.name)
-                .font(Typeface.hero(40))
-                .foregroundStyle(Palette.coralDeep)
-                .revealIn(after: 0.1, rise: 14)
+        VStack(spacing: Space.xl) {
+            BloomMark(size: 80, glow: false)
+                .revealIn(after: 0.1)
 
-            NarrativePage(lines: [pattern.diagnosis], ready: $ready, fontSize: 21)
+            Text(pattern.encouragement)
+                .font(Typeface.title(25))
+                .foregroundStyle(Palette.ink)
+                .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
+                .revealIn(after: 0.25)
 
-            if !evidence.isEmpty {
-                VStack(spacing: Space.sm) {
-                    Kicker(text: "You said", color: Palette.muted)
-                    ForEach(Array(evidence.prefix(2)), id: \.self) { statement in
-                        Text("“\(statement.text)”")
-                            .font(Typeface.bodyItalic(15))
-                            .foregroundStyle(Palette.ink)
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal, Space.lg)
-                            .padding(.vertical, Space.md)
-                            .frame(maxWidth: .infinity)
-                            .glassSurface(cornerRadius: Corner.md)
-                    }
-                }
-                .opacity(ready ? 1 : 0)
-                .offset(y: ready ? 0 : 8)
-                .animation(.easeOut(duration: 0.5), value: ready)
-            }
+            Text(pattern.practiceHelp)
+                .font(Typeface.body(17))
+                .foregroundStyle(Palette.dim)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+                .revealIn(after: 0.55)
+                .after(1.15) { ready = true }
         }
+        .frame(maxWidth: .infinity)
     }
 }
 
 // MARK: - The demo
 
-/// "Practice it before it's real", shown rather than told: a rehearsal in
-/// miniature under the user's thumb. Three beats, the product's own loop:
+/// A tappable example of the practice loop. The sample answer is clearly
+/// identified as an example; the user does not need to speak on this page.
 ///
-/// 1. **Rehearse** — hold the bloom and the first take streams out word by
-///    word, a haptic on each, the petals opening with the "voice".
-/// 2. **Hear it back** — the fillers light up, then lift off one by one with
-///    a crisp tap each, and the sentence closes up around the gaps.
-/// 3. **Retry** — hold again, and the better take lands; the fix for their
-///    own pattern settles underneath.
-///
-/// Letting go mid-take pauses it (the petals fold); holding resumes. The
-/// bloom is the same instrument as the rehearsal room's, so the first time
-/// they see it breathe with a voice is here. VoiceOver's activate plays a
-/// whole take; Reduce Motion keeps every beat, without the travel.
+/// One tap shows a first try and one useful change. A second tap shows the
+/// clearer try. Reduce Motion keeps the steps without word travel.
 struct DemoInstrument: View {
     let script: DemoScript
-    let fix: String
     @Binding var ready: Bool
 
     enum Beat: Int, CaseIterable {
@@ -159,9 +139,9 @@ struct DemoInstrument: View {
 
         var label: String {
             switch self {
-            case .rehearse: "Rehearse"
-            case .hearBack: "Hear it back"
-            case .retry, .done: "Retry"
+            case .rehearse: "First try"
+            case .hearBack: "One change"
+            case .retry, .done: "Try again"
             }
         }
     }
@@ -170,8 +150,7 @@ struct DemoInstrument: View {
     @State private var shown: [DemoScript.Word] = []
     @State private var cursor = 0
     @State private var flagged: Set<Int> = []
-    @State private var holding = false
-    @State private var level: Double = 0
+    @State private var isPlaying = false
     @State private var speaking: Task<Void, Never>?
     @State private var coaching: Task<Void, Never>?
 
@@ -179,16 +158,25 @@ struct DemoInstrument: View {
     @Environment(\.scenePhase) private var scenePhase
 
     private var take: [DemoScript.Word] { beat == .rehearse ? script.firstWords : script.betterWords }
-    private var canHold: Bool { (beat == .rehearse || beat == .retry) && cursor < take.count }
+    private var canPlay: Bool { (beat == .rehearse || beat == .retry) && cursor < take.count }
 
     var body: some View {
         VStack(spacing: Space.xl) {
+            Text("Here's a short example. You don't need to speak yet.")
+                .font(Typeface.body(16))
+                .foregroundStyle(Palette.dim)
+                .multilineTextAlignment(.center)
             beats
             card
-            bloom
+            if beat != .done {
+                PrimaryButton(title: actionTitle, systemImage: "play.fill", action: playTake)
+                    .disabled(!canPlay || isPlaying)
+                    .opacity(beat == .hearBack ? 0 : 1)
+                    .accessibilityHidden(beat == .hearBack)
+            }
         }
         .onDisappear { stopSpeaking(); coaching?.cancel() }
-        .onChange(of: scenePhase) { _, phase in if phase != .active { release() } }
+        .onChange(of: scenePhase) { _, phase in if phase != .active { stopSpeaking() } }
     }
 
     // MARK: Beats
@@ -219,7 +207,7 @@ struct DemoInstrument: View {
 
     private var card: some View {
         VStack(alignment: .leading, spacing: Space.md) {
-            Kicker(text: script.partner, color: Palette.muted)
+            Kicker(text: "Example · \(script.partner)", color: Palette.muted)
             Text(script.prompt)
                 .font(Typeface.title(20))
                 .foregroundStyle(Palette.ink)
@@ -227,7 +215,7 @@ struct DemoInstrument: View {
             GlassRowDivider()
             ZStack(alignment: .topLeading) {
                 if shown.isEmpty {
-                    Text(beat == .retry ? "Now say it again." : "Your answer appears here.")
+                    Text(beat == .retry ? "See a clearer try." : "The example answer appears here.")
                         .font(Typeface.bodyItalic(16))
                         .foregroundStyle(Palette.muted)
                         .transition(.opacity)
@@ -281,66 +269,26 @@ struct DemoInstrument: View {
     private var caption: String? {
         switch beat {
         case .rehearse: nil
-        case .hearBack: flagged.isEmpty ? nil : "\(script.fillerCount) fillers. \(script.note)"
-        case .retry: script.note
-        case .done: fix
+        case .hearBack: flagged.isEmpty ? nil : "One change to try: \(script.note)"
+        case .retry: "Now see that change in the answer."
+        case .done: "In practice, you'll try your own words and get one useful next step."
         }
     }
 
-    // MARK: The bloom
-
-    private var bloom: some View {
-        VStack(spacing: Space.md) {
-            ZStack {
-                Circle()
-                    .fill(Color.white.opacity(holding ? 0.75 : 0.5))
-                    .overlay(Circle().strokeBorder(Palette.border, lineWidth: 1))
-                    .frame(width: 104, height: 104)
-                BloomMark(size: 60, level: level)
-            }
-            .frame(width: 124, height: 124)
-            .scaleEffect(holding ? 0.96 : 1)
-            .opacity(canHold || holding || beat == .done ? 1 : 0.55)
-            .animation(.easeOut(duration: 0.18), value: holding)
-            .contentShape(Circle())
-            .gesture(
-                DragGesture(minimumDistance: 0)
-                    .onChanged { value in
-                        if abs(value.translation.width) > 80 || abs(value.translation.height) > 80 {
-                            release()
-                        } else if !holding {
-                            press()
-                        }
-                    }
-                    .onEnded { _ in release() }
-            )
-            .accessibilityElement()
-            .accessibilityLabel(holdCaption)
-            .accessibilityAddTraits(.isButton)
-            .accessibilityAction { playWholeTake() }
-
-            Text(holdCaption)
-                .font(Typeface.label(16))
-                .foregroundStyle(beat == .done ? Palette.coralDeep : Palette.dim)
-                .contentTransition(.opacity)
-                .animation(.easeInOut(duration: 0.2), value: holdCaption)
-        }
-    }
-
-    private var holdCaption: String {
+    private var actionTitle: String {
         switch beat {
-        case .rehearse: holding ? "Keep holding…" : cursor == 0 ? "Hold to answer" : "Hold to keep going"
-        case .hearBack: "Hearing it back…"
-        case .retry: holding ? "Keep holding…" : cursor == 0 ? "Hold to try again" : "Hold to keep going"
-        case .done: "Much clearer."
+        case .rehearse: "Show an example answer"
+        case .hearBack: "Finding one change…"
+        case .retry: "Show a clearer answer"
+        case .done: ""
         }
     }
 
     // MARK: Playing
 
-    private func press() {
-        guard canHold, speaking == nil else { return }
-        holding = true
+    private func playTake() {
+        guard canPlay, speaking == nil else { return }
+        isPlaying = true
         Haptics.prepare()
         Haptics.soft()
         speaking = Task { @MainActor in
@@ -364,33 +312,17 @@ struct DemoInstrument: View {
         withAnimation(.easeOut(duration: 0.18)) { shown.append(word) }
         cursor += 1
         Haptics.tick(word.isFiller ? 0.28 : 0.45)
-        withAnimation(.easeOut(duration: 0.12)) { level = Double.random(in: 0.45...0.95) }
-    }
-
-    private func release() {
-        stopSpeaking()
-        guard holding else { return }
-        holding = false
-        withAnimation(.easeOut(duration: 0.35)) { level = 0 }
     }
 
     private func stopSpeaking() {
         speaking?.cancel()
         speaking = nil
-    }
-
-    /// VoiceOver has no hold to give: activating plays the take in full.
-    private func playWholeTake() {
-        guard canHold else { return }
-        stopSpeaking()
-        while cursor < take.count { speak(take[cursor]) }
-        finishTake()
+        isPlaying = false
     }
 
     private func finishTake() {
         speaking = nil
-        holding = false
-        withAnimation(.easeOut(duration: 0.35)) { level = 0 }
+        isPlaying = false
         Haptics.rigid()
         if beat == .rehearse {
             coaching = Task { @MainActor in await hearItBack() }

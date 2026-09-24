@@ -141,36 +141,28 @@ struct HomeView: View {
                 }
             }
 
-            Spacer(minLength: Space.xxxl)
-
             if let plan {
-                // The bloom steps aside on short screens; the plan never does.
+                Spacer(minLength: Space.lg)
+                // The action stays with the step it advances. The bloom
+                // steps aside on short screens; the plan never does.
                 ViewThatFits(in: .vertical) {
-                    VStack(spacing: Space.xl) {
-                        BloomMark(size: 96)
+                    VStack(spacing: Space.lg) {
+                        BloomMark(size: 72)
                         PlanCard(plan: plan, compact: true)
+                        planAction(plan)
                     }
-                    PlanCard(plan: plan, compact: true)
+                    VStack(spacing: Space.md) {
+                        PlanCard(plan: plan, compact: true)
+                        planAction(plan)
+                    }
                 }
                 .transition(.opacity)
+                Spacer(minLength: Space.lg)
             } else {
+                Spacer(minLength: Space.xxxl)
                 upNextStack.transition(.opacity)
-            }
-
-            Spacer(minLength: Space.xxxl)
-
-            VStack(spacing: Space.lg) {
-                if let plan, let step = plan.current {
-                    PrimaryButton(title: actionTitle(step), systemImage: actionIcon(step), isLoading: openingRetry) {
-                        advance(plan, step)
-                    }
-                    .disabled(openingRetry)
-                    Text(planError ?? hint(plan, step))
-                        .font(Typeface.body(14))
-                        .foregroundStyle(planError == nil ? Palette.muted : Palette.danger)
-                        .multilineTextAlignment(.center)
-                        .fixedSize(horizontal: false, vertical: true)
-                } else {
+                Spacer(minLength: Space.xxxl)
+                VStack(spacing: Space.lg) {
                     PrimaryButton(title: "Start rehearsal", systemImage: "mic.fill") {
                         if let upNext { path.append(upNext) }
                     }
@@ -180,10 +172,26 @@ struct HomeView: View {
                             .foregroundStyle(Palette.muted)
                     }
                 }
+                .padding(.bottom, Space.xxxl)
             }
-            .padding(.bottom, Space.xxxl)
         }
         .animation(.easeInOut(duration: 0.3), value: plan)
+    }
+
+    private func planAction(_ plan: FirstPlan) -> some View {
+        VStack(spacing: Space.sm) {
+            if let step = plan.current {
+                PrimaryButton(title: actionTitle(step), systemImage: actionIcon(step), isLoading: openingRetry) {
+                    advance(plan, step)
+                }
+                .disabled(openingRetry)
+                Text(planError ?? hint(plan, step))
+                    .font(Typeface.body(14))
+                    .foregroundStyle(planError == nil ? Palette.muted : Palette.danger)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
     }
 
     private var upNextStack: some View {

@@ -4,15 +4,24 @@ import Foundation
 /// The partner plays a role; it never coaches, scores or announces feedback —
 /// the debrief does that afterwards, from the words actually spoken.
 enum PracticePrompt {
-    /// The partner waits in silence until the app sends this, so it never
-    /// starts talking before the room is ready. It is filtered out of every
-    /// transcript and never shown.
+    /// For non-English scenes without an immediate first-message override,
+    /// the partner waits until the room is ready. This is never shown.
     static let beginSignal = "[[PRACTICE_BEGIN]]"
     /// After a pause, asks the partner to repeat its last question briefly.
     static let resumeSignal = "[[PRACTICE_RESUME]]"
 
     static func isControlSignal(_ text: String) -> Bool {
         text.contains(beginSignal) || text.contains(resumeSignal)
+    }
+
+    /// An already-written opening can be spoken as soon as the voice room is
+    /// connected, without a separate control message and model turn. Keep
+    /// other languages on the generated opening path so the agent can speak
+    /// in the learner's language.
+    static func firstMessage(_ definition: PracticeDefinition, _ context: PracticeContext) -> String? {
+        guard context.language == "en" else { return nil }
+        let opening = context.retry?.prompt ?? definition.opening
+        return opening.isEmpty ? nil : opening
     }
 
     static func build(_ definition: PracticeDefinition, _ context: PracticeContext) -> String {
@@ -23,9 +32,14 @@ enum PracticePrompt {
         }
         let maxTurns = context.retry == nil ? definition.maxUserTurns : 2
         let opening = context.retry?.prompt ?? definition.opening
-        let openingRule = opening.isEmpty
-            ? "Do not speak until you receive the message \(beginSignal). When you do, open the scene in character with one short, natural line that sets it up."
-            : "Do not speak until you receive the message \(beginSignal). When you do, open with exactly: \(opening)"
+        let openingRule: String
+        if firstMessage(definition, context) != nil {
+            openingRule = "Your first line is supplied when the conversation connects: \(opening). After that, wait for the learner and respond in character."
+        } else if opening.isEmpty {
+            openingRule = "Do not speak until you receive the message \(beginSignal). When you do, open the scene in character with one short, natural line that sets it up."
+        } else {
+            openingRule = "Do not speak until you receive the message \(beginSignal). When you do, open with exactly: \(opening)"
+        }
 
         var sections: [String] = [
             "# Real-life rehearsal",

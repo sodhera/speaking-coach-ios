@@ -78,7 +78,7 @@ targets:
         UIUserInterfaceStyle: Light
         CFBundleURLTypes:
           - CFBundleURLName: com.sodhera.speakingcoach.auth
-            CFBundleURLSchemes: [com.sodhera.speakingcoach]
+            CFBundleURLSchemes: [com.sodhera.speakingcoach, dating-coach]
         UIApplicationSceneManifest:
           UIApplicationSupportsMultipleScenes: false
   SpeakingCoachMonitor:

@@ -26,6 +26,7 @@
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>com.sodhera.speakingcoach</string>
+				<string>dating-coach</string>
 			</array>
 		</dict>
 	</array>

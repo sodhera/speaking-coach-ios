@@ -103,11 +103,6 @@ struct ReviewScreens: View {
                 RehearsalView(store: model.presentations, deck: deck, language: "en", onClose: {})
             case "profile":
                 ProfileView(model: model)
-            case "signin":
-                ZStack {
-                    MorningStage(depth: 0.3)
-                    SignInView(model: model) {}
-                }
             case "welcome":
                 ZStack {
                     MorningStage(depth: 0)

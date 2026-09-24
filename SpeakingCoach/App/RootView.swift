@@ -66,6 +66,12 @@ struct RootView: View {
                 DesignGallery()
             } else if LaunchFlags.value("-review-onboarding-step") != nil {
                 OnboardingGate(model: model)
+            } else if LaunchFlags.value("-review-screen") == "signin" {
+                if model.userID == nil {
+                    OnboardingGate(model: model, startAtSignIn: true)
+                } else {
+                    routed
+                }
             } else if let review = LaunchFlags.value("-review-screen") {
                 ReviewScreens(name: review, model: model)
             } else {
@@ -77,7 +83,7 @@ struct RootView: View {
         }
         .task {
             #if DEBUG
-            if LaunchFlags.value("-review-screen") != nil { return }
+            if let review = LaunchFlags.value("-review-screen"), review != "signin" { return }
             #endif
             model.start()
             remindersNeeded = await SetupChain.needsReminders()

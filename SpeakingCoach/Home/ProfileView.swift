@@ -75,7 +75,7 @@ struct ProfileView: View {
         HStack(alignment: .top, spacing: Space.md) {
             GlassRowIcon(icon: "sparkles")
             VStack(alignment: .leading, spacing: 3) {
-                Text(profile.pattern.name)
+                Text("A good next step")
                     .font(Typeface.label(17))
                     .foregroundStyle(Palette.ink)
                 Text(profile.pattern.fix)

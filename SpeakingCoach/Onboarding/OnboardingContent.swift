@@ -272,23 +272,25 @@ extension PainStatement: CodingKeyRepresentable {}
 enum SpeakingPattern: String, Codable {
     case blankOut, rambler, holdBack, replayer, steady
 
-    var name: String {
+    /// Private tailoring for a supportive onboarding response. The app never
+    /// presents this internal grouping as a label for the person.
+    var encouragement: String {
         switch self {
-        case .blankOut: "The Blank-Out"
-        case .rambler: "The Rambler"
-        case .holdBack: "The Holder-Back"
-        case .replayer: "The Replayer"
-        case .steady: "The Steady One"
+        case .blankOut: "It's okay to pause when a question catches you off guard."
+        case .rambler: "Your ideas deserve room to land."
+        case .holdBack: "What you want to say matters."
+        case .replayer: "A difficult conversation can stay with you afterward."
+        case .steady: "You already have a strong starting point."
         }
     }
 
-    var diagnosis: String {
+    var practiceHelp: String {
         switch self {
-        case .blankOut: "You have the words. They just don't show up under pressure."
-        case .rambler: "You know your point. It gets lost on the way out."
-        case .holdBack: "You have good things to say. They stay in your head."
-        case .replayer: "The conversation ends. The replay doesn't."
-        case .steady: "You're steadier than most. Now make it sharp."
+        case .blankOut: "We'll rehearse one question at a time, with room to find your words."
+        case .rambler: "We'll practice finding your main point and saying it clearly."
+        case .holdBack: "We'll give you a place to say it out loud before the real conversation."
+        case .replayer: "Here you can try that kind of moment again, at your own pace."
+        case .steady: "We'll help you make one good answer even clearer."
         }
     }
 

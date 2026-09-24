@@ -41,6 +41,7 @@ final class VoiceSession {
     private var pausedFor = 0
     private var overtime = 0
     private var endingByUser = false
+    private var beginsWithSignal = true
 
     var userTurns: Int { transcript.filter { $0.role == .user }.count }
     var lastPartnerLine: String? { transcript.last { $0.role == .coach }?.text }
@@ -69,12 +70,13 @@ final class VoiceSession {
 
     // MARK: Lifecycle
 
-    func start(token: String, prompt: String, language: String, duration: Int, maxUserTurns: Int) async throws {
+    func start(token: String, prompt: String, firstMessage: String?, language: String, duration: Int, maxUserTurns: Int) async throws {
         phase = .connecting
         remaining = duration
         self.maxUserTurns = maxUserTurns
+        beginsWithSignal = firstMessage == nil
         let config = ConversationConfig(
-            agentOverrides: AgentOverrides(prompt: prompt, language: Language(rawValue: language) ?? .english)
+            agentOverrides: AgentOverrides(prompt: prompt, firstMessage: firstMessage, language: Language(rawValue: language) ?? .english)
         )
         let conversation = try await ElevenLabs.startConversation(conversationToken: token, config: config)
         self.conversation = conversation
@@ -112,8 +114,9 @@ final class VoiceSession {
             guard phase != .live else { return }
             phase = .live
             attachMeters()
-            // The partner waits in silence for this; see `PracticePrompt`.
-            Task { try? await conversation?.sendMessage(PracticePrompt.beginSignal) }
+            if beginsWithSignal {
+                Task { try? await conversation?.sendMessage(PracticePrompt.beginSignal) }
+            }
             startTicker()
         case .ended, .error:
             guard phase != .ended else { return }

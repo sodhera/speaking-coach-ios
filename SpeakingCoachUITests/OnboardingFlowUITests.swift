@@ -56,9 +56,9 @@ final class OnboardingFlowUITests: XCTestCase {
             usleep(700_000)
         }
 
-        // Mirror — the diagnosis types out; its button waits for it.
-        XCTAssertTrue(app.staticTexts["The Blank-Out"].waitForExistence(timeout: 6))
-        tap("That's me", timeout: 10)
+        // Support is tailored to the answers without labeling the person.
+        XCTAssertTrue(app.staticTexts["Sulav, we'll work through this together."].waitForExistence(timeout: 6))
+        tap("Continue", timeout: 10)
         snap("04-mirror")
 
         // Cost
@@ -78,16 +78,16 @@ final class OnboardingFlowUITests: XCTestCase {
         tap("Show me how", timeout: 15)
         snap("06-promise")
 
-        // Demo: hold the bloom through the first take, watch the fillers
-        // lift, then hold again for the retry.
-        XCTAssertTrue(app.staticTexts["Practice it before it's real."].waitForExistence(timeout: 5))
-        let answer = app.buttons["Hold to answer"].firstMatch
+        // Demo: tap through a clearly labeled example and its one change.
+        XCTAssertTrue(app.staticTexts["See how practice works."].waitForExistence(timeout: 5))
+        let answer = app.buttons["Show an example answer"].firstMatch
         XCTAssertTrue(answer.waitForExistence(timeout: 5))
-        answer.press(forDuration: 6)
-        let retry = app.buttons["Hold to try again"].firstMatch
+        answer.tap()
+        let retry = app.buttons["Show a clearer answer"].firstMatch
         XCTAssertTrue(retry.waitForExistence(timeout: 12))
         snap("07-demo-heard-back")
-        retry.press(forDuration: 6)
+        retry.tap()
+        XCTAssertTrue(app.staticTexts["In practice, you'll try your own words and get one useful next step."].waitForExistence(timeout: 12))
         snap("07-demo-done")
         tap("Continue", timeout: 6)
 

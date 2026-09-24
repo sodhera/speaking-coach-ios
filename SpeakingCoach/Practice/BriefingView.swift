@@ -60,9 +60,12 @@ struct BriefingView: View {
                                 .fixedSize(horizontal: false, vertical: true)
                         }
 
-                        partnerCard
-
-                        if adjusting { adjustments.transition(.opacity.combined(with: .offset(y: -6))) }
+                        VStack(spacing: Space.sm) {
+                            partnerCard
+                            QuietButton(title: "Adjust this rehearsal", color: Palette.coralDeep) {
+                                adjusting = true
+                            }
+                        }
                     }
                     .padding(.horizontal, Space.xxl)
                     .padding(.top, Space.xl)
@@ -70,17 +73,12 @@ struct BriefingView: View {
                 }
                 .scrollDismissesKeyboard(.interactively)
 
-                VStack(spacing: Space.xs) {
-                    PrimaryButton(title: "Start speaking", systemImage: "mic.fill") {
-                        situationFocused = false
-                        Analytics.action("briefing")
-                        var final = setup
-                        final.situation = setup.situation.trimmingCharacters(in: .whitespacesAndNewlines)
-                        onStart(final)
-                    }
-                    QuietButton(title: adjusting ? "Hide adjustments" : "Make it yours", color: Palette.coralDeep) {
-                        withAnimation(.easeInOut(duration: 0.25)) { adjusting.toggle() }
-                    }
+                PrimaryButton(title: "Start speaking", systemImage: "mic.fill") {
+                    situationFocused = false
+                    Analytics.action("briefing")
+                    var final = setup
+                    final.situation = setup.situation.trimmingCharacters(in: .whitespacesAndNewlines)
+                    onStart(final)
                 }
                 .padding(.horizontal, Space.xxl)
                 .padding(.bottom, Space.sm)
@@ -88,6 +86,26 @@ struct BriefingView: View {
         }
         .toolbar(.hidden, for: .navigationBar)
         .onAppear { Analytics.enter("briefing") }
+        .sheet(isPresented: $adjusting) {
+            SceneScreen(depth: 0.4) {
+                HStack {
+                    Text("Adjust rehearsal")
+                        .font(Typeface.hero(28))
+                        .foregroundStyle(Palette.ink)
+                    Spacer()
+                    Button("Done") {
+                        situationFocused = false
+                        adjusting = false
+                    }
+                    .font(Typeface.label(16))
+                    .foregroundStyle(Palette.coralDeep)
+                }
+                .padding(.top, Space.lg)
+                .padding(.bottom, Space.xxl)
+                adjustments
+            }
+            .presentationDragIndicator(.visible)
+        }
     }
 
     private var partnerCard: some View {

@@ -118,6 +118,7 @@ final class PracticeSession {
     }
 
     func start() async {
+        let startedAt = Date.now
         stage = .preparing
         finishing = false
         voice = VoiceSession()
@@ -136,6 +137,7 @@ final class PracticeSession {
             ))
             return
         }
+        let microphoneReadyAt = Date.now
         do {
             // Catalog rehearsals start on the practice server (which checks
             // the plan and reserves the attempt); a custom situation gets its
@@ -148,6 +150,7 @@ final class PracticeSession {
                 context = started.context
                 token = started.token
             }
+            let tokenReadyAt = Date.now
             saveDraft([])
             voice.onTranscript = { [weak self] lines in self?.saveDraft(lines) }
             voice.onNaturalEnd = { [weak self] in Task { await self?.finish() } }
@@ -158,10 +161,13 @@ final class PracticeSession {
             try await voice.start(
                 token: token,
                 prompt: PracticePrompt.build(definition, context),
+                firstMessage: PracticePrompt.firstMessage(definition, context),
                 language: context.language,
                 duration: PracticePrompt.duration(definition, context),
                 maxUserTurns: context.retry == nil ? definition.maxUserTurns : 2
             )
+            let roomReadyAt = Date.now
+            AppLog.info("Practice startup ms: microphone \(Int(microphoneReadyAt.timeIntervalSince(startedAt) * 1000)), token \(Int(tokenReadyAt.timeIntervalSince(microphoneReadyAt) * 1000)), room \(Int(roomReadyAt.timeIntervalSince(tokenReadyAt) * 1000))")
             stage = .live
             UIApplication.shared.isIdleTimerDisabled = true
             if !context.isCustom { PracticeAPI.event("practice_connected", attemptId: context.attemptId) }

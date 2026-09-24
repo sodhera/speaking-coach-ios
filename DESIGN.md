@@ -32,7 +32,7 @@ This lives in `Glass.swift`. On iOS 26+ it is native `glassEffect`. On iOS 17–
 
 The goal is conversion. It makes the user aware of real pain, then shows how practice fixes it:
 
-welcome → **practice language** → name → **category** → the situation → when → readiness baseline → "does this sound like you?" deck → **the mirror** (their pattern) → the cost → **the reframe** ("a practice problem, not a talent problem") → the outcome → **the promise** → **the demo** (the loop, under their thumb) → your plan → hold to commit → account → paywall (personalized, hard)
+welcome → **practice language** → name → **category** → the situation → when → readiness baseline → "does this sound like you?" deck → **support** (care and a useful next step) → the cost → **the reframe** ("a practice problem, not a talent problem") → the outcome → **the promise** → **the demo** (a tap-through example) → your plan → hold to commit → account → paywall (personalized, hard)
 
 ### Categories
 
@@ -47,7 +47,7 @@ The practice language is asked first, because the partner, the scenes and IELTS 
 ### The promise and the demo
 
 - **The promise** is a typewriter page in the user's own words: "Sulav, here's our promise. / Rehearse it with us first, / and you'll walk into your interview calm and clear." It is strong on purpose, but it never names a result we can't measure (no band scores, no "you'll get the job").
-- **The demo** is the product's loop played under the thumb. Holding the bloom streams a first take word by word, with a haptic on each word and the petals opening with the "voice". Then the fillers light up and lift off one by one, and the sentence closes up. Holding again lands the better take, and the fix for the user's own pattern settles underneath. Letting go pauses the take. The card reserves its full height up front, so the bloom never moves under the finger. VoiceOver's activate plays a whole take.
+- **The demo** says it is an example and that the user does not need to speak yet. One clear tap shows a first answer, the card explains one useful change, and a second tap shows a clearer answer. The sample never presents its words as the user's own.
 
 ### Onboarding rules
 
@@ -60,9 +60,9 @@ The practice language is asked first, because the partner, the scenes and IELTS 
   - `NarrativePage`: a typewriter with a haptic on each word, where earlier lines step back.
   - A fingerprint `CommitmentHoldButton`.
   - Left-edge swipe-back and a two-stage keyboard prewarm.
-- **One button, one gesture.** Every step moves forward with the same primary button, including single-select answers (no auto-advance). The fingerprint hold is the only gesture.
+- **Clear actions.** Every step moves forward with the same primary button, including single-select answers (no auto-advance). The demo has two labeled taps to show its example. The fingerprint hold is reserved for commitment.
 - **Buttons.** Question steps keep their button on screen but dimmed through the 900ms settle, which only applies going forward. Reveal steps keep theirs absent until the reveal lands.
-- **The mirror quotes the user.** Its pattern is computed only from the deck (`SpeakingPattern.from`). No "that's me" anywhere means *The Steady One*, never a problem the user didn't report.
+- **Support without a label.** The response is tailored privately from the deck (`SpeakingPattern.from`) and gives care plus a concrete way practice can help. It does not name a type of person or repeat the answers back to them.
 - **No pain, no cost question.** If every statement in the deck gets "Not me", the cost step is skipped and "Nothing yet" is recorded. If they go back and report pain, it's cleared so they answer it themselves.
 - **Outcomes fit the situation.** IELTS and everyday conversations offer "I keep going, without freezing". Work and presentations offer "I get what I asked for".
 - **The sun peaks on the commitment.** Stage depth is the step position divided by the commit step's position.
@@ -73,7 +73,7 @@ The practice language is asked first, because the partner, the scenes and IELTS 
 
 **Apple or Google, nothing else.** There's no email or password path: nothing to create, forget or reset, no confirmation emails, and no second flow to maintain. Both providers hand back a verified identity in one sheet. The two buttons are matching 58pt white pills with the official marks, labelled "Sign up with …" in the flow and "Sign in with …" on "Welcome back".
 
-Apple uses the native sheet with a nonce, then `signInWithIdToken`. Google uses Supabase OAuth in `ASWebAuthenticationSession` with the redirect `com.sodhera.speakingcoach://auth-callback`. The profile lives in `user_metadata.coach_profile_v1`, is mirrored to the `profiles` row (name, language, goals), and is cached per user on the device. Accounts from the old app, which have a `profiles` row but no metadata, are treated as already set up.
+Apple uses the native sheet with a nonce, then `signInWithIdToken`. Google uses Supabase OAuth in `ASWebAuthenticationSession` with the existing app redirect `dating-coach://auth/callback`. The profile lives in `user_metadata.coach_profile_v1`, is mirrored to the `profiles` row (name, language, goals), and is cached per user on the device. Accounts from the old app, which have a `profiles` row but no metadata, are treated as already set up.
 
 > Accounts the old app created with an email and password can't sign in here. That's a deliberate product call.
 
@@ -139,7 +139,7 @@ Review routes: `-review-screen=home|setup|checkin` with `-review-plan-step=retry
 Two tabs, mirroring SleepBlock:
 
 - **Home: go rehearse.** It never scrolls. A small-caps greeting sits over the name, the bloom breathes at the centre, and one glass capsule names the next rehearsal. "Start rehearsal" sits where the thumb rests, with a "Last rehearsal …" line only when it's recent. The streak chip sits top-left: it shows zero as a hollow flame and never celebrates nothing. The full library sits top-right.
-- **Profile.** A hero title with the gear, a summary band with one numeral (rehearsals in the last 7 days) and the starting readiness, the user's pattern, and recent rehearsals from `reports`. Settings is a sheet of grouped glass rows.
+- **Profile.** A hero title with the gear, a summary band with one numeral (rehearsals in the last 7 days) and the starting readiness, a useful next step, and recent rehearsals from `reports`. Settings is a sheet of grouped glass rows.
 
 ## The rehearsal room
 
