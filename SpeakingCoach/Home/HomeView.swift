@@ -78,7 +78,7 @@ struct HomeView: View {
     /// Shown only once history has loaded, so a step is never drawn as
     /// undone and then ticked a moment later.
     private var plan: FirstPlan? {
-        guard model.history.loaded, let plan = FirstPlan(profile: profile, records: model.history.records), !plan.isComplete else { return nil }
+        guard model.history.loaded, let plan = FirstPlan(profile: profile, records: model.history.records, startedRetries: model.history.startedRetries), !plan.isComplete else { return nil }
         return plan
     }
 
@@ -124,7 +124,7 @@ struct HomeView: View {
             PromptView(routine: model.routine, source: .practice, language: profile?.language ?? "en") { showsPrompt = false }
         }
         .sheet(isPresented: $showsCheckIn) {
-            if let plan = FirstPlan(profile: profile, records: model.history.records) {
+            if let plan = FirstPlan(profile: profile, records: model.history.records, startedRetries: model.history.startedRetries) {
                 PlanCheckInView(plan: plan) { model.completePlan(readiness: $0) }
                     .presentationDragIndicator(.visible)
             }
@@ -739,7 +739,7 @@ struct LibraryView: View {
                             }
                             if let model {
                                 GlassRowDivider()
-                                ownRow(icon: "alarm.fill", title: "Practice routine", detail: "A daily prompt, and speak to unlock your apps.") {
+                                ownRow(icon: "alarm", title: "Practice routine", detail: "A daily prompt, and speak to unlock your apps.") {
                                     routining = true
                                 }
                             }

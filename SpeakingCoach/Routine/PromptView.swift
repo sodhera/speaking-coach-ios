@@ -140,7 +140,7 @@ struct PromptView: View {
                         QuietButton(title: "You can skip in \(left)s", color: Palette.muted) {}
                             .disabled(true)
                     } else {
-                        QuietButton(title: "Skip — open my apps for \(Self.skipMinutes) minutes") {
+                        QuietButton(title: "Skip and open my apps for \(Self.skipMinutes) minutes") {
                             routine.grant(minutes: Self.skipMinutes)
                             Analytics.action("daily_prompt_skip")
                             onClose()

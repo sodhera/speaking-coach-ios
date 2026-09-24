@@ -204,7 +204,7 @@ enum MomentTiming: String, Codable, CaseIterable, Identifiable {
         case .soon: "Today or tomorrow"
         case .thisWeek: "This week"
         case .thisMonth: "This month"
-        case .noDate: "No date — I want to be ready"
+        case .noDate: "No date, I just want to be ready"
         }
     }
 
@@ -241,7 +241,7 @@ enum PainStatement: String, Codable, CaseIterable, Identifiable {
 
     var text: String {
         switch self {
-        case .wordsVanish: "I know what I want to say — until I have to say it."
+        case .wordsVanish: "I know what I want to say, until I have to say it."
         case .blankOnTheSpot: "My mind goes blank when I'm put on the spot."
         case .rambleWhenNervous: "When I'm nervous, I talk too fast or ramble."
         case .stayQuiet: "I stay quiet, even when I have a good point."
@@ -336,7 +336,7 @@ enum SpeakingCost: String, Codable, CaseIterable, Identifiable {
         case .takenSeriously: "Being taken seriously"
         case .connection: "A connection I wanted"
         case .selfConfidence: "Confidence in myself"
-        case .nothingYet: "Nothing yet — I want to stay ahead"
+        case .nothingYet: "Nothing yet, I want to stay ahead"
         }
     }
 
@@ -458,7 +458,7 @@ struct DemoScript {
                 partner: "Your interviewer",
                 prompt: "“Tell me about yourself.”",
                 firstTake: "{Um, so,} I grew up in Ohio, then I studied {like,} design, {and basically} I make tools now. {I guess.}",
-                betterTake: "I'm a designer who turns messy problems into simple tools — most recently at Acme.",
+                betterTake: "I'm a designer who turns messy problems into simple tools. Lately, a booking app for local clinics.",
                 note: "Lead with who you are now."
             )
         case .raise:
@@ -498,7 +498,7 @@ struct DemoScript {
                 partner: "Someone new",
                 prompt: "“So, what do you do?”",
                 firstTake: "{Oh, um,} nothing interesting, {really.} I'm {like,} a teacher. {I guess.}",
-                betterTake: "I teach kids to code — one just built a game about his cat. You?",
+                betterTake: "I teach kids to code. One just built a game about his cat. You?",
                 note: "A detail, then a question back."
             )
         case .everyday:
@@ -514,7 +514,7 @@ struct DemoScript {
                 partner: "Your examiner",
                 prompt: "“Do you enjoy cooking?”",
                 firstTake: "{Um,} yes. {Like,} I cook {uh,} sometimes. {I guess.}",
-                betterTake: "Yes, I love it — especially cooking for friends at the weekend. It's how I relax.",
+                betterTake: "Yes, I love it, especially cooking for friends at the weekend. It's how I relax.",
                 note: "Answer, then extend with a reason."
             )
         }

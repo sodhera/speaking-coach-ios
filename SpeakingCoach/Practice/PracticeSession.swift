@@ -27,6 +27,8 @@ final class PracticeSession {
         /// Words were captured, so feedback is still possible.
         var canAssess = false
         var canRetry = true
+        /// Offer the whole scene again rather than the same doomed request.
+        var offersFresh = false
     }
 
     private(set) var stage: Stage = .preparing
@@ -149,6 +151,8 @@ final class PracticeSession {
                 let started = try await PracticeAPI.start(context)
                 context = started.context
                 token = started.token
+                // The server counts the retry as used from this moment.
+                if let parent = context.retry?.parentAttemptId { RetryLedger.mark(parent, for: userID) }
             }
             let tokenReadyAt = Date.now
             saveDraft([])
@@ -172,8 +176,19 @@ final class PracticeSession {
             UIApplication.shared.isIdleTimerDisabled = true
             if !context.isCustom { PracticeAPI.event("practice_connected", attemptId: context.attemptId) }
             observeDrop()
+        } catch PracticeAPIError.retryUsed {
+            if let parent = context.retry?.parentAttemptId { RetryLedger.mark(parent, for: userID) }
+            stage = .failed(Failure(
+                title: "This retry's been used",
+                message: PracticeAPIError.retryUsed.localizedDescription,
+                canRetry: false,
+                offersFresh: true
+            ))
         } catch let error as PracticeAPIError {
-            stage = .failed(Failure(title: "Couldn't start", message: error.localizedDescription, canRetry: !(error.isSubscription)))
+            // A refusal (409) won't change on a second ask; only a dropped
+            // connection or a busy server might.
+            let refused: Bool = if case .server(409, _) = error { true } else { false }
+            stage = .failed(Failure(title: "Couldn't start", message: error.localizedDescription, canRetry: !error.isSubscription && !refused))
         } catch {
             stage = .failed(Failure(title: "Couldn't connect", message: "Your partner couldn't connect. Check your connection and try again."))
         }

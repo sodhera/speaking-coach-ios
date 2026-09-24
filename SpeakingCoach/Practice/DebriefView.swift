@@ -171,7 +171,7 @@ struct DebriefView: View {
                     .revealIn(after: 0.9)
                 }
 
-                Text("Based on the words captured in this session — not a rating of your accent or personality.")
+                Text("Based on the words captured in this session, not a rating of your accent or personality.")
                     .font(Typeface.body(12))
                     .foregroundStyle(Palette.muted)
                     .fixedSize(horizontal: false, vertical: true)
@@ -475,7 +475,7 @@ struct DebriefView: View {
                     .fixedSize(horizontal: false, vertical: true)
                 beforeAfterRow("Before", comparison.before, faded: true)
                 beforeAfterRow("Now", comparison.after, faded: false)
-                Text("One session compared with one retry — a direction, not proof of lasting change.")
+                Text("One session compared with one retry. A direction, not proof of lasting change.")
                     .font(Typeface.body(12))
                     .foregroundStyle(Palette.muted)
                     .fixedSize(horizontal: false, vertical: true)

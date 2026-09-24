@@ -108,7 +108,7 @@ struct ReviewScreens: View {
                 }
             case "custom":
                 CustomSituationView(language: "en", onBack: {}, onStart: { _, _ in })
-            case "room", "debrief", "assessing", "recovery", "retry", "customdebrief":
+            case "room", "connecting", "debrief", "assessing", "recovery", "retry", "customdebrief":
                 PracticeSessionView(session: reviewSession, onClose: {})
             case "library":
                 LibraryView(presentations: model.presentations, model: model) { _ in }
@@ -124,7 +124,7 @@ struct ReviewScreens: View {
                 }
                 .onAppear {
                     model.preparation.setReviewPlan(PreparationPlan(
-                        programID: "interview", eventName: "Interview at Acme",
+                        programID: "interview", eventName: "My interview on Friday",
                         eventDate: Calendar.current.date(byAdding: .day, value: 5, to: .now), reminderEnabled: true,
                         createdAt: .distantPast, reflection: nil
                     ))
@@ -184,12 +184,13 @@ extension ReviewScreens {
         let context = PracticeContext.new(for: setup, language: "en")
         let transcript = [
             TranscriptLine(id: "coach-1", role: .coach, text: "Tell me a little about yourself."),
-            TranscriptLine(id: "user-1", role: .user, text: "I'm a product designer. Most recently I led the redesign of our onboarding at Acme, which cut drop-off by a third."),
+            TranscriptLine(id: "user-1", role: .user, text: "I'm a product designer. Most recently I led the redesign of our onboarding, which cut drop-off by a third."),
             TranscriptLine(id: "coach-2", role: .coach, text: "What drew you to this role?"),
             TranscriptLine(id: "user-2", role: .user, text: "Um, I guess I like the product, and, you know, the team seems great."),
         ]
         switch name {
         case "room": session.loadReviewStage(.live)
+        case "connecting": session.loadReviewStage(.preparing)
         case "assessing": session.loadReviewStage(.assessing)
         case "recovery": session.loadReviewStage(.recovery(PracticeDraft(context: context, transcript: transcript)))
         case "customdebrief":
@@ -208,7 +209,7 @@ extension ReviewScreens {
                     Subscore(label: "Assertiveness", score: 41, note: "You asked if it *could* come back, not when it will."),
                     Subscore(label: "Warmth", score: 78, note: "Friendly and respectful throughout."),
                 ],
-                rewrites: [Rewrite(original: "Sorry to bother you, I was just wondering if maybe the deposit could come back soon?", better: "I'm calling about my £900 deposit. I'd like it returned by Friday — can you confirm that?")],
+                rewrites: [Rewrite(original: "Sorry to bother you, I was just wondering if maybe the deposit could come back soon?", better: "I'm calling about my £900 deposit. I'd like it returned by Friday. Can you confirm that?")],
                 custom: situation
             )
             session.loadReviewStage(.report(PracticeReport(id: UUID(), transcript: lines, analysis: analysis)))
@@ -221,12 +222,12 @@ extension ReviewScreens {
             )
             let retryTranscript = [
                 TranscriptLine(id: "coach-r1", role: .coach, text: "What drew you to this role?"),
-                TranscriptLine(id: "user-r1", role: .user, text: "Your onboarding loses people at the same step ours did — and I've fixed that once already."),
+                TranscriptLine(id: "user-r1", role: .user, text: "Your onboarding loses people at the same step ours did, and I've fixed that once already."),
             ]
             let assessment = PracticeAssessment(
                 summary: "This time your reason was specific and tied to your own result.",
                 criteria: [CriterionResult(id: practice.criteria[1].id, level: 2, note: "You named something specific about their product.", evidence: [.init(turnId: "user-r1", quote: "Your onboarding loses people at the same step ours did")])],
-                adjustment: "Keep the link, then stop — the silence after a strong line is yours.",
+                adjustment: "Keep the link, then stop. The silence after a strong line is yours.",
                 targetCriterionId: practice.criteria[1].id,
                 limitations: []
             )

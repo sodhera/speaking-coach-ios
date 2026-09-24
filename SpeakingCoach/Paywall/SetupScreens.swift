@@ -190,7 +190,7 @@ struct SetupCompleteView: View {
         model.profile?.moment?.firstPractice ?? PracticeCatalog.definition("interview_tell_me_about_yourself")
     }
 
-    private var plan: FirstPlan? { FirstPlan(profile: model.profile, records: model.history.records) }
+    private var plan: FirstPlan? { FirstPlan(profile: model.profile, records: model.history.records, startedRetries: model.history.startedRetries) }
 
     var body: some View {
         Group {
@@ -265,7 +265,7 @@ struct SetupCompleteView: View {
             Spacer(minLength: Space.xxl)
 
             GlassRowGroup {
-                GlassRow(icon: "mic.fill", title: firstPractice?.title ?? "First session", value: firstPractice.map { "\($0.durationMinutes) min" })
+                GlassRow(icon: "mic", title: firstPractice?.title ?? "First session", value: firstPractice.map { "\($0.durationMinutes) min" })
                 GlassRowDivider()
                 Menu {
                     Picker("Practice language", selection: Binding(
@@ -279,7 +279,7 @@ struct SetupCompleteView: View {
                 }
                 GlassRowDivider()
                 HStack(spacing: Space.md) {
-                    GlassRowIcon(icon: "bell.fill")
+                    GlassRowIcon(icon: "bell")
                     Toggle(isOn: Binding(
                         get: { remindersOn },
                         set: { on in

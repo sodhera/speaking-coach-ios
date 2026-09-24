@@ -190,24 +190,24 @@ struct RootView: View {
                 PracticeSessionView(
                     session: PracticeSession(setup: setup, language: model.profile?.language ?? "en", userID: userID) { _ = finished() },
                     canRetry: canRetry,
-                    onClose: { self.launch = nil }
+                    onClose: { self.launch = nil; _ = finished() }
                 )
             case .recover(let draft):
                 PracticeSessionView(
                     session: PracticeSession(draft: draft, userID: userID) { _ = finished() },
                     canRetry: canRetry,
-                    onClose: { self.launch = nil }
+                    onClose: { self.launch = nil; _ = finished() }
                 )
             case .report(let report):
                 PracticeSessionView(
                     session: PracticeSession(report: report, userID: userID) { _ = finished() },
                     canRetry: canRetry,
-                    onClose: { self.launch = nil }
+                    onClose: { self.launch = nil; _ = finished() }
                 )
             case .custom(let situation, let setup):
                 PracticeSessionView(
                     session: PracticeSession(custom: situation, setup: setup, language: model.profile?.language ?? "en", userID: userID) { _ = finished() },
-                    onClose: { self.launch = nil }
+                    onClose: { self.launch = nil; _ = finished() }
                 )
             case .prompt(let source):
                 PromptView(routine: model.routine, source: source, language: model.profile?.language ?? "en") { self.launch = nil }
@@ -243,7 +243,8 @@ struct RootView: View {
         return .new(setup)
     }
 
-    /// One focused retry per rehearsal, as the server enforces.
+    /// One focused retry per session, as the server enforces: none once it
+    /// has ended in feedback or been started on this phone.
     private func canRetry(_ reportID: UUID) -> Bool {
         !model.history.retriedIDs.contains(reportID)
     }

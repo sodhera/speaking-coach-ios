@@ -52,11 +52,15 @@ final class VoiceSession {
         phase = .live
         remaining = 184
         transcript = [
-            TranscriptLine(id: "coach-1", role: .coach, text: "Thanks for coming in. So — tell me a little about yourself."),
+            TranscriptLine(id: "coach-1", role: .coach, text: "Thanks for coming in. So, tell me a little about yourself."),
             TranscriptLine(id: "user-1", role: .user, text: "I'm a designer who turns messy problems into simple tools."),
             TranscriptLine(id: "coach-2", role: .coach, text: "Interesting. What's one tool you made that people actually use every day?"),
         ]
-        partnerSpeaking = true
+        // `-review-room-start`: the moment after the first question, before
+        // the user has said anything. `-review-room-remaining=<s>` sets the clock.
+        if LaunchFlags.has("-review-room-start") { transcript = Array(transcript.prefix(1)) }
+        if let seconds = LaunchFlags.value("-review-room-remaining").flatMap(Int.init) { remaining = seconds }
+        partnerSpeaking = !LaunchFlags.has("-review-room-start")
         Task { @MainActor in
             var t = 0.0
             while phase == .live {

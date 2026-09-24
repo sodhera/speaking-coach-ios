@@ -31,6 +31,18 @@ final class FirstPlanTests: XCTestCase {
         XCTAssertEqual(plan?.retryFrom?.id, first.id)
     }
 
+    func testARetryStartedButLeftIsntOfferedAgainNorCountedDone() {
+        // The server counts a retry as used once it starts, feedback or not.
+        let older = record("salary_raise")
+        let newer = record("salary_raise")
+        let plan = FirstPlan(profile: profile(), records: [newer, older], startedRetries: [newer.id])
+        XCTAssertEqual(plan?.current, .retry, "No feedback came back, so step two isn't done")
+        XCTAssertEqual(plan?.retryFrom?.id, older.id, "Step two goes to a session whose retry is still free")
+
+        let spent = FirstPlan(profile: profile(), records: [newer], startedRetries: [newer.id])
+        XCTAssertNil(spent?.retryFrom, "With no free retry, step two runs the whole scene again")
+    }
+
     func testRetryOfThePlanRehearsalMovesToFinish() {
         let first = record("salary_raise")
         let plan = FirstPlan(profile: profile(), records: [record("salary_raise", parent: first.id), first])

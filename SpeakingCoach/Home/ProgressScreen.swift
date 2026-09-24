@@ -115,7 +115,7 @@ struct ActivitySections: View {
                 Spacer(minLength: Space.sm)
                 trailing(for: retry)
             }
-            .padding(.leading, 30 + Space.md)
+            .padding(.leading, GlassRowIcon.width + Space.md)
             .padding(.bottom, Space.md)
             .frame(minHeight: 32)
             .contentShape(Rectangle())
@@ -331,7 +331,7 @@ private struct EmptyHistory: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: Space.md) {
-            GlassRowIcon(icon: "mic.fill")
+            GlassRowIcon(icon: "mic")
             VStack(alignment: .leading, spacing: 3) {
                 Text(loaded ? "Nothing here yet" : "Loading your history…")
                     .font(Typeface.label(16))

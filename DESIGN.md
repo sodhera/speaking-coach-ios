@@ -47,7 +47,7 @@ The practice language is asked first, because the partner, the scenes and IELTS 
 ### The promise and the demo
 
 - **The promise** is a typewriter page in the user's own words: "Sulav, here's our promise. / Practise it with us first, / and you'll walk into your interview calm and clear." It is strong on purpose, but it never names a result we can't measure (no band scores, no "you'll get the job").
-- **The demo** says it is an example and that the user does not need to speak yet. One clear tap shows a first answer, the card explains one useful change, and a second tap shows a clearer answer. The sample never presents its words as the user's own.
+- **The demo** is a two-line chat in the feedback's bubble style. The partner asks on the left ("Your interviewer"), and "Play an example" plays an answer, labelled "Example answer", in on the right. The filler words turn red and lift out, one line names the change ("One change: Lead with who you are now."), and "Play it with the change" plays the clearer answer. It ends on one line: "Your words, one change, a clearer try." An earlier version stacked a subtitle, a three-step legend, a tracked label and an empty placeholder before anything happened, and it was hard to follow. Now nothing needs reading before the first tap. Room for the answer and the button is reserved, so nothing moves.
 
 ### Onboarding rules
 
@@ -58,6 +58,7 @@ The practice language is asked first, because the partner, the scenes and IELTS 
   - `CoachSlider`: a rolling number and a tick on each step.
   - An underline name field.
   - `NarrativePage`: a typewriter with a haptic on each word, where earlier lines step back.
+  - `TypedParagraphs`: the same typing rhythm (`Typewriter`) for sentences that type in place, one after another, such as the support step's care and next step. Sentences the app says to the user type out with word haptics rather than fading in.
   - A fingerprint `CommitmentHoldButton`.
   - Left-edge swipe-back and a two-stage keyboard prewarm.
 - **Clear actions.** Every step moves forward with the same primary button, including single-select answers (no auto-advance). The demo has two labeled taps to show its example. The fingerprint hold is reserved for commitment.
@@ -138,11 +139,15 @@ Review routes: `-review-screen=home|setup|checkin` with `-review-plan-step=retry
 
 **Custom situation** mirrors the briefing: a centred cover (the ✎ from its tile), title and one short line, then both questions in one card and the two choices. **A primary button that can't be tapped yet is neutral**, a grey glass pill with muted words that turns coral once it can go. A faded coral read as broken. This lives in `PrimaryButton`, so every screen gets it.
 
+**Row icons are bare glyphs.** List rows (Settings, History, the routine, a deck's sessions) keep an icon to scan by, drawn as a plain outline glyph in quiet ink with no tinted square behind it (outlines throughout; filled and outline glyphs side by side looked uneven). The pink rounded squares read as templated. Coral stays the accent; a glyph is coloured only when the colour means something (Delete account's red, the preparation plan's selected program, a sage confirmation).
+
+**Swipe back works everywhere.** Pages hide the navigation bar for their own glass chevron, which switches off iOS's back swipe. A `UINavigationController` extension turns it back on for every stack, including iOS 26's swipe from anywhere on the page, so a page follows the finger. It is allowed only when there is a page to go back to, since on a root it would freeze the screen. The hand-rolled `swipeBack` modifier stays only for onboarding and sign-in, which are custom transitions rather than a stack.
+
 **Pushed pages hide the tab bar.** The briefing, Custom situation, presentations, a deck, a presentation review and the preparation plan end in their own action at the bottom, so the tab bar steps aside rather than stacking under it.
 
 **Ground.** Everything after onboarding stands on warm paper lit faintly from above (`AppGround.warmLight`, #FAF6F2 at the top to #F3ECE5 at the bottom), with no grain or ripples. `MorningStage` draws it when the environment's `stageStyle` is `.flat`, which is set on the tab shell and the session cover. The sunrise stays for onboarding, the paywall and the setup gates, where it tells the story of committing. Behind real content it went muddy tan at the bottom, and its grain and ripples added noise. A flat grey (#EFEBE7) was tried in between: it was clean but read cold and dull next to the coral.
 
-**Wording.** Everything the user reads says *session* for one go at a scene and *practise* for the verb ("Start my first session", "Practise with my slides", "Your next session is ready"). "Rehearsal" read oddly in headings and counts. Code names (`RehearsalView`, `rehearsals.json`), analytics events and the content file's `format: "rehearsal"` keep the old word, because none of them reach the screen.
+**Wording.** Everything the user reads says *session* for one go at a scene and *practise* for the verb ("Start my first session", "Practise with my slides", "Your next session is ready"). "Rehearsal" read oddly in headings and counts. Code names (`RehearsalView`, `rehearsals.json`), analytics events and the content file's `format: "rehearsal"` keep the old word, because none of them reach the screen. **No em dashes** in anything the user reads; use a full stop or a comma. They read as machine-written. Examples use believable specifics, never placeholder names like "Acme".
 
 Two tabs: Practice and Profile. Progress and Profile were separate tabs, each too thin to earn one, and both were about the user rather than what to do next, so they merged.
 
@@ -175,7 +180,9 @@ The screens after a tap on Practice use its language, so the flow reads as one a
 
 Built like SleepBlock's sleep mode. **The bloom is the state**: it opens with whoever is speaking, driven by the real audio levels of the mic and the partner's track (fast attack, slow release), and greys out while paused. **The partner's line is the instrument**, shown as a caption. The user's own words are never captioned back to them, because they just said them.
 
-- **Control grammar.** Consequential exits take a deliberate confirmation, and harmless ones are taps. "Hold to finish & get feedback" is a 1.2s coral hold. "I need a moment" and "Help me" are taps. Help pauses the scene and shows the rehearsal's sentence scaffold. The ✕ leaves at once if nothing has been said yet. Otherwise it asks, and offers feedback on what was said.
+- **Waits show motion.** "Getting your partner" and "Finding one useful change" end in `WaitingDots`: three dots that fill in one at a time. The dots keep their space, so the words never shift, and Reduce Motion shows a still ellipsis.
+- **What's on screen.** The header is only the ✕ and the time left, because the question is already in the middle and the session was chosen a moment ago. The time turns coral for the last 30 seconds. Above the partner's line, one label says who has the floor: the partner by name ("A hiring manager") while they talk, "Your turn" once they stop.
+- **Control grammar.** Consequential exits take a deliberate confirmation, and harmless ones are taps. "I need a moment" and "Help me" are taps. Help pauses the scene and shows the session's sentence scaffold. "Finish and get feedback" asks first, and appears only after the user has spoken. Before that it would have nothing to give feedback on, so its room is kept empty (the bloom never jumps). The ✕ leaves at once if nothing has been said yet. Otherwise it asks, and offers feedback on what was said.
 - **Pause is real.** The mic is muted, the partner's audio drops to zero, and activity pings keep the partner from filling the silence. Resuming asks the partner to repeat its last question.
 - **The partner waits for a signal.** The prompt override tells it to stay silent until `[[PRACTICE_BEGIN]]`, then open with the rehearsal's exact first line. Control signals are filtered out of every transcript. (ElevenLabs' `firstMessage` override would be cleaner, but it needs that override allowed in the agent's security settings. The signal approach works with the agents as they are configured today.)
 - **Natural close.** After the last allowed answer, or when time is up (the partner is asked to wrap up), the scene ends once both sides have been quiet for 3s. It never ends mid-sentence.
@@ -213,6 +220,7 @@ Two views of the same rehearsal, switched by a **Feedback | Conversation** capsu
 
 The fastest path from "try one change" to having actually tried it. After a rehearsal, the debrief names the moment under *Try one change* ("The moment to retry: 'What drew you to this role?'"), and **Retry this moment · 90 sec** leads the actions.
 
+- **One retry, as the server counts it.** The server allows one focused retry per session and counts it as used the moment it starts, finished or not. The app used to judge only by saved reports, so a retry left early stayed on offer and was then refused ("already been started"), with a "Try again" that could never succeed. Now the phone keeps a small per-account ledger (`RetryLedger`) of retries it has started, and the debrief and the first plan's step two both consult it. A refusal with the server's `retry_used` code is recorded and answered with "Practise the whole scene". Other refusals no longer offer a pointless "Try again". History reloads whenever a session closes, not only when it finishes.
 - **The moment** is the partner's question just before the answer the feedback targeted, with up to eight lines of what came before it (`RetryCheckpoint.make`). This mirrors the server's `retryFromReport`, so the app only offers retries the server will accept.
 - **The retry** restores that scene, opens on that exact question, allows two answers and runs about 90 seconds. It has a fresh voice connection and the same original setup. The server keeps the setup and doesn't re-check the plan for retries.
 - **What changed** leads the retry's debrief. It covers the one criterion targeted, before → now as level dots plus the user's own quote from each attempt, and a sage "Clearer this time." when the level rose. It's always captioned: "One session compared with one retry — a direction, not proof of lasting change." A comparison is shown only when the rubric is the same.

@@ -72,12 +72,12 @@ private struct OptionPressStyle: ButtonStyle {
 
 // MARK: - Glass rows (settings surfaces)
 
-/// One row inside a glass group: a tinted icon chip, a short title, and an
+/// One row inside a glass group: a bare glyph, a short title, and an
 /// optional quiet trailing value and chevron. Rows name things; they don't
 /// explain them.
 struct GlassRow: View {
     let icon: String
-    var iconColor: Color = Palette.coralDeep
+    var iconColor: Color = Palette.dim
     let title: String
     var titleColor: Color = Palette.ink
     var value: String?
@@ -110,18 +110,21 @@ struct GlassRow: View {
     }
 }
 
+/// A row's glyph, bare: no tinted square behind it, which read as
+/// templated. Quiet ink by default, so coral stays the screen's accent;
+/// callers colour it only when the colour means something.
 struct GlassRowIcon: View {
+    /// Its slot, so titles line up down a list and retries can indent to it.
+    static let width: CGFloat = 24
+
     let icon: String
-    var color: Color = Palette.coralDeep
+    var color: Color = Palette.dim
 
     var body: some View {
         Image(systemName: icon)
-            .font(.system(size: 14, weight: .medium))
+            .font(.system(size: 16, weight: .regular))
             .foregroundStyle(color)
-            .frame(width: 30, height: 30)
-            .background {
-                RoundedRectangle(cornerRadius: 9, style: .continuous).fill(color.opacity(0.12))
-            }
+            .frame(width: Self.width, height: 24)
     }
 }
 
@@ -234,9 +237,29 @@ extension View {
 
 // MARK: - Swipe back
 
-/// Left-edge swipe → back, mirroring the glass chevron. These flows are
-/// custom transitions, not a NavigationStack, so the system pop gesture
-/// doesn't exist. A trigger, not a tracked pop. Call sites tap `soft()` —
+/// The system's edge swipe back on every NavigationStack page. Our pages
+/// hide the navigation bar for their own glass chevron, and hiding it
+/// switches the pop gesture off; this turns it back on, so a page follows
+/// the finger as it does in any app. Only when there's somewhere to go back
+/// to: on a stack's root the gesture would freeze the screen.
+extension UINavigationController: @retroactive UIGestureRecognizerDelegate {
+    override open func viewDidLoad() {
+        super.viewDidLoad()
+        interactivePopGestureRecognizer?.delegate = self
+        // iOS 26's back swipe from anywhere on the page, not just the edge.
+        if #available(iOS 26.0, *) {
+            interactiveContentPopGestureRecognizer?.delegate = self
+        }
+    }
+
+    public func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+        viewControllers.count > 1
+    }
+}
+
+/// Left-edge swipe → back, mirroring the glass chevron, for flows that are
+/// custom transitions rather than a NavigationStack (onboarding, sign-in),
+/// where the system pop gesture doesn't exist. A trigger, not a tracked pop. Call sites tap `soft()` —
 /// a swipe is a non-button cue, never the button knock.
 extension View {
     func swipeBack(_ action: @escaping () -> Void) -> some View {

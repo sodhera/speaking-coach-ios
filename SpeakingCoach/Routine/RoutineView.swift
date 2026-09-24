@@ -44,7 +44,6 @@ struct RoutineView: View {
         }
         .statusBarScrim()
         .toolbar(.hidden, for: .navigationBar)
-        .swipeBack(onBack)
         .onAppear {
             routine.reconcile()
             if !loaded {
@@ -77,7 +76,7 @@ struct RoutineView: View {
                         .font(Typeface.body(15))
                         .foregroundStyle(Palette.dim)
                         .fixedSize(horizontal: false, vertical: true)
-                    Text("Apple's Screen Time keeps your choices private — Speaking Coach never sees which apps they are.")
+                    Text("Apple's Screen Time keeps your choices private. Speaking Coach never sees which apps they are.")
                         .font(Typeface.body(13))
                         .foregroundStyle(Palette.muted)
                         .fixedSize(horizontal: false, vertical: true)
@@ -106,7 +105,7 @@ struct RoutineView: View {
                         Haptics.heavy()
                         picking = true
                     } label: {
-                        GlassRow(icon: "square.grid.2x2.fill", title: "Apps", value: routine.selectionCount == 0 ? "Choose" : "\(routine.selectionCount) chosen", showsChevron: true)
+                        GlassRow(icon: "square.grid.2x2", title: "Apps", value: routine.selectionCount == 0 ? "Choose" : "\(routine.selectionCount) chosen", showsChevron: true)
                     }
                     .buttonStyle(.plain)
                     GlassRowDivider()
@@ -161,7 +160,7 @@ struct RoutineView: View {
             SectionTitle(text: "Daily prompt")
             GlassRowGroup {
                 Toggle(isOn: Binding(get: { routine.settings.promptEnabled }, set: { on in savePrompt(enabled: on) })) {
-                    rowLabel("Remind me", icon: "bell.fill")
+                    rowLabel("Remind me", icon: "bell")
                 }
                 .tint(Palette.coral)
                 .frame(minHeight: 56)

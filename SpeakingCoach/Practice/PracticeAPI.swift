@@ -5,6 +5,8 @@ enum PracticeAPIError: LocalizedError {
     case signedOut
     case sessionUnavailable
     case subscriptionRequired
+    /// The session's one focused retry has already been started.
+    case retryUsed
     case server(status: Int, message: String)
     case offline
 
@@ -13,6 +15,7 @@ enum PracticeAPIError: LocalizedError {
         case .signedOut: "Please sign in again to practice."
         case .sessionUnavailable: "We couldn't verify your sign-in. Check your connection and try again."
         case .subscriptionRequired: "Your plan isn't active right now."
+        case .retryUsed: "Each session gets one focused retry, and this one has already been started. You can practise the whole scene again instead."
         case .server(_, let message): message
         case .offline: "You're offline. Check your connection and try again."
         }
@@ -97,6 +100,7 @@ enum PracticeAPI {
         guard (200..<300).contains(status) else {
             let payload = try? JSONDecoder().decode([String: String].self, from: data)
             if status == 402 { throw PracticeAPIError.subscriptionRequired }
+            if status == 409, path == "start", payload?["code"] == "retry_used" { throw PracticeAPIError.retryUsed }
             if status == 409, path == "start" {
                 throw PracticeAPIError.server(status: status, message: payload?["error"] ?? "This session's retry has already been used. Start a new session instead.")
             }

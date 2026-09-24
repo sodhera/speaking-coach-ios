@@ -48,7 +48,6 @@ struct RehearsalReviewView: View {
         .toolbar(.hidden, for: .navigationBar)
         // A page with its own action at the bottom: the tab bar steps aside.
         .toolbar(.hidden, for: .tabBar)
-        .swipeBack(leave)
         .onAppear {
             if let rehearsal { player.load(store.audioURL(rehearsal)) }
             Analytics.enter("presentation_review")

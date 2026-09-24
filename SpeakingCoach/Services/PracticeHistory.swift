@@ -82,9 +82,18 @@ final class PracticeHistory {
     }
     #endif
 
-    /// Rehearsals whose one focused retry has already been used — the server
-    /// allows exactly one per rehearsal.
-    var retriedIDs: Set<UUID> { Set(records.compactMap(\.parentID)) }
+    /// Sessions whose one focused retry has already been used. The server
+    /// allows exactly one per session and counts a retry as used the moment
+    /// it starts, so this adds the retries this phone started to the ones
+    /// that ended in feedback. A retry left early never saves a report, and
+    /// without the ledger the app kept offering it only to be refused.
+    var retriedIDs: Set<UUID> { completedRetryParents.union(startedRetries) }
+
+    /// Retries that ended in feedback. What the first plan counts as done.
+    var completedRetryParents: Set<UUID> { Set(records.compactMap(\.parentID)) }
+
+    /// Retries this phone started, finished or not.
+    var startedRetries: Set<UUID> { userID.map(RetryLedger.parents(for:)) ?? [] }
 
     /// A full saved report, for reopening a past rehearsal.
     func report(id: UUID) async throws -> PracticeReport {
@@ -127,5 +136,22 @@ final class PracticeHistory {
         init(from decoder: Decoder) throws {
             items = (try? [CriterionLevel](from: decoder)) ?? []
         }
+    }
+}
+
+/// The sessions whose retry this phone has started, per account. The
+/// server is the authority; this only stops the app offering a retry the
+/// server will refuse.
+enum RetryLedger {
+    private static func key(_ userID: UUID) -> String { "practice.startedRetries.\(userID.uuidString.lowercased())" }
+
+    static func parents(for userID: UUID) -> Set<UUID> {
+        Set((UserDefaults.standard.stringArray(forKey: key(userID)) ?? []).compactMap(UUID.init(uuidString:)))
+    }
+
+    static func mark(_ parent: UUID, for userID: UUID) {
+        var parents = parents(for: userID)
+        guard parents.insert(parent).inserted else { return }
+        UserDefaults.standard.set(parents.map(\.uuidString), forKey: key(userID))
     }
 }

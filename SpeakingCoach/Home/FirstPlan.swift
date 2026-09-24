@@ -30,7 +30,10 @@ struct FirstPlan: Equatable {
 
     /// Nil when there's no plan to keep: an old-app account (it never saw
     /// one), or a profile without a moment.
-    init?(profile: CoachProfile?, records: [PracticeRecord]) {
+    /// `startedRetries`: sessions whose retry has begun on this phone. They
+    /// don't count as the step done (no feedback came back), but step two
+    /// can't send the user back to them either: the server allows one.
+    init?(profile: CoachProfile?, records: [PracticeRecord], startedRetries: Set<UUID> = []) {
         guard let profile, !profile.isLegacy, let moment = profile.moment,
               let practice = moment.firstPractice else { return nil }
         self.practice = practice
@@ -50,7 +53,7 @@ struct FirstPlan: Equatable {
         } else {
             rehearsals = records.filter { $0.activityID == practice.id && $0.parentID == nil }
             didRetry = rehearsals.contains { retried.contains($0.id) }
-            retryFrom = rehearsals.first { !retried.contains($0.id) }
+            retryFrom = rehearsals.first { !retried.contains($0.id) && !startedRetries.contains($0.id) }
         }
 
         if profile.planCompletedAt != nil {

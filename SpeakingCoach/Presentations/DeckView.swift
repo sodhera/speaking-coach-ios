@@ -127,7 +127,6 @@ struct DeckView: View {
         .toolbar(.hidden, for: .navigationBar)
         // A page with its own action at the bottom: the tab bar steps aside.
         .toolbar(.hidden, for: .tabBar)
-        .swipeBack { save(); onBack() }
         .onDisappear(perform: save)
         .fullScreenCover(isPresented: $rehearsing) {
             RehearsalView(

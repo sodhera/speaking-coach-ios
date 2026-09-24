@@ -231,7 +231,7 @@ extension CustomSituation {
             "Close as the examiner does: “Thank you. That's the end of Part 1.”",
         ],
         scaffold: "Answer, then add why: “Yes, I really enjoy it, because…”",
-        transfer: "In the test, give every answer a reason or an example — never just yes or no.",
+        transfer: "In the test, give every answer a reason or an example, never just yes or no.",
         maxUserTurns: 7,
         recovery: ["If they stall, repeat the question once, slowly, exactly as an examiner would. Never help with the answer."],
         variants: []

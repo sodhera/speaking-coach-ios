@@ -68,7 +68,6 @@ struct PreparationPlanView: View {
         .toolbar(.hidden, for: .navigationBar)
         // A page with its own action at the bottom: the tab bar steps aside.
         .toolbar(.hidden, for: .tabBar)
-        .swipeBack(onBack)
         .animation(.easeInOut(duration: 0.25), value: editing)
         .animation(.easeInOut(duration: 0.25), value: hasDate)
         .onAppear {
@@ -94,7 +93,7 @@ struct PreparationPlanView: View {
 
             VStack(alignment: .leading, spacing: Space.sm) {
                 Text("What's coming up? (optional)").font(Typeface.label(14)).foregroundStyle(Palette.dim)
-                TextField("", text: $eventName, prompt: Text("e.g. interview at Acme").foregroundStyle(Palette.muted))
+                TextField("", text: $eventName, prompt: Text("e.g. my interview on Friday").foregroundStyle(Palette.muted))
                     .focused($focus, equals: .event)
                     .submitLabel(.done)
                     .modifier(InputChrome(focused: focus == .event))

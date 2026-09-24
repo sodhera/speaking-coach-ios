@@ -70,7 +70,7 @@ struct NarrativePage: View {
             // A cold feedback generator fires weakly or not at all — warm it
             // before the first word.
             Haptics.prepare()
-            try await Task.sleep(for: .milliseconds(420))
+            try await Task.sleep(for: Typewriter.lead)
             for index in lines.indices {
                 try Task.checkCancellation()
                 if index > 0 {
@@ -78,26 +78,9 @@ struct NarrativePage: View {
                     shown = 0
                     try await Task.sleep(for: .milliseconds(180))
                 }
-                let characters = Array(lines[index])
-                var sinceTick = 0
-                for character in 1...max(1, characters.count) {
-                    try Task.checkCancellation()
-                    if skipCurrentLine {
-                        shown = characters.count
-                        break
-                    }
-                    shown = character
-                    sinceTick += 1
-                    let isBoundary = character < characters.count && characters[character - 1] == " "
-                    if isBoundary, sinceTick >= 4 {
-                        sinceTick = 0
-                        Haptics.tick(0.34)
-                    }
-                    try await Task.sleep(for: .milliseconds(38))
-                }
+                try await Typewriter.type(lines[index], skipped: { skipCurrentLine }, show: { shown = $0 })
                 skipCurrentLine = false
-                Haptics.rigid()
-                try await Task.sleep(for: .milliseconds(380))
+                try await Task.sleep(for: Typewriter.settle)
             }
             finish()
         } catch { /* Navigation cancels the reveal. */ }
@@ -113,6 +96,113 @@ struct NarrativePage: View {
         withAnimation(Self.stepBack) { current = max(0, lines.count - 1) }
         shown = lines.last?.count ?? 0
         ready = true
+    }
+}
+
+/// The typing rhythm every revealed sentence shares: a character every
+/// 38ms, a soft tick on word boundaries (with a four-character floor, so
+/// short words don't machine-gun), and a firmer `rigid` as the sentence
+/// lands.
+enum Typewriter {
+    static let lead: Duration = .milliseconds(420)
+    static let settle: Duration = .milliseconds(380)
+
+    @MainActor
+    static func type(_ line: String, skipped: () -> Bool, show: (Int) -> Void) async throws {
+        let characters = Array(line)
+        var sinceTick = 0
+        for character in 1...max(1, characters.count) {
+            try Task.checkCancellation()
+            if skipped() {
+                show(characters.count)
+                break
+            }
+            show(character)
+            sinceTick += 1
+            let isBoundary = character < characters.count && characters[character - 1] == " "
+            if isBoundary, sinceTick >= 4 {
+                sinceTick = 0
+                Haptics.tick(0.34)
+            }
+            try await Task.sleep(for: .milliseconds(38))
+        }
+        Haptics.rigid()
+    }
+}
+
+/// Sentences typed one after another in place, each already laid out at
+/// its final size so nothing below them moves while they type. A tap
+/// finishes the sentence being typed. Reduce Motion and VoiceOver get the
+/// whole text at once.
+struct TypedParagraphs: View {
+    struct Line: Hashable {
+        let text: String
+        let size: CGFloat
+        var weight: CGFloat = 500
+        var color: Color = Palette.ink
+    }
+
+    let lines: [Line]
+    var spacing: CGFloat = Space.xl
+    /// Wait before the first word, so it follows whatever arrived above it.
+    var delay: Duration = Typewriter.lead
+    var onFinished: () -> Void = {}
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.accessibilityVoiceOverEnabled) private var voiceOver
+
+    @State private var current = 0
+    @State private var shown = 0
+    @State private var skipCurrent = false
+    @State private var done = false
+
+    var body: some View {
+        VStack(spacing: spacing) {
+            ForEach(lines.indices, id: \.self) { index in
+                let line = lines[index]
+                RevealingSentence(
+                    line: line.text,
+                    shown: done || index < current ? line.text.count : index == current ? shown : 0,
+                    color: UIColor(line.color),
+                    fontSize: line.size,
+                    weight: line.weight
+                )
+                .frame(maxWidth: .infinity)
+            }
+        }
+        .contentShape(Rectangle())
+        .onTapGesture {
+            guard !done, !skipCurrent else { return }
+            skipCurrent = true
+            Haptics.soft()
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(lines.map(\.text).joined(separator: " "))
+        .task(id: lines) { await play() }
+    }
+
+    private func play() async {
+        current = 0
+        shown = 0
+        done = false
+        if reduceMotion || voiceOver { finish(); return }
+        do {
+            Haptics.prepare()
+            try await Task.sleep(for: delay)
+            for index in lines.indices {
+                current = index
+                shown = 0
+                skipCurrent = false
+                try await Typewriter.type(lines[index].text, skipped: { skipCurrent }, show: { shown = $0 })
+                try await Task.sleep(for: Typewriter.settle)
+            }
+            finish()
+        } catch { /* Navigation cancels the reveal. */ }
+    }
+
+    private func finish() {
+        done = true
+        onFinished()
     }
 }
 

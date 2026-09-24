@@ -94,7 +94,8 @@ struct DeckInstrument: View {
 // MARK: - Support
 
 /// A caring response and a concrete next step, tailored privately from the
-/// answers without labeling the person or repeating their selections.
+/// answers without labeling the person or repeating their selections. The
+/// two sentences type out in turn, with the promise page's word haptics.
 struct MirrorInstrument: View {
     let pattern: SpeakingPattern
     @Binding var ready: Bool
@@ -104,20 +105,16 @@ struct MirrorInstrument: View {
             BloomMark(size: 80, glow: false)
                 .revealIn(after: 0.1)
 
-            Text(pattern.encouragement)
-                .font(Typeface.title(25))
-                .foregroundStyle(Palette.ink)
-                .multilineTextAlignment(.center)
-                .fixedSize(horizontal: false, vertical: true)
-                .revealIn(after: 0.25)
-
-            Text(pattern.practiceHelp)
-                .font(Typeface.body(17))
-                .foregroundStyle(Palette.dim)
-                .multilineTextAlignment(.center)
-                .fixedSize(horizontal: false, vertical: true)
-                .revealIn(after: 0.55)
-                .after(1.15) { ready = true }
+            // Typed word by word with a tick per word, like the promise
+            // page: this is the app speaking to them, not a caption.
+            TypedParagraphs(
+                lines: [
+                    .init(text: pattern.encouragement, size: 25),
+                    .init(text: pattern.practiceHelp, size: 17, weight: 400, color: Palette.dim),
+                ],
+                delay: .milliseconds(650),
+                onFinished: { ready = true }
+            )
         }
         .frame(maxWidth: .infinity)
     }
@@ -125,8 +122,10 @@ struct MirrorInstrument: View {
 
 // MARK: - The demo
 
-/// A tappable example of the practice loop. The sample answer is clearly
-/// identified as an example; the user does not need to speak on this page.
+/// A tappable example of the practice loop, shown as a two-line chat: the
+/// partner's question, then an example answer (labelled as one) that plays
+/// in, gets one change, and plays again with it. Nothing to read up front;
+/// the user does not speak on this page.
 ///
 /// One tap shows a first try and one useful change. A second tap shows the
 /// clearer try. Reduce Motion keeps the steps without word travel.
@@ -136,14 +135,6 @@ struct DemoInstrument: View {
 
     enum Beat: Int, CaseIterable {
         case rehearse, hearBack, retry, done
-
-        var label: String {
-            switch self {
-            case .rehearse: "First try"
-            case .hearBack: "One change"
-            case .retry, .done: "Try again"
-            }
-        }
     }
 
     @State private var beat: Beat = .rehearse
@@ -162,97 +153,95 @@ struct DemoInstrument: View {
 
     var body: some View {
         VStack(spacing: Space.xl) {
-            Text("Here's a short example. You don't need to speak yet.")
-                .font(Typeface.body(16))
-                .foregroundStyle(Palette.dim)
-                .multilineTextAlignment(.center)
-            beats
-            card
-            if beat != .done {
-                PrimaryButton(title: actionTitle, systemImage: "play.fill", action: playTake)
-                    .disabled(!canPlay || isPlaying)
-                    .opacity(beat == .hearBack ? 0 : 1)
-                    .accessibilityHidden(beat == .hearBack)
-            }
+            conversation
+            // Always laid out, only hidden: removing it at the end re-centred
+            // the page and the conversation jumped.
+            PrimaryButton(title: actionTitle, systemImage: "play.fill", action: playTake)
+                .disabled(!canPlay || isPlaying)
+                .opacity(beat == .hearBack || beat == .done ? 0 : 1)
+                .accessibilityHidden(beat == .hearBack || beat == .done)
         }
         .onDisappear { stopSpeaking(); coaching?.cancel() }
         .onChange(of: scenePhase) { _, phase in if phase != .active { stopSpeaking() } }
     }
 
-    // MARK: Beats
+    // MARK: The conversation
 
-    private var beats: some View {
-        HStack(spacing: Space.sm) {
-            ForEach([Beat.rehearse, .hearBack, .retry], id: \.self) { item in
-                if item != .rehearse {
-                    Circle().fill(Palette.faint).frame(width: 3, height: 3)
-                }
-                Text(item.label)
-                    .font(Typeface.label(13))
-                    .foregroundStyle(color(for: item))
+    /// The example as a two-line chat, in the feedback's bubble language:
+    /// the partner asks on the left, the example answer arrives on the right.
+    /// Its room is reserved up front, so nothing moves while a thumb is on
+    /// the button below.
+    private var conversation: some View {
+        VStack(alignment: .leading, spacing: Space.lg) {
+            VStack(alignment: .leading, spacing: 6) {
+                Text(script.partner)
+                    .font(Typeface.label(12))
+                    .foregroundStyle(Palette.muted)
+                    .padding(.leading, Space.xs)
+                Text(script.prompt.trimmingCharacters(in: CharacterSet(charactersIn: "“”\"")))
+                    .font(Typeface.body(17))
+                    .foregroundStyle(Palette.ink)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 10)
+                    .background(Palette.paper, in: bubble(from: .partner))
+                    .overlay { bubble(from: .partner).strokeBorder(Palette.border, lineWidth: 1) }
             }
-        }
-        .animation(.easeInOut(duration: 0.3), value: beat)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Step: \(beat.label)")
-    }
+            .padding(.trailing, Space.huge)
 
-    private func color(for item: Beat) -> Color {
-        let current = beat == .done ? Beat.retry : beat
-        if item == current { return Palette.coralDeep }
-        return item.rawValue < current.rawValue ? Palette.ink : Palette.muted
-    }
-
-    // MARK: The card
-
-    private var card: some View {
-        VStack(alignment: .leading, spacing: Space.md) {
-            Kicker(text: "Example · \(script.partner)", color: Palette.muted)
-            Text(script.prompt)
-                .font(Typeface.title(20))
-                .foregroundStyle(Palette.ink)
-                .fixedSize(horizontal: false, vertical: true)
-            GlassRowDivider()
-            ZStack(alignment: .topLeading) {
-                if shown.isEmpty {
-                    Text(beat == .retry ? "See a clearer try." : "The example answer appears here.")
-                        .font(Typeface.bodyItalic(16))
+            VStack(alignment: .trailing, spacing: 6) {
+                if !shown.isEmpty {
+                    Text("Example answer")
+                        .font(Typeface.label(12))
                         .foregroundStyle(Palette.muted)
+                        .padding(.trailing, Space.xs)
                         .transition(.opacity)
-                }
-                FlowLayout(spacing: 5, lineSpacing: 6) {
-                    ForEach(shown) { word in
-                        Text(word.text)
-                            .font(Typeface.body(17))
-                            .foregroundStyle(flagged.contains(word.id) ? Palette.coralDeep : Palette.ink)
-                            .strikethrough(flagged.contains(word.id), color: Palette.coral)
-                            .transition(wordTransition)
+                    FlowLayout(spacing: 5, lineSpacing: 6) {
+                        ForEach(shown) { word in
+                            Text(word.text)
+                                .font(Typeface.body(17))
+                                .foregroundStyle(flagged.contains(word.id) ? Palette.coralDeep : Palette.ink)
+                                .strikethrough(flagged.contains(word.id), color: Palette.coral)
+                                .transition(wordTransition)
+                        }
                     }
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 10)
+                    .background(Palette.glassCoral, in: bubble(from: .user))
+                    .transition(.opacity)
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel(shown.map(\.text).joined(separator: " "))
                 }
             }
-            // Room for the longest take and a two-line caption, reserved up
-            // front: the card must not grow while a thumb is on the bloom
-            // below it, or the bloom slides out from under the finger.
-            .frame(maxWidth: .infinity, minHeight: 112, alignment: .topLeading)
-            .accessibilityElement(children: .ignore)
-            .accessibilityLabel(shown.map(\.text).joined(separator: " "))
+            .frame(maxWidth: .infinity, minHeight: 150, alignment: .topTrailing)
+            .padding(.leading, Space.xxl)
 
-            ZStack(alignment: .topLeading) {
+            ZStack {
                 if let caption {
                     Text(caption)
-                        .font(Typeface.label(14))
+                        .font(Typeface.label(15))
                         .foregroundStyle(beat == .done ? Palette.sage : Palette.coralDeep)
+                        .multilineTextAlignment(.center)
                         .fixedSize(horizontal: false, vertical: true)
                         .id(caption)
                         .transition(.opacity.combined(with: .offset(y: 6)))
                 }
             }
-            .frame(maxWidth: .infinity, minHeight: 40, alignment: .topLeading)
+            .frame(maxWidth: .infinity, minHeight: 44)
         }
-        .padding(Space.xl)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .glassSurface(cornerRadius: Corner.xl)
         .animation(.easeOut(duration: 0.3), value: caption)
+        .animation(.easeOut(duration: 0.25), value: shown.isEmpty)
+    }
+
+    private enum Side { case partner, user }
+
+    private func bubble(from side: Side) -> UnevenRoundedRectangle {
+        UnevenRoundedRectangle(
+            topLeadingRadius: 18,
+            bottomLeadingRadius: side == .partner ? 6 : 18,
+            bottomTrailingRadius: side == .user ? 6 : 18,
+            topTrailingRadius: 18,
+            style: .continuous
+        )
     }
 
     /// Words arrive with a small rise; fillers leave upward and shrink, as
@@ -266,21 +255,21 @@ struct DemoInstrument: View {
             )
     }
 
+    /// One short line, only when there's something to say.
     private var caption: String? {
         switch beat {
-        case .rehearse: nil
-        case .hearBack: flagged.isEmpty ? nil : "One change to try: \(script.note)"
-        case .retry: "Now see that change in the answer."
-        case .done: "In practice, you'll try your own words and get one useful next step."
+        case .rehearse, .retry: nil
+        case .hearBack: flagged.isEmpty ? nil : "One change: \(script.note)"
+        case .done: "Your words, one change, a clearer try."
         }
     }
 
     private var actionTitle: String {
         switch beat {
-        case .rehearse: "Show an example answer"
+        case .rehearse: "Play an example"
         case .hearBack: "Finding one change…"
-        case .retry: "Show a clearer answer"
-        case .done: ""
+        case .retry: "Play it with the change"
+        case .done: "Play it with the change"
         }
     }
 

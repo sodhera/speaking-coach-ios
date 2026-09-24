@@ -40,7 +40,7 @@ struct SettingsView: View {
 
             VStack(alignment: .leading, spacing: Space.xxl) {
                 section("Account") {
-                    GlassRow(icon: "person.fill", title: model.profile?.name.isEmpty == false ? model.profile!.name : "Your account", value: model.email)
+                    GlassRow(icon: "person", title: model.profile?.name.isEmpty == false ? model.profile!.name : "Your account", value: model.email)
                 }
 
                 section("Subscription") {
@@ -54,7 +54,7 @@ struct SettingsView: View {
                 }
 
                 section("Practice") {
-                    rowButton(GlassRow(icon: "alarm.fill", title: "Practice routine", value: routineSummary, showsChevron: true)) { showsRoutine = true }
+                    rowButton(GlassRow(icon: "alarm", title: "Practice routine", value: routineSummary, showsChevron: true)) { showsRoutine = true }
                     GlassRowDivider()
                     Menu {
                         Picker("Practice language", selection: Binding(
@@ -68,7 +68,7 @@ struct SettingsView: View {
                     }
                     GlassRowDivider()
                     HStack(spacing: Space.md) {
-                        GlassRowIcon(icon: "bell.fill")
+                        GlassRowIcon(icon: "bell")
                         Toggle(isOn: Binding(
                             get: { remindersOn },
                             set: { on in
@@ -96,11 +96,11 @@ struct SettingsView: View {
                 }
 
                 section("Help and legal") {
-                    rowButton(GlassRow(icon: "bubble.left.fill", title: "Send feedback", showsChevron: true)) { sendingFeedback = true }
+                    rowButton(GlassRow(icon: "bubble.left", title: "Send feedback", showsChevron: true)) { sendingFeedback = true }
                     GlassRowDivider()
-                    rowButton(GlassRow(icon: "hand.raised.fill", title: "Privacy policy", showsChevron: true)) { UIApplication.shared.open(AppConfig.privacyURL) }
+                    rowButton(GlassRow(icon: "hand.raised", title: "Privacy policy", showsChevron: true)) { UIApplication.shared.open(AppConfig.privacyURL) }
                     GlassRowDivider()
-                    rowButton(GlassRow(icon: "doc.text.fill", title: "Terms of use", showsChevron: true)) { UIApplication.shared.open(AppConfig.termsURL) }
+                    rowButton(GlassRow(icon: "doc.text", title: "Terms of use", showsChevron: true)) { UIApplication.shared.open(AppConfig.termsURL) }
                 }
 
                 if let notice {
