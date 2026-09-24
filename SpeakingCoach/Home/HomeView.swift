@@ -15,7 +15,7 @@ struct MainShellView: View {
                 .tabItem { Label("Practice", systemImage: "mic.fill") }
             ProgressScreen(model: model, onOpenReport: onOpenReport)
                 .tabItem { Label("Progress", systemImage: "chart.bar.fill") }
-            ProfileView(model: model, onOpenReport: onOpenReport)
+            ProfileView(model: model)
                 .tabItem { Label("Profile", systemImage: "person.crop.circle") }
         }
         .tint(Palette.coral)
