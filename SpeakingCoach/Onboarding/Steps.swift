@@ -432,8 +432,8 @@ struct PlanInstrument: View {
         VStack(spacing: Space.lg) {
             VStack(alignment: .leading, spacing: 0) {
                 VStack(alignment: .leading, spacing: Space.xs) {
-                    Kicker(text: "First rehearsal · \(practice?.durationMinutes ?? 4) min", color: Palette.coralDeep)
-                    Text(practice?.title ?? "Your first rehearsal")
+                    Kicker(text: "First session · \(practice?.durationMinutes ?? 4) min", color: Palette.coralDeep)
+                    Text(practice?.title ?? "Your first session")
                         .font(Typeface.hero(24))
                         .foregroundStyle(Palette.ink)
                     if let practice {

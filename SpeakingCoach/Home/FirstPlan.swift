@@ -10,7 +10,7 @@ struct FirstPlan: Equatable {
 
         var title: String {
             switch self {
-            case .rehearse: "Rehearse it out loud"
+            case .rehearse: "Practise it out loud"
             case .retry: "Retry the moment that trips you up"
             case .finish: "" // In the user's own outcome — see `FirstPlan.title(of:)`.
             }
@@ -261,9 +261,9 @@ struct PlanCheckInView: View {
     private var resultLine: String {
         guard let baseline = plan.baseline else { return "That's where you are today, by your own rating." }
         if value > baseline { return "Up from \(baseline) when you started." }
-        if value == baseline { return "The same as when you started. Every rehearsal is still there when you want another go." }
+        if value == baseline { return "The same as when you started. Every session is still there when you want another go." }
         return plan.moment.isGeneral || plan.moment == .meetingPeople
-            ? "Lower than when you started. That's worth another rehearsal."
-            : "Lower than when you started. That's worth another rehearsal before the day."
+            ? "Lower than when you started. That's worth another session."
+            : "Lower than when you started. That's worth another session before the day."
     }
 }

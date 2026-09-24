@@ -46,7 +46,7 @@ The practice language is asked first, because the partner, the scenes and IELTS 
 
 ### The promise and the demo
 
-- **The promise** is a typewriter page in the user's own words: "Sulav, here's our promise. / Rehearse it with us first, / and you'll walk into your interview calm and clear." It is strong on purpose, but it never names a result we can't measure (no band scores, no "you'll get the job").
+- **The promise** is a typewriter page in the user's own words: "Sulav, here's our promise. / Practise it with us first, / and you'll walk into your interview calm and clear." It is strong on purpose, but it never names a result we can't measure (no band scores, no "you'll get the job").
 - **The demo** says it is an example and that the user does not need to speak yet. One clear tap shows a first answer, the card explains one useful change, and a second tap shows a clearer answer. The sample never presents its words as the user's own.
 
 ### Onboarding rules
@@ -94,7 +94,7 @@ onboarding → account → (existing account?) → **paywall** → "How did you 
 
 ## Paywall
 
-Built on JournalBlock's paywall. The headline repeats the user's own outcome ("Walk into your interview calm and clear."), left-aligned under a small bloom and a tracked wordmark. Three benefits each have a bold lead and one line: *Rehearse it* (their moment), *Hear it back*, and *Retry the moment* (their pattern's fix). Under "Select a plan that fits you", the two plans sit side by side, so the yearly price is read against the monthly one. "Change plans or cancel anytime." sits under the cards.
+Built on JournalBlock's paywall. The headline repeats the user's own outcome ("Walk into your interview calm and clear."), left-aligned under a small bloom and a tracked wordmark. Three benefits each have a bold lead and one line: *Practise it* (their moment), *Hear it back*, and *Retry the moment* (their pattern's fix). Under "Select a plan that fits you", the two plans sit side by side, so the yearly price is read against the monthly one. "Change plans or cancel anytime." sits under the cards.
 
 - **The billed amount leads (3.1.2(c)).** Each card's large number is the real charge for its own period. The struck-through anchor (twelve months of the monthly plan, formatted by the product's own price formatter) and the "Billed yearly." note are smaller and below it. The sticker overhanging the yearly card reads "3 DAYS FREE" when there's a trial, otherwise "SAVE 33%", computed from the fetched prices.
 - **The CTA names the tap.** It reads "Start 3-Day Free Trial →" when the selected plan has a trial, otherwise "Continue with Yearly →" or "Continue with Monthly →".
@@ -126,20 +126,43 @@ Review runs and UI tests never send analytics.
 
 The plan the user holds their thumb on before paying (rehearse it out loud → retry the moment that trips you up → walk in *their outcome*) is kept after the paywall.
 
-- **The hand-off is the plan.** "You're all set, {name}." shows the same card with its progress. "Start my first rehearsal" goes to Home with the first briefing already open on top, so Back lands on Home. "I'll look around first" goes to Home, where the plan waits. Old-app accounts never saw a plan and get the settings hand-off instead.
-- **Home is the plan until it's done.** The plan card replaces the up-next capsule (the bloom steps aside on short screens). The primary action names the next step, with a one-line hint under it. The library and Profile stay one tap away.
+- **The hand-off is the plan.** "You're all set, {name}." shows the same card with its progress. "Start my first session" goes to Home with the first briefing already open on top, so Back lands on Home. "I'll look around first" goes to Home, where the plan waits. Old-app accounts never saw a plan and get the settings hand-off instead.
+- **Home is the plan until it's done.** The plan's current step fills Home's Up next card: three marks count the step, and tapping the card takes that step.
 - **Progress is read, never guessed.** Step 1 is a rehearsal of the plan's own practice in `reports`. Step 2 is a retry of it. Step 3 is the check-in. A second phone shows the same progress. The card waits for history to load, so a step is never drawn undone and then ticked.
 - **Step 2 reopens the debrief**, not a bare retry, because "Try one change" and the quoted moment are what make the retry mean anything. A report with no moment to go back to gets the whole scene again.
-- **Step 3 is the readiness question again.** The app can't walk in with the user, so the honest close is their own number read against their onboarding baseline (`planReadiness`, `planCompletedAt` on the profile). The result states only what the two numbers say. Profile shows both.
+- **Step 3 is the readiness question again.** The app can't walk in with the user, so the honest close is their own number read against their onboarding baseline (`planReadiness`, `planCompletedAt` on the profile). The result states only what the two numbers say.
 
 Review routes: `-review-screen=home|setup|checkin` with `-review-plan-step=retry|finish|done`.
 
 ## Main app
 
-Two tabs, mirroring SleepBlock:
+**Wording.** Everything the user reads says *session* for one go at a scene and *practise* for the verb ("Start my first session", "Practise with my slides", "Your next session is ready"). "Rehearsal" read oddly in headings and counts. Code names (`RehearsalView`, `rehearsals.json`), analytics events and the content file's `format: "rehearsal"` keep the old word, because none of them reach the screen.
 
-- **Home: go rehearse.** It never scrolls. A small-caps greeting sits over the name, the bloom breathes at the centre, and one glass capsule names the next rehearsal. "Start rehearsal" sits where the thumb rests, with a "Last rehearsal …" line only when it's recent. The streak chip sits top-left: it shows zero as a hollow flame and never celebrates nothing. The full library sits top-right.
-- **Profile.** A hero title with the gear, a summary band with one numeral (rehearsals in the last 7 days) and the starting readiness, a useful next step, and recent rehearsals from `reports`. Settings is a sheet of grouped glass rows.
+Three tabs: Practice, Progress, Profile.
+
+- **Practice: a shelf of rehearsals.** Laid out like a music library (Spotify's home was the reference), because that is what it is. Earlier versions tried a near-wordless hero, a full catalog of pills and lists, and a three-card stack with a bottom button. Each one either hid the choices or crowded them. Top to bottom:
+  1. **Situation and streak.** The situation is a dropdown at the top left ("Work ⌄"), a popover rather than a system menu, because iOS 26 morphs a menu back into its label and clipped the new name. It opens on the user's last pick (`practice.selectedCategory`), or their own kind of moment on first run. The menu also holds the 30-second prompt and the preparation plan. The streak chip sits top right: zero wears a hollow flame and never celebrates nothing.
+  2. **The situation's rehearsals** as compact two-column text tiles. The title gets the width, and a mark on the right appears only where it means something: a coral tick once a rehearsal is done, or the glyph of a tile that isn't a rehearsal. A repeated situation icon said nothing and cut titles short. "Practise with my slides" joins Presentations, and "My own situation" always closes the grid.
+  3. **Up next.** One large card, the whole card a button with a chevron: a coral cover panel, a label only when it adds something ("Your plan · step 1 of 3" with three step marks, "Your event · 2 of 5 done", or a situation other than the chosen one), the title, and partner · length. Order: the first plan, then a preparation plan in progress, then the first rehearsal not yet done in the chosen situation, then anywhere.
+  4. **Recently practised.** A horizontal row of the last ten rehearsals and retries, each with its level marks, reopening its feedback.
+
+  There is no bottom action button. Weekly days live on Progress.
+- **Progress: showing up, and what you've done.** Same language as Practice: a hero title, one card, then a section title and a list. Two reads:
+  1. **This week.** A disc per day under "This week · N sessions": ticked coral discs for days with a session, today ringed, the rest faint. It replaced a five-week calendar, which was more history than a glance needs. The streak's number stays on Practice, where it asks for today. With nothing practised yet, one line says what the card is for.
+  2. **History.** Every session, newest first. Each row has a situation icon, the title and a relative date, and reopens that session's feedback. Retries sit under the session they went back to, and eight rows show before "Show more".
+
+  Removed on purpose: a Skills card (the best level reached on every rubric criterion) and a "How ready you feel" track. They were accurate but hard to read at a glance, and the per-criterion level dots on each row went with them. Feedback detail lives in each session's debrief.
+- **Profile.** A hero title with the gear, the account name, a useful next step, and practice preferences (the routine). Rehearsal activity lives in Progress. Settings is a sheet of grouped glass rows.
+
+Review route: `-review-screen=progress` brings four weeks of fixture practice.
+
+## After Practice: briefing to feedback
+
+The screens after a tap on Practice use its language, so the flow reads as one app: sentence-case labels instead of tracked uppercase kickers, section titles above plain glass cards (as "Up next" sits over its card), and `Corner.lg` cards.
+
+- **Briefing** is laid out like a track's page. The session cover (the coral gradient with the situation's symbol, shared with the Up next card as `SessionCover`) sits above the title and goal. The setup follows as a short list (Partner, Length, Pressure, and the user's situation once written), and its last row is "Adjust session". "Start speaking" is the one button.
+- **Live session.** Status lines ("Your partner is speaking") are small sentence-case labels.
+- **Feedback.** A quiet label names the session. The verdict is the headline, then sections: What we listened for, Keep this, Try one change, Take it into real life (What changed leads a retry). Each section is a title over one card, with no icon chip in a card header.
 
 ## The rehearsal room
 
@@ -149,7 +172,7 @@ Built like SleepBlock's sleep mode. **The bloom is the state**: it opens with wh
 - **Pause is real.** The mic is muted, the partner's audio drops to zero, and activity pings keep the partner from filling the silence. Resuming asks the partner to repeat its last question.
 - **The partner waits for a signal.** The prompt override tells it to stay silent until `[[PRACTICE_BEGIN]]`, then open with the rehearsal's exact first line. Control signals are filtered out of every transcript. (ElevenLabs' `firstMessage` override would be cleaner, but it needs that override allowed in the agent's security settings. The signal approach works with the agents as they are configured today.)
 - **Natural close.** After the last allowed answer, or when time is up (the partner is asked to wrap up), the scene ends once both sides have been quiet for 3s. It never ends mid-sentence.
-- **Nothing spoken is lost.** Every transcript change is written atomically to one encrypted file per account (`PracticeDrafts`, complete file protection). A dropped call with words goes straight to feedback. Backgrounding the app ends the scene, because the mic never stays live in the background. A crash or kill is offered back the next time Home appears ("Your last rehearsal was cut short").
+- **Nothing spoken is lost.** Every transcript change is written atomically to one encrypted file per account (`PracticeDrafts`, complete file protection). A dropped call with words goes straight to feedback. Backgrounding the app ends the scene, because the mic never stays live in the background. A crash or kill is offered back the next time Home appears ("Your last session was cut short").
 - **Honest feedback.** The debrief quotes only lines the user actually said (the server rejects assessments that cite anything else) and never rates accent or personality.
 
 Review routes: `-review-screen=room|assessing|debrief|recovery`.
@@ -166,9 +189,18 @@ Not everyone has an event coming up. The first question ("What's coming up?", su
 | Promise | "and you'll speak calmly and clearly, every day." |
 | Plan | "Your plan is ready.", with the first rehearsal *Introduce yourself* and the final step "Speak calmly, every day" |
 | Commit | "Ready to start speaking better, every day?" |
-| Paywall | "Speak calmly and clearly, every day." (the user's outcomes as adverbs), with "Rehearse it: Everyday conversations, out loud…" |
+| Paywall | "Speak calmly and clearly, every day." (the user's outcomes as adverbs), with "Practise it: Everyday conversations, out loud…" |
 
 Review with `-review-moment=everyday` alongside `-review-onboarding-step=…` or `-review-screen=paywall`.
+
+## The debrief
+
+Two views of the same rehearsal, switched by a **Feedback | Conversation** capsule pinned beside the ✕. The transcript used to wait behind a link below the fold, so people didn't know it existed.
+
+- **Feedback reads as one argument.** The summary comes first. Under it, **What we listened for** shows every criterion as a mark (a sage check for clearly, a half coral disc for partly, a dashed ring for not yet) and a level word. Summaries often say "the three parts we're checking", so those parts now appear on screen. Tapping a row shows its note and quote. The rows tagged *Keep this* and *Your focus* are the ones the two cards below discuss. *Try one change* gets the faint coral tint and shows the moment to retry as the partner's own bubble.
+- **Quotes look like speech.** The user's words sit in right-hand coral bubbles and the partner's in left-hand paper ones, in the cards and in the conversation. A quote cut from a longer line gets an ellipsis at each cut end.
+- **The conversation is marked, not annotated.** Only the lines the cards quote carry a tag (*Keep this*, *Your focus*, *The moment to retry*). Inside a marked line, the quoted words stay in ink and the rest dims. A background tint read as mud on the coral bubble.
+- **Quotes link to the conversation.** Tapping a quote opens the Conversation view, scrolls to that line and outlines it for a moment. Both views stay mounted, so each keeps its scroll position.
 
 ## Retry this moment
 
@@ -176,12 +208,12 @@ The fastest path from "try one change" to having actually tried it. After a rehe
 
 - **The moment** is the partner's question just before the answer the feedback targeted, with up to eight lines of what came before it (`RetryCheckpoint.make`). This mirrors the server's `retryFromReport`, so the app only offers retries the server will accept.
 - **The retry** restores that scene, opens on that exact question, allows two answers and runs about 90 seconds. It has a fresh voice connection and the same original setup. The server keeps the setup and doesn't re-check the plan for retries.
-- **What changed** leads the retry's debrief. It covers the one criterion targeted, before → now as level dots plus the user's own quote from each attempt, and a sage "Clearer this time." when the level rose. It's always captioned: "One rehearsal compared with one retry — a direction, not proof of lasting change." A comparison is shown only when the rubric is the same.
-- **One retry per rehearsal**, as the server enforces (`retry_used`). History tracks retried rehearsals (`retriedIDs`), so a used retry isn't offered again. A retry of a retry is never offered. After a retry, the secondary action is "Rehearse the whole scene again".
+- **What changed** leads the retry's debrief. It covers the one criterion targeted, before → now as level dots plus the user's own quote from each attempt, and a sage "Clearer this time." when the level rose. It's always captioned: "One session compared with one retry — a direction, not proof of lasting change." A comparison is shown only when the rubric is the same.
+- **One retry per rehearsal**, as the server enforces (`retry_used`). History tracks retried rehearsals (`retriedIDs`), so a used retry isn't offered again. A retry of a retry is never offered. After a retry, the secondary action is "Practise the whole scene again".
 
 ## Past rehearsals
 
-Profile's rows open the full saved report (the same debrief, retry included when it's still available). Retries carry a small RETRY tag. Bare scores are gone from the rows, because a number with no scale explained nothing. Old-app reports without a practice assessment show their summary and "What to work on".
+Progress's rows open the full saved report (the same debrief, retry included when it's still available). Retries sit under the rehearsal they retried. Bare scores are gone from the rows, because a number with no scale explained nothing. The rubric's marks replace them, since each one has a word behind it. Old-app reports without a practice assessment show their summary and "What to work on".
 
 Review routes: `-review-screen=debrief|retry`.
 
@@ -201,7 +233,7 @@ Review routes: `presentations`, `deck`, `presentationreview`, `rehearsalready`.
 
 ### Preparation plan
 
-Five rehearsals in the order that builds, from four programs (interview, work, boundaries, everyday). The program suggested first is the one that fits the onboarding answer. An optional event name and date come with one 9 am reminder the day before, and the reminder never names the event. Progress is read from history (first rehearsals since the plan began, not retries) and is never ticked by hand. A reflection is asked for once the day arrives. The plan is stored in `user_metadata.preparation_plan_v1`, so it follows the account and needs no table. While it's in progress, Home's "up next" is the plan's next rehearsal, with a one-line link to the plan.
+Five rehearsals in the order that builds, from four programs (interview, work, boundaries, everyday). The program suggested first is the one that fits the onboarding answer. An optional event name and date come with one 9 am reminder the day before, and the reminder never names the event. Progress is read from history (first rehearsals since the plan began, not retries) and is never ticked by hand. A reflection is asked for once the day arrives. The plan is stored in `user_metadata.preparation_plan_v1`, so it follows the account and needs no table. While it's in progress, Home's Up next card is the plan's next rehearsal, and the plan's row shows "2 of 5 done".
 
 Review routes: `plan`, `planprogress`.
 

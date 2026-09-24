@@ -96,7 +96,7 @@ struct PaywallView: View {
     /// for accounts that never answered (the old app's users).
     static func headline(for profile: CoachProfile?) -> String {
         guard let profile, let moment = profile.moment, !profile.outcomes.isEmpty else {
-            return "Rehearse the conversations that matter."
+            return "Practise the conversations that matter."
         }
         if moment.isGeneral {
             let how = profile.outcomes.prefix(2).map(\.adverb).joined(separator: " and ")
@@ -124,7 +124,7 @@ struct PaywallView: View {
         case nil: "Real conversations, out loud, with a partner who plays the other side."
         }
         return VStack(alignment: .leading, spacing: 18) {
-            BenefitRow(lead: "Rehearse it", detail: rehearse)
+            BenefitRow(lead: "Practise it", detail: rehearse)
             BenefitRow(lead: "Hear it back", detail: "Feedback that quotes your own words.")
             BenefitRow(lead: "Retry the moment", detail: pattern.fix)
         }

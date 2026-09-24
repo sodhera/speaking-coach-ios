@@ -17,7 +17,7 @@ struct RootView: View {
     @State private var remindersNeeded: Bool?
     @State private var remindersDone = false
     @State private var setupDone = false
-    /// The hand-off's "Start my first rehearsal": Home opens on its briefing.
+    /// The hand-off's "Start my first session": Home opens on its briefing.
     @State private var pendingBriefing: PracticeDefinition?
     @State private var links = DeepLinks.shared
     @Environment(\.scenePhase) private var scenePhase

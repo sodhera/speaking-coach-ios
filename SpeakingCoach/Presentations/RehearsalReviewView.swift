@@ -73,7 +73,7 @@ struct RehearsalReviewView: View {
                 GlassBackButton(action: leave)
             }
             VStack(alignment: .leading, spacing: Space.sm) {
-                Kicker(text: isFresh ? "Rehearsal done" : rehearsal.startedAt.formatted(.dateTime.month(.wide).day().hour().minute()))
+                Kicker(text: isFresh ? "Session done" : rehearsal.startedAt.formatted(.dateTime.month(.wide).day().hour().minute()))
                 Text(deck.title)
                     .font(Typeface.hero(28))
                     .foregroundStyle(Palette.ink)

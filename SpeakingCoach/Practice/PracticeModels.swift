@@ -55,17 +55,10 @@ struct RetryCheckpoint: Codable, Equatable {
         guard let assessment = report.analysis.practice,
               let context = report.analysis.practiceContext,
               context.retry == nil,
-              let criterion = assessment.criteria.first(where: { $0.id == assessment.targetCriterionId })
+              let criterion = assessment.criteria.first(where: { $0.id == assessment.targetCriterionId }),
+              let questionIndex = questionIndex(for: criterion, in: report.transcript)
         else { return nil }
         let transcript = report.transcript
-        let answerIndex: Int? = {
-            if let turnId = criterion.evidence.first?.turnId {
-                return transcript.firstIndex { $0.id == turnId && $0.role == .user }
-            }
-            return transcript.firstIndex { $0.role == .user }
-        }()
-        guard let answerIndex else { return nil }
-        guard let questionIndex = transcript[..<answerIndex].lastIndex(where: { $0.role == .coach }) else { return nil }
         return RetryCheckpoint(
             parentAttemptId: context.attemptId,
             prompt: transcript[questionIndex].text,
@@ -73,6 +66,21 @@ struct RetryCheckpoint: Codable, Equatable {
             criterionId: criterion.id,
             previous: criterion
         )
+    }
+
+    /// Where the moment sits in a transcript: the partner's question just
+    /// before the answer a criterion's feedback quotes (or, with no quote,
+    /// the first answer). The debrief marks this same line in the
+    /// conversation.
+    static func questionIndex(for criterion: CriterionResult, in transcript: [TranscriptLine]) -> Int? {
+        let answerIndex: Int? = {
+            if let turnId = criterion.evidence.first?.turnId {
+                return transcript.firstIndex { $0.id == turnId && $0.role == .user }
+            }
+            return transcript.firstIndex { $0.role == .user }
+        }()
+        guard let answerIndex else { return nil }
+        return transcript[..<answerIndex].lastIndex { $0.role == .coach }
     }
 }
 

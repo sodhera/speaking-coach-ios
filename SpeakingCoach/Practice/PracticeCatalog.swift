@@ -7,6 +7,11 @@ struct PracticeDefinition: Codable, Identifiable, Hashable {
     struct Criterion: Codable, Hashable {
         let id: String
         let label: String
+
+        /// The label as a name. Rubric labels are written as sentences
+        /// ("Establish the situation briefly."), and a row or tag reads
+        /// better without the full stop.
+        var name: String { label.hasSuffix(".") ? String(label.dropLast()) : label }
     }
 
     let id: String

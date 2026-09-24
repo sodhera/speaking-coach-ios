@@ -179,7 +179,7 @@ final class PreparationStore {
         }
         let content = UNMutableNotificationContent()
         content.title = "Your moment is close"
-        content.body = "One rehearsal now makes it easier to walk in ready."
+        content.body = "One session now makes it easier to walk in ready."
         content.sound = .default
         let components = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: date)
         try? await center.add(UNNotificationRequest(identifier: Self.reminderID, content: content, trigger: UNCalendarNotificationTrigger(dateMatching: components, repeats: false)))

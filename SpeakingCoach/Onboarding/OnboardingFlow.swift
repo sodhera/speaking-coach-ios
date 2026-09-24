@@ -271,7 +271,7 @@ struct OnboardingFlow: View {
             // last line is the one that stays in front.
             NarrativePage(lines: [
                 trimmedName.isEmpty ? "Here's our promise." : "\(trimmedName), here's our promise.",
-                "Rehearse it with us first,",
+                "Practise it with us first,",
                 moment.promise(outcomes: answers.outcomes),
             ], ready: $revealReady)
 

@@ -89,7 +89,7 @@ enum PracticeAPI {
             let payload = try? JSONDecoder().decode([String: String].self, from: data)
             if status == 402 { throw PracticeAPIError.subscriptionRequired }
             if status == 409, path == "start" {
-                throw PracticeAPIError.server(status: status, message: payload?["error"] ?? "This rehearsal's retry has already been used. Start a new rehearsal instead.")
+                throw PracticeAPIError.server(status: status, message: payload?["error"] ?? "This session's retry has already been used. Start a new session instead.")
             }
             throw PracticeAPIError.server(status: status, message: payload?["error"] ?? "Practice is unavailable right now. Please try again.")
         }

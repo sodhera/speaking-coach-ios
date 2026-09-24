@@ -82,7 +82,7 @@ struct DeckView: View {
 
                         if !rehearsals.isEmpty {
                             VStack(alignment: .leading, spacing: Space.md) {
-                                Kicker(text: "Rehearsals")
+                                Kicker(text: "Sessions")
                                 GlassRowGroup {
                                     ForEach(Array(rehearsals.enumerated()), id: \.element.id) { index, rehearsal in
                                         if index > 0 { GlassRowDivider() }
@@ -111,7 +111,7 @@ struct DeckView: View {
                 .safeAreaPadding(.top)
                 .bottomEdgeFade()
 
-                PrimaryButton(title: rehearsals.isEmpty ? "Rehearse it" : "Rehearse again", systemImage: "mic.fill") {
+                PrimaryButton(title: rehearsals.isEmpty ? "Practise it" : "Practise again", systemImage: "mic.fill") {
                     focus = nil
                     save()
                     rehearsing = true
@@ -136,7 +136,7 @@ struct DeckView: View {
                 onBack()
             }
         } message: {
-            Text("Its slides and every rehearsal recording will be removed from this phone.")
+            Text("Its slides and every session recording will be removed from this phone.")
         }
     }
 

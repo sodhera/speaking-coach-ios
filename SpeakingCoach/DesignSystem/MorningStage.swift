@@ -22,17 +22,7 @@ struct MorningStage: View {
             let sunRadius = size.width * (0.95 + 0.55 * depth)
 
             ZStack {
-                LinearGradient(
-                    stops: [
-                        .init(color: Palette.skyCrown, location: 0),
-                        .init(color: Palette.skyHigh, location: 0.28),
-                        .init(color: Palette.skyMid, location: 0.55),
-                        .init(color: Palette.skyLow, location: 0.80),
-                        .init(color: Palette.skyBase, location: 1),
-                    ],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
+                MorningStage.sky
 
                 // The sunrise. A radial glow anchored below the fold; its
                 // reach and warmth are the only things depth changes. Painted
@@ -57,6 +47,36 @@ struct MorningStage: View {
                 GrainOverlay()
             }
         }
+        .ignoresSafeArea()
+        .accessibilityHidden(true)
+    }
+}
+
+extension MorningStage {
+    static let sky = LinearGradient(
+        stops: [
+            .init(color: Palette.skyCrown, location: 0),
+            .init(color: Palette.skyHigh, location: 0.28),
+            .init(color: Palette.skyMid, location: 0.55),
+            .init(color: Palette.skyLow, location: 0.80),
+            .init(color: Palette.skyBase, location: 1),
+        ],
+        startPoint: .top,
+        endPoint: .bottom
+    )
+}
+
+/// The stage's paper without its sunrise: the same full-screen sky and grain,
+/// so a slice of it lies pixel-for-pixel over the real stage. The sun never
+/// reaches the top of the screen, which is the only place this is used.
+struct MorningPaper: View {
+    var body: some View {
+        ZStack {
+            MorningStage.sky
+            GrainOverlay()
+        }
+        // Grain multiplies onto this sky only, never onto what's beneath.
+        .compositingGroup()
         .ignoresSafeArea()
         .accessibilityHidden(true)
     }

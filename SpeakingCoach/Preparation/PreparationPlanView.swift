@@ -35,7 +35,7 @@ struct PreparationPlanView: View {
                         SubpageHeader(
                             title: "Preparation plan",
                             subtitle: editing || plan == nil
-                                ? "Five rehearsals, in the order that builds. Add a date if something's coming up."
+                                ? "Five sessions, in the order that builds. Add a date if something's coming up."
                                 : nil,
                             onBack: onBack
                         )
@@ -76,7 +76,7 @@ struct PreparationPlanView: View {
         .confirmationDialog("Remove this plan?", isPresented: $confirmingRemove, titleVisibility: .visible) {
             Button("Remove plan", role: .destructive) { Task { await save(nil) } }
         } message: {
-            Text("Your rehearsals and feedback stay. Only the plan and its reminder go.")
+            Text("Your sessions and feedback stay. Only the plan and its reminder go.")
         }
     }
 
@@ -151,7 +151,7 @@ struct PreparationPlanView: View {
                             .frame(height: 6)
                     }
                 }
-                Text("\(done.count) of \(practices.count) rehearsed")
+                Text("\(done.count) of \(practices.count) done")
                     .font(Typeface.body(14))
                     .foregroundStyle(Palette.dim)
             }
@@ -188,7 +188,7 @@ struct PreparationPlanView: View {
                 }
             }
 
-            Text("Rehearsing counts as done. Your feedback shows whether the skill is landing.")
+            Text("Practising counts as done. Your feedback shows whether the skill is landing.")
                 .font(Typeface.body(13))
                 .foregroundStyle(Palette.muted)
                 .fixedSize(horizontal: false, vertical: true)
@@ -261,7 +261,7 @@ struct PreparationPlanView: View {
     private var action: some View {
         if let plan, !editing {
             if let next = plan.next(in: model.history.records) {
-                PrimaryButton(title: "Rehearse: \(next.title)", systemImage: "mic.fill") { onPractice(next) }
+                PrimaryButton(title: "Practise: \(next.title)", systemImage: "mic.fill") { onPractice(next) }
             }
         } else {
             VStack(spacing: Space.xs) {

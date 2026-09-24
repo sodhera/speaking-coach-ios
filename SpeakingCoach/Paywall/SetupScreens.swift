@@ -84,7 +84,7 @@ struct MicrophonePrimerView: View {
     var body: some View {
         PrimerLayout(
             title: "Your partner needs to hear you",
-            line: "Speaking Coach only listens while you rehearse. Nothing is recorded outside a session."
+            line: "Speaking Coach only listens while you practise. Nothing is recorded outside a session."
         ) {
             MockPermissionDialog(
                 glyph: "mic.fill",
@@ -117,7 +117,7 @@ struct RemindersPrimerView: View {
 
     var body: some View {
         PrimerLayout(
-            title: "Keep your rehearsals going",
+            title: "Keep your sessions going",
             line: "One quiet nudge at \(Reminders.timeLabel). You can turn it off anytime in Settings."
         ) {
             MockPermissionDialog(
@@ -228,7 +228,7 @@ struct SetupCompleteView: View {
             Spacer(minLength: Space.xxl)
 
             VStack(spacing: Space.xs) {
-                PrimaryButton(title: "Start my first rehearsal", systemImage: "mic.fill") {
+                PrimaryButton(title: "Start my first session", systemImage: "mic.fill") {
                     Analytics.action("setup_complete")
                     finish(startFirst: plan.practice)
                 }
@@ -255,7 +255,7 @@ struct SetupCompleteView: View {
                 Text("You're all set!")
                     .font(Typeface.title(28))
                     .foregroundStyle(Palette.ink)
-                Text("Your first rehearsal is waiting. You can change these anytime.")
+                Text("Your first session is waiting. You can change these anytime.")
                     .font(Typeface.body(15))
                     .foregroundStyle(Palette.dim)
                     .lineSpacing(4)
@@ -265,7 +265,7 @@ struct SetupCompleteView: View {
             Spacer(minLength: Space.xxl)
 
             GlassRowGroup {
-                GlassRow(icon: "mic.fill", title: firstPractice?.title ?? "First rehearsal", value: firstPractice.map { "\($0.durationMinutes) min" })
+                GlassRow(icon: "mic.fill", title: firstPractice?.title ?? "First session", value: firstPractice.map { "\($0.durationMinutes) min" })
                 GlassRowDivider()
                 Menu {
                     Picker("Practice language", selection: Binding(

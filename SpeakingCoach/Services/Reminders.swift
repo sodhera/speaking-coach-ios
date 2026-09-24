@@ -32,7 +32,7 @@ enum Reminders {
         }
         let content = UNMutableNotificationContent()
         content.title = "Two minutes, out loud."
-        content.body = practiceTitle.map { "Your next rehearsal: \($0)." } ?? "Your next rehearsal is ready."
+        content.body = practiceTitle.map { "Your next session: \($0)." } ?? "Your next session is ready."
         content.sound = .default
         let trigger = UNCalendarNotificationTrigger(dateMatching: DateComponents(hour: hour, minute: minute), repeats: true)
         try? await center.add(UNNotificationRequest(identifier: id, content: content, trigger: trigger))

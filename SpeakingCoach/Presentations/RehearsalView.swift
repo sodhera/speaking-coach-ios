@@ -120,10 +120,10 @@ struct RehearsalView: View {
     private var recording: some View {
         VStack(spacing: 0) {
             HStack {
-                GlassIconButton(systemImage: "xmark", size: 44, iconSize: 15, color: Palette.dim, accessibilityLabel: "Leave rehearsal") {
+                GlassIconButton(systemImage: "xmark", size: 44, iconSize: 15, color: Palette.dim, accessibilityLabel: "Leave session") {
                     confirmingLeave = true
                 }
-                .confirmationDialog("Leave this rehearsal?", isPresented: $confirmingLeave, titleVisibility: .visible) {
+                .confirmationDialog("Leave this session?", isPresented: $confirmingLeave, titleVisibility: .visible) {
                     Button("Finish and get questions") { finish() }
                     Button("Discard recording", role: .destructive) {
                         recorder.stop()

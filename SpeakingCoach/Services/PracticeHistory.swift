@@ -13,6 +13,19 @@ struct PracticeRecord: Identifiable, Equatable {
     let score: Int?
     /// Set when this record is a focused retry of another rehearsal.
     let parentID: UUID?
+    /// Each rubric criterion and the level it reached, in rubric order. A
+    /// retry carries only the one it targeted. Empty for custom situations
+    /// and old-app reports, which have no rubric.
+    var criteria: [CriterionLevel] = []
+    /// A situation the user described themselves, or a built-in scene.
+    var isCustom = false
+}
+
+/// A criterion's level without its note and quotes: all a record needs.
+struct CriterionLevel: Decodable, Equatable {
+    let id: String
+    /// 0 not yet observed, 1 partly, 2 clearly demonstrated.
+    let level: Int
 }
 
 @MainActor
@@ -32,7 +45,7 @@ final class PracticeHistory {
         self.userID = userID
         do {
             let rows: [Row] = try await Backend.supabase.from("reports")
-                .select("id, scenario_id, score, created_at, activityId:analysis->practiceContext->>activityId, parentId:analysis->practiceContext->retry->>parentAttemptId, customTitle:analysis->custom->>title")
+                .select("id, scenario_id, score, created_at, activityId:analysis->practiceContext->>activityId, parentId:analysis->practiceContext->retry->>parentAttemptId, customTitle:analysis->custom->>title, criteria:analysis->practice->criteria")
                 .eq("user_id", value: userID)
                 .neq("scenario_id", value: "feedback")
                 .order("created_at", ascending: false)
@@ -83,12 +96,6 @@ final class PracticeHistory {
             .value
     }
 
-    /// Rehearsals in the last seven days, today included.
-    var lastSevenDays: Int {
-        let start = Calendar.current.date(byAdding: .day, value: -6, to: Calendar.current.startOfDay(for: .now)) ?? .now
-        return records.filter { $0.date >= start }.count
-    }
-
     private struct Row: Decodable {
         let id: UUID
         let scenario_id: String
@@ -97,6 +104,7 @@ final class PracticeHistory {
         let activityId: String?
         let parentId: String?
         let customTitle: String?
+        let criteria: Levels?
 
         var record: PracticeRecord {
             let title = customTitle ?? activityId.flatMap { PracticeCatalog.definition($0)?.title }
@@ -104,8 +112,20 @@ final class PracticeHistory {
             return PracticeRecord(
                 id: id, activityID: activityId, title: title, date: created_at,
                 score: (score ?? 0) > 0 ? score : nil,
-                parentID: parentId.flatMap(UUID.init(uuidString:))
+                parentID: parentId.flatMap(UUID.init(uuidString:)),
+                criteria: criteria?.items ?? [],
+                isCustom: customTitle != nil
             )
+        }
+    }
+
+    /// Tolerates an odd rubric: one malformed report mustn't cost the
+    /// whole history, so it reads as having no levels instead.
+    private struct Levels: Decodable {
+        let items: [CriterionLevel]
+
+        init(from decoder: Decoder) throws {
+            items = (try? [CriterionLevel](from: decoder)) ?? []
         }
     }
 }

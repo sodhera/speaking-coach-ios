@@ -65,12 +65,6 @@ struct OnboardingGate: View {
     }
 
     private func go(_ next: Route) {
-        // Warm the keyboard on the way into the flow, a few frames late so it
-        // doesn't share a frame with the transition; masked by the 280ms
-        // fade and done before the name step's 320ms autofocus.
-        if next == .flow {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) { Keyboard.prewarm() }
-        }
         if next != .flow { depth = next == .welcome ? 0 : 0.3 }
         withAnimation(.easeInOut(duration: 0.28)) { route = next }
     }

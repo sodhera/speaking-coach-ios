@@ -72,7 +72,9 @@ struct PracticeSessionView: View {
         VStack(spacing: Space.xxl) {
             BloomMark(size: 150)
             VStack(spacing: Space.sm) {
-                Kicker(text: "Getting your partner")
+                Text("Getting your partner")
+                    .font(Typeface.label(14))
+                    .foregroundStyle(Palette.dim)
                 Text(session.definition.partner)
                     .font(Typeface.title(24))
                     .foregroundStyle(Palette.ink)
@@ -98,7 +100,7 @@ struct PracticeSessionView: View {
 
     private func recovery(_ draft: PracticeDraft) -> some View {
         StatusScreen(
-            title: "Your last rehearsal was cut short",
+            title: "Your last session was cut short",
             message: "What you said is saved. Get feedback on it, or let it go.",
             primary: StatusScreen.Action(title: "Get my feedback") { Task { await session.assess(draft) } },
             secondary: StatusScreen.Action(title: "Let it go") {
@@ -167,7 +169,9 @@ private struct PracticeRoom: View {
                 BloomMark(size: 120, color: voice.isPaused ? Palette.muted : Palette.coral, level: level)
                     .animation(.easeInOut(duration: 0.4), value: voice.isPaused)
                 VStack(spacing: Space.md) {
-                    Kicker(text: status, color: voice.partnerSpeaking ? Palette.coralDeep : Palette.dim)
+                    Text(status)
+                        .font(Typeface.label(14))
+                        .foregroundStyle(voice.partnerSpeaking ? Palette.coralDeep : Palette.dim)
                         .contentTransition(.opacity)
                         .animation(.easeInOut(duration: 0.25), value: status)
                     caption
@@ -185,12 +189,12 @@ private struct PracticeRoom: View {
 
     private var header: some View {
         HStack(alignment: .center) {
-            GlassIconButton(systemImage: "xmark", size: 44, iconSize: 15, color: Palette.dim, accessibilityLabel: "Leave rehearsal") {
+            GlassIconButton(systemImage: "xmark", size: 44, iconSize: 15, color: Palette.dim, accessibilityLabel: "Leave session") {
                 // Nothing said yet: leaving costs nothing. Otherwise it's a
                 // consequential exit, so it asks — honestly — first.
                 if voice.userTurns == 0 { onLeave() } else { confirmingLeave = true }
             }
-            .confirmationDialog("Leave this rehearsal?", isPresented: $confirmingLeave, titleVisibility: .visible) {
+            .confirmationDialog("Leave this session?", isPresented: $confirmingLeave, titleVisibility: .visible) {
                 Button("Get feedback on what I said") { Task { await session.finish() } }
                 Button("Leave without feedback", role: .destructive, action: onLeave)
             } message: {
@@ -235,7 +239,7 @@ private struct PracticeRoom: View {
             }
             .padding(Space.xl)
             .frame(maxWidth: .infinity)
-            .glassSurface(cornerRadius: Corner.xl)
+            .glassSurface(cornerRadius: Corner.lg)
             .transition(.opacity.combined(with: .scale(scale: 0.97)))
         } else if let line = voice.lastPartnerLine {
             Text(line)
@@ -278,7 +282,7 @@ private struct PracticeRoom: View {
             Button {
                 confirmingFinish = true
             } label: {
-                Label(voice.userTurns == 0 ? "End rehearsal" : "Finish and get feedback", systemImage: "checkmark")
+                Label(voice.userTurns == 0 ? "End session" : "Finish and get feedback", systemImage: "checkmark")
                     .font(Typeface.label(16))
                     .foregroundStyle(Palette.ink)
                     .frame(maxWidth: .infinity, minHeight: 54)
@@ -286,8 +290,8 @@ private struct PracticeRoom: View {
             }
             .buttonStyle(.plain)
             .glassSurface(cornerRadius: 999, interactive: true)
-            .confirmationDialog(voice.userTurns == 0 ? "End this rehearsal?" : "Ready for feedback?", isPresented: $confirmingFinish, titleVisibility: .visible) {
-                Button(voice.userTurns == 0 ? "End rehearsal" : "Finish and get feedback") { Task { await session.finish() } }
+            .confirmationDialog(voice.userTurns == 0 ? "End this session?" : "Ready for feedback?", isPresented: $confirmingFinish, titleVisibility: .visible) {
+                Button(voice.userTurns == 0 ? "End session" : "Finish and get feedback") { Task { await session.finish() } }
                 Button("Keep speaking", role: .cancel) { }
             }
         }

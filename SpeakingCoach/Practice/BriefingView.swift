@@ -15,8 +15,9 @@ struct PracticeSetup: Hashable, Identifiable {
     var id: String { practice.id }
 }
 
-/// The moment before a rehearsal: what it is, who you'll talk to, and — only
-/// if you want — the knobs. One button starts it.
+/// The moment before a session, laid out like a track's page: its cover,
+/// the title and goal, then the setup as a short list. The knobs are the
+/// list's last row, only if you want them. One button starts it.
 struct BriefingView: View {
     let practice: PracticeDefinition
     let onBack: () -> Void
@@ -47,28 +48,26 @@ struct BriefingView: View {
                 .padding(.top, Space.sm)
 
                 ScrollView {
-                    VStack(alignment: .leading, spacing: Space.xxl) {
-                        VStack(alignment: .leading, spacing: Space.md) {
-                            Kicker(text: "\(practice.durationMinutes) min rehearsal")
-                            Text(practice.title)
-                                .font(Typeface.hero(34))
-                                .foregroundStyle(Palette.ink)
-                                .fixedSize(horizontal: false, vertical: true)
-                            Text(practice.objective)
-                                .font(Typeface.body(17))
-                                .foregroundStyle(Palette.dim)
-                                .fixedSize(horizontal: false, vertical: true)
-                        }
+                    VStack(alignment: .leading, spacing: 0) {
+                        SessionCover(symbol: PracticeCategory(rawValue: practice.category)?.icon ?? "mic.fill", size: 88)
 
-                        VStack(spacing: Space.sm) {
-                            partnerCard
-                            QuietButton(title: "Adjust this rehearsal", color: Palette.coralDeep) {
-                                adjusting = true
-                            }
-                        }
+                        Text(practice.title)
+                            .font(Typeface.hero(30))
+                            .foregroundStyle(Palette.ink)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .padding(.top, Space.xl)
+                        Text(practice.objective)
+                            .font(Typeface.body(16))
+                            .foregroundStyle(Palette.dim)
+                            .lineSpacing(2)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .padding(.top, Space.sm)
+
+                        details
+                            .padding(.top, Space.xxl)
                     }
                     .padding(.horizontal, Space.xxl)
-                    .padding(.top, Space.xl)
+                    .padding(.top, Space.lg)
                     .padding(.bottom, Space.xl)
                 }
                 .scrollDismissesKeyboard(.interactively)
@@ -89,7 +88,7 @@ struct BriefingView: View {
         .sheet(isPresented: $adjusting) {
             SceneScreen(depth: 0.4) {
                 HStack {
-                    Text("Adjust rehearsal")
+                    Text("Adjust session")
                         .font(Typeface.hero(28))
                         .foregroundStyle(Palette.ink)
                     Spacer()
@@ -108,27 +107,65 @@ struct BriefingView: View {
         }
     }
 
-    private var partnerCard: some View {
-        HStack(spacing: Space.lg) {
-            ZStack {
-                Circle().fill(Palette.coral.opacity(0.14))
-                Image(systemName: "person.wave.2.fill")
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundStyle(Palette.coralDeep)
+    /// The setup as a short list, like a track's details: who, how long,
+    /// how hard. Adjust is the last row, so the knobs stay one tap away and
+    /// out of the way.
+    private var details: some View {
+        GlassRowGroup {
+            detailRow("Partner", practice.partner)
+            GlassRowDivider()
+            detailRow("Length", "\(practice.durationMinutes) min")
+            GlassRowDivider()
+            detailRow("Pressure", pressureName(setup.pressure))
+            let situation = setup.situation.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !situation.isEmpty {
+                GlassRowDivider()
+                detailRow("Your situation", situation)
             }
-            .frame(width: 48, height: 48)
-            VStack(alignment: .leading, spacing: 3) {
-                Text("Your partner")
-                    .font(Typeface.label(13))
-                    .foregroundStyle(Palette.muted)
-                Text(practice.partner)
-                    .font(Typeface.title(17))
-                    .foregroundStyle(Palette.ink)
+            GlassRowDivider()
+            Button {
+                Haptics.selection()
+                adjusting = true
+            } label: {
+                HStack(spacing: Space.sm) {
+                    Text("Adjust session")
+                        .font(Typeface.label(15))
+                        .foregroundStyle(Palette.coralDeep)
+                    Spacer(minLength: Space.sm)
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(Palette.faint)
+                }
+                .frame(minHeight: 50)
+                .contentShape(Rectangle())
             }
-            Spacer(minLength: 0)
+            .buttonStyle(.plain)
         }
-        .padding(Space.lg)
-        .glassSurface(cornerRadius: Corner.lg)
+    }
+
+    private func detailRow(_ label: String, _ value: String) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: Space.lg) {
+            Text(label)
+                .font(Typeface.body(15))
+                .foregroundStyle(Palette.dim)
+            Spacer(minLength: Space.sm)
+            Text(value)
+                .font(Typeface.label(15))
+                .foregroundStyle(Palette.ink)
+                .multilineTextAlignment(.trailing)
+                .lineLimit(2)
+        }
+        .padding(.vertical, Space.md)
+        .frame(minHeight: 50)
+        .accessibilityElement(children: .combine)
+    }
+
+    private func pressureName(_ pressure: PracticeSetup.Pressure) -> String {
+        switch pressure {
+        case .supportive: "Gentle"
+        case .realistic: "Realistic"
+        case .challenging: "Tough"
+        }
     }
 
     // MARK: Adjustments
@@ -154,13 +191,7 @@ struct BriefingView: View {
                     if text.count > 1200 { setup.situation = String(text.prefix(1200)) }
                 }
             }
-            Segmented(title: "Pressure", options: PracticeSetup.Pressure.allCases, selection: $setup.pressure) {
-                switch $0 {
-                case .supportive: "Gentle"
-                case .realistic: "Realistic"
-                case .challenging: "Tough"
-                }
-            }
+            Segmented(title: "Pressure", options: PracticeSetup.Pressure.allCases, selection: $setup.pressure, label: pressureName)
             Segmented(title: "Pace", options: PracticeSetup.Pacing.allCases, selection: $setup.pacing) {
                 $0 == .patient ? "Time to think" : "Natural"
             }

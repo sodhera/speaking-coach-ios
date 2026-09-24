@@ -177,24 +177,37 @@ struct ProgressBar: View {
 
 // MARK: - Status bar scrim
 
-/// A soft fade in the stage's own crown colour behind the status bar, so
-/// scrolling content dissolves under the clock and signal icons instead of
-/// running through them. Opaque at the very top, gone 20pt below the safe
-/// area. Never takes touches.
+/// A slice of the stage's own paper — sky and grain, aligned to the real
+/// stage — laid over the status bar, so scrolling content dissolves under
+/// the clock instead of running through it. A flat painted colour showed as
+/// a smooth band against the grain. Solid through the status bar, gone
+/// `fade` points below it. Never takes touches.
 struct StatusBarScrim: ViewModifier {
+    var fade: CGFloat = 28
+
     func body(content: Content) -> some View {
-        content.overlay(alignment: .top) {
-            LinearGradient(
-                stops: [
-                    .init(color: Palette.skyCrown, location: 0),
-                    .init(color: Palette.skyCrown.opacity(0.9), location: 0.6),
-                    .init(color: Palette.skyCrown.opacity(0), location: 1),
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .frame(height: 20)
-            .ignoresSafeArea(edges: .top)
+        content.overlay {
+            GeometryReader { proxy in
+                let inset = proxy.safeAreaInsets.top
+                MorningPaper()
+                    .mask(alignment: .top) {
+                        VStack(spacing: 0) {
+                            Color.black.frame(height: inset)
+                            LinearGradient(
+                                stops: [
+                                    .init(color: .black, location: 0),
+                                    .init(color: .black.opacity(0.6), location: 0.45),
+                                    .init(color: .black.opacity(0), location: 1),
+                                ],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                            .frame(height: fade)
+                            Spacer(minLength: 0)
+                        }
+                        .ignoresSafeArea()
+                    }
+            }
             .allowsHitTesting(false)
             .accessibilityHidden(true)
         }
@@ -248,13 +261,13 @@ extension View {
 // MARK: - Keyboard warmup
 
 /// The first keyboard in a process pays a cold path that hitches whatever
-/// animation it lands in. Two stages, both invisible:
-/// `warmFrameworks()` while the welcome screen idles (become + resign in one
-/// runloop turn, so nothing appears), then `prewarm()` masked by the route
-/// into the flow, so the name step's autofocus is instant.
+/// animation it lands in. `warmFrameworks()` loads the input frameworks while
+/// the welcome screen idles — become + resign in one runloop turn, so nothing
+/// appears. Never hold the warmup field as first responder across frames: the
+/// flow opens on the language step, and a held field shows a real keyboard
+/// over it.
 @MainActor
 enum Keyboard {
-    private static var warmupField: UITextField?
     private static var didWarmFrameworks = false
 
     private static var activeWindow: UIWindow? {
@@ -282,26 +295,12 @@ enum Keyboard {
 
     static func warmFrameworks() {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-            guard !didWarmFrameworks, warmupField == nil, let window = activeWindow else { return }
+            guard !didWarmFrameworks, let window = activeWindow else { return }
             didWarmFrameworks = true
             let field = makeWarmupField(in: window)
             field.becomeFirstResponder()
             field.resignFirstResponder()
             field.removeFromSuperview()
-        }
-    }
-
-    static func prewarm(duration: TimeInterval = 0.55) {
-        DispatchQueue.main.async {
-            guard warmupField == nil, let window = activeWindow else { return }
-            let field = makeWarmupField(in: window)
-            warmupField = field
-            field.becomeFirstResponder()
-            DispatchQueue.main.asyncAfter(deadline: .now() + duration) {
-                field.resignFirstResponder()
-                field.removeFromSuperview()
-                if warmupField === field { warmupField = nil }
-            }
         }
     }
 }

@@ -3,9 +3,10 @@ import SwiftUI
 
 /// `-review-screen=<name>` renders a screen against a fixture profile, with
 /// no account or purchase needed: `welcome`, `signin`, `existing`, `paywall`,
-/// `attribution`, `microphone`, `reminders`, `setup`, `home`, `profile`, `library`,
-/// `briefing`, `settings`, `checkin`. Add `-review-plan-step=retry|finish|done`
-/// to see Home (or the hand-off) partway through the first plan.
+/// `attribution`, `microphone`, `reminders`, `setup`, `home`, `profile`, `progress`,
+/// `library`, `briefing`, `settings`, `checkin`. Add `-review-plan-step=retry|finish|done`
+/// to see Home (or the hand-off) partway through the first plan; `progress`
+/// brings its own four weeks of practice.
 struct ReviewScreens: View {
     let name: String
     let model: AppModel
@@ -101,6 +102,8 @@ struct ReviewScreens: View {
             case "rehearsalready":
                 let (deck, _) = model.presentations.loadReviewFixture()
                 RehearsalView(store: model.presentations, deck: deck, language: "en", onClose: {})
+            case "progress":
+                ProgressScreen(model: model)
             case "profile":
                 ProfileView(model: model)
             case "welcome":
@@ -118,7 +121,8 @@ struct ReviewScreens: View {
 
 extension ReviewScreens {
     var reviewSession: PracticeSession {
-        let practice = PracticeCatalog.definition("interview_tell_me_about_yourself")!
+        // The debrief mirrors a real report on the example question.
+        let practice = PracticeCatalog.definition(name == "debrief" ? "interview_evidence" : "interview_tell_me_about_yourself")!
         let setup = PracticeSetup(practice: practice, pressure: .realistic, persona: .female)
         let session = PracticeSession(setup: setup, language: "en", userID: UUID(), onFinished: {})
         let context = PracticeContext.new(for: setup, language: "en")
@@ -172,19 +176,29 @@ extension ReviewScreens {
             )
             session.loadReviewStage(.report(PracticeReport(id: UUID(), transcript: retryTranscript, analysis: .init(score: 67, summary: nil, practice: assessment, practiceContext: retryContext))))
         default:
+            // Mirrors a real report: one criterion clear, one partly, one
+            // missing, so every level mark and both cards show.
+            let lines = [
+                TranscriptLine(id: "coach-e1", role: .coach, text: practice.opening),
+                TranscriptLine(id: "user-e1", role: .user, text: "Uh, there's this time when I was playing football and I had to figure out how to do free kick."),
+                TranscriptLine(id: "coach-e2", role: .coach, text: "Okay. What part of that was your responsibility?"),
+                TranscriptLine(id: "user-e2", role: .user, text: "We practised a lot as a team, like every day after school, and the coach showed us some videos."),
+                TranscriptLine(id: "coach-e3", role: .coach, text: "And what changed because of that?"),
+                TranscriptLine(id: "user-e3", role: .user, text: "It was good. Yeah, it went well."),
+                TranscriptLine(id: "coach-e4", role: .coach, text: "Thanks, that's helpful."),
+            ]
             let assessment = PracticeAssessment(
-                summary: "You opened with a clear, concrete story — then the second answer lost its shape.",
+                summary: "You gave an example, but it does not yet clearly answer the prompt in the three parts we're checking: situation, your own action, and result.",
                 criteria: [
-                    CriterionResult(id: practice.criteria[0].id, level: 2, note: "You led with who you are now and one real result.", evidence: [.init(turnId: "user-1", quote: "Most recently I led the redesign of our onboarding at Acme, which cut drop-off by a third.")]),
-                    CriterionResult(id: practice.criteria[1].id, level: 1, note: "Your reason for the role was there, but vague.", evidence: [.init(turnId: "user-2", quote: "I like the product")]),
-                    CriterionResult(id: practice.criteria[2].id, level: 0, note: "You didn't connect your strength to what they need yet.", evidence: []),
+                    CriterionResult(id: practice.criteria[0].id, level: 2, note: "You briefly set the situation by saying it was a time playing football and working on a free kick.", evidence: [.init(turnId: "user-e1", quote: "there's this time when I was playing football and I had to figure out how to do free kick")]),
+                    CriterionResult(id: practice.criteria[1].id, level: 1, note: "You described what the team did, not what you did yourself.", evidence: [.init(turnId: "user-e2", quote: "We practised a lot as a team")]),
+                    CriterionResult(id: practice.criteria[2].id, level: 0, note: "You said it went well, but not what actually happened after.", evidence: []),
                 ],
-                adjustment: "When they ask why this role, name one specific thing about their product and link it to the result you just described.",
+                adjustment: "Next time, add one sentence that says exactly what you did and one sentence that says what happened after, without using numbers.",
                 targetCriterionId: practice.criteria[1].id,
                 limitations: []
             )
-            let report = PracticeReport(id: UUID(), transcript: transcript, analysis: .init(score: 50, summary: nil, practice: assessment, practiceContext: context))
-            session.loadReviewStage(.report(report))
+            session.loadReviewStage(.report(PracticeReport(id: UUID(), transcript: lines, analysis: .init(score: 50, summary: nil, practice: assessment, practiceContext: context))))
         }
         return session
     }
@@ -201,7 +215,9 @@ extension AppModel {
             profile.planCompletedAt = .now
         }
         setReviewProfile(profile)
-        history.setReviewRecords(Self.reviewRecords(for: step, moment: profile.moment))
+        history.setReviewRecords(LaunchFlags.value("-review-screen") == "progress"
+            ? Self.reviewProgressRecords()
+            : Self.reviewRecords(for: step, moment: profile.moment))
         if LaunchFlags.has("-review-plans") { subscriptions.useReviewPlans() }
     }
 
@@ -218,6 +234,50 @@ extension AppModel {
         guard step != "retry" else { return [first] }
         let retry = PracticeRecord(id: UUID(), activityID: practiceID, title: builtIn?.title ?? "Retry", date: .now, score: nil, parentID: builtIn == nil ? first.id : nil)
         return [retry, first]
+    }
+
+    /// Four weeks of practice for Progress: runs of days and gaps between
+    /// them, retries under their rehearsals, custom scenes without a rubric,
+    /// and every level. Newest first, as the history query returns them.
+    private static func reviewProgressRecords() -> [PracticeRecord] {
+        let calendar = Calendar.current
+        func at(_ daysAgo: Int, _ hour: Int, _ minute: Int) -> Date {
+            let day = calendar.date(byAdding: .day, value: -daysAgo, to: calendar.startOfDay(for: .now))!
+            return calendar.date(bySettingHour: hour, minute: minute, second: 0, of: day)!
+        }
+        func rehearsal(_ id: String, _ date: Date, _ levels: [Int]) -> PracticeRecord {
+            let practice = PracticeCatalog.definition(id)!
+            let criteria = zip(practice.criteria, levels).map { CriterionLevel(id: $0.id, level: $1) }
+            return PracticeRecord(id: UUID(), activityID: id, title: practice.title, date: date, score: nil, parentID: nil, criteria: criteria)
+        }
+        func retry(of parent: PracticeRecord, _ date: Date, criterion: Int, level: Int) -> PracticeRecord {
+            let practice = PracticeCatalog.definition(parent.activityID!)!
+            return PracticeRecord(
+                id: UUID(), activityID: parent.activityID, title: parent.title, date: date, score: nil, parentID: parent.id,
+                criteria: [CriterionLevel(id: practice.criteria[criterion].id, level: level)]
+            )
+        }
+        func custom(_ title: String, _ date: Date) -> PracticeRecord {
+            PracticeRecord(id: UUID(), activityID: nil, title: title, date: date, score: nil, parentID: nil, isCustom: true)
+        }
+
+        let evidence = rehearsal("interview_evidence", .now.addingTimeInterval(-50 * 60), [2, 1, 0])
+        let intro = rehearsal("interview_tell_me_about_yourself", at(8, 9, 5), [1, 1, 0])
+        return [
+            retry(of: evidence, .now.addingTimeInterval(-42 * 60), criterion: 1, level: 2),
+            evidence,
+            rehearsal("clear_work_update", at(1, 18, 10), [2, 2, 1]),
+            rehearsal("interview_tell_me_about_yourself", at(2, 8, 30), [2, 1, 1]),
+            custom(CustomSituation.ieltsSpeaking.title, at(6, 19, 0)),
+            rehearsal("set_a_boundary", at(7, 12, 15), [1, 1, 0]),
+            retry(of: intro, at(8, 9, 20), criterion: 1, level: 2),
+            intro,
+            rehearsal("meet_someone_new", at(9, 20, 40), [2, 1, 2]),
+            rehearsal("salary_raise", at(15, 17, 45), [1, 0, 1]),
+            rehearsal("disagree_in_meeting", at(16, 13, 0), [2, 1, 1]),
+            rehearsal("ask_for_clarity", at(17, 10, 30), [2, 2, 2]),
+            custom("Talking to my landlord", at(24, 18, 20)),
+        ]
     }
 }
 

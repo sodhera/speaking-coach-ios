@@ -34,7 +34,7 @@ struct WelcomeView: View {
                     Text("Speaking Coach")
                         .font(Typeface.hero(40))
                         .foregroundStyle(Palette.ink)
-                    Text("Rehearse the conversations that matter.")
+                    Text("Practise the conversations that matter.")
                         .font(Typeface.body(16))
                         .foregroundStyle(Palette.dim)
                         .multilineTextAlignment(.center)
