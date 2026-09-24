@@ -81,6 +81,7 @@
 		AA3E11B982FB37115985A704 /* RevenueCat in Frameworks */ = {isa = PBXBuildFile; productRef = A3710C14A575F6186A73935B /* RevenueCat */; };
 		AB158A5A469E6440041AFD4F /* FeedbackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00824D76FEB19ED86D0F5F6 /* FeedbackView.swift */; };
 		AB3535EC39C16BAF60D6B85E /* CustomSituationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EC7DA605C425FC734F2C569 /* CustomSituationTests.swift */; };
+		B1F2FABD591F5A9B0816B7F9 /* ZaraRecordingUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58C40E995A0E5305771F585D /* ZaraRecordingUITests.swift */; };
 		B60EB24BE8509F511014857A /* CommitmentHold.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C75F48C4662777C12122460 /* CommitmentHold.swift */; };
 		BAFA154E467803635E7923C9 /* SetupScreens.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB7A68AAA0307C0CFE6348BE /* SetupScreens.swift */; };
 		BB7C23BD1B2D5152C8AA3A72 /* DeckView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14D653FB1223CAF262DBD667 /* DeckView.swift */; };
@@ -210,6 +211,7 @@
 		538B2736E594CB8E21E910A6 /* OnboardingGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingGate.swift; sourceTree = "<group>"; };
 		56451D639C57713FA918338D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		5820BB9F944B0C59FA860FAD /* FirstPlanTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirstPlanTests.swift; sourceTree = "<group>"; };
+		58C40E995A0E5305771F585D /* ZaraRecordingUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZaraRecordingUITests.swift; sourceTree = "<group>"; };
 		5F26D0CDE1836A5096EA6971 /* AppLog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLog.swift; sourceTree = "<group>"; };
 		6002E69B3E399A661EB62046 /* AuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthService.swift; sourceTree = "<group>"; };
 		6290C4B104DCD9CB29E9F3F7 /* SpeakingCoachShieldAction.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = SpeakingCoachShieldAction.appex; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -543,6 +545,7 @@
 			isa = PBXGroup;
 			children = (
 				01B57A87E9381F0DAECB1F2C /* OnboardingFlowUITests.swift */,
+				58C40E995A0E5305771F585D /* ZaraRecordingUITests.swift */,
 			);
 			path = SpeakingCoachUITests;
 			sourceTree = "<group>";
@@ -853,6 +856,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				26ECE937A577B22EEFD8A0B1 /* OnboardingFlowUITests.swift in Sources */,
+				B1F2FABD591F5A9B0816B7F9 /* ZaraRecordingUITests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

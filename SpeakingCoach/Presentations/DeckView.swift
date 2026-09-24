@@ -130,7 +130,13 @@ struct DeckView: View {
         .swipeBack { save(); onBack() }
         .onDisappear(perform: save)
         .fullScreenCover(isPresented: $rehearsing) {
-            RehearsalView(store: store, deck: current, language: language) { rehearsing = false }
+            RehearsalView(
+                store: store,
+                deck: current,
+                language: language,
+                onClose: { rehearsing = false },
+                demoRecording: LaunchFlags.has("-zara-demo")
+            )
         }
         .navigationDestination(item: $reviewing) { rehearsal in
             RehearsalReviewView(store: store, deck: current, rehearsalID: rehearsal.id, language: language, onBack: { reviewing = nil })

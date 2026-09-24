@@ -64,6 +64,8 @@ struct RootView: View {
             #if DEBUG
             if LaunchFlags.has("-review-gallery") {
                 DesignGallery()
+            } else if LaunchFlags.has("-zara-demo") {
+                ZaraDemoFlow(model: model)
             } else if LaunchFlags.value("-review-onboarding-step") != nil {
                 OnboardingGate(model: model)
             } else if LaunchFlags.value("-review-screen") == "signin" {
@@ -83,6 +85,7 @@ struct RootView: View {
         }
         .task {
             #if DEBUG
+            if LaunchFlags.has("-zara-demo") { return }
             if let review = LaunchFlags.value("-review-screen"), review != "signin" { return }
             #endif
             model.start()
@@ -104,7 +107,20 @@ struct RootView: View {
             sessionView(for: launch)
                 .environment(\.stageStyle, .flat)
         }
-        .onOpenURL { links.pending = $0 }
+        .onOpenURL { url in
+            if url.scheme == AppConfig.authCallback.scheme,
+               url.host == AppConfig.authCallback.host,
+               url.path == AppConfig.authCallback.path {
+                // The in-app ASWebAuthenticationSession handles its own
+                // callback. This also covers a callback delivered by iOS
+                // after the app was backgrounded or relaunched: Supabase
+                // must exchange the code while its persisted PKCE verifier
+                // is still available.
+                Backend.supabase.auth.handle(url)
+            } else {
+                links.pending = url
+            }
+        }
         .onChange(of: links.pending) { _, _ in openPendingLink() }
         .onChange(of: model.userID) { _, _ in openPendingLink() }
         .onChange(of: scenePhase) { _, phase in

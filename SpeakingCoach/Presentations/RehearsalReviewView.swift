@@ -307,9 +307,21 @@ struct RehearsalReviewView: View {
             .padding(Space.lg)
             .glassSurface(cornerRadius: Corner.lg)
             if !player.isReady {
+#if DEBUG
+                if rehearsal.audioFile == "missing.m4a" {
+                    Text("Sample transcript · no audio recorded for this demo.")
+                        .font(Typeface.body(13))
+                        .foregroundStyle(Palette.muted)
+                } else {
+                    Text("The recording isn't on this phone any more.")
+                        .font(Typeface.body(13))
+                        .foregroundStyle(Palette.muted)
+                }
+#else
                 Text("The recording isn't on this phone any more.")
                     .font(Typeface.body(13))
                     .foregroundStyle(Palette.muted)
+#endif
             }
         }
     }

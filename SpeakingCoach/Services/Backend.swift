@@ -9,7 +9,7 @@ enum Backend {
         supabaseURL: AppConfig.supabaseURL,
         supabaseKey: AppConfig.supabaseAnonKey,
         options: SupabaseClientOptions(
-            auth: .init(emitLocalSessionAsInitialSession: true)
+            auth: .init(flowType: .pkce, emitLocalSessionAsInitialSession: true)
         )
     )
 }

@@ -3,6 +3,7 @@ import Supabase
 
 enum PracticeAPIError: LocalizedError {
     case signedOut
+    case sessionUnavailable
     case subscriptionRequired
     case server(status: Int, message: String)
     case offline
@@ -10,6 +11,7 @@ enum PracticeAPIError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .signedOut: "Please sign in again to practice."
+        case .sessionUnavailable: "We couldn't verify your sign-in. Check your connection and try again."
         case .subscriptionRequired: "Your plan isn't active right now."
         case .server(_, let message): message
         case .offline: "You're offline. Check your connection and try again."
@@ -69,7 +71,14 @@ enum PracticeAPI {
     private struct Ignored: Decodable {}
 
     private static func post<Body: Encodable, Response: Decodable>(_ path: String, body: Body, timeout: TimeInterval) async throws -> Response {
-        guard let session = try? await Backend.supabase.auth.session else { throw PracticeAPIError.signedOut }
+        let session: Session
+        do {
+            session = try await Backend.supabase.auth.session
+        } catch let error as AuthError where error == .sessionMissing {
+            throw PracticeAPIError.signedOut
+        } catch {
+            throw PracticeAPIError.sessionUnavailable
+        }
         var request = URLRequest(url: AppConfig.apiBaseURL.appending(path: "api/practice/\(path)"))
         request.httpMethod = "POST"
         request.timeoutInterval = timeout

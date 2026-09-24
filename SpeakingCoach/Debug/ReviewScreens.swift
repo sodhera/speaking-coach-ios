@@ -1,6 +1,57 @@
 #if DEBUG
 import SwiftUI
 
+/// One continuous, local-only walk through for recording Zara's sample talk.
+/// It never authenticates, records audio, or calls the coaching server.
+struct ZaraDemoFlow: View {
+    let model: AppModel
+    @State private var step: Step = .welcome
+
+    private enum Step: Equatable { case welcome, account, home }
+
+    var body: some View {
+        Group {
+            switch step {
+            case .welcome:
+                ZStack {
+                    MorningStage(depth: 0)
+                    WelcomeView(onGetStarted: { step = .account }, onSignIn: { step = .account })
+                }
+            case .account:
+                ZStack {
+                    MorningStage(depth: 0)
+                    VStack(spacing: Space.lg) {
+                        Spacer()
+                        BloomMark(size: 128)
+                        Text("Zara's demo account")
+                            .font(Typeface.hero(30))
+                            .foregroundStyle(Palette.ink)
+                        Text("A local sample for walking through a presentation.")
+                            .font(Typeface.body(16))
+                            .foregroundStyle(Palette.dim)
+                            .multilineTextAlignment(.center)
+                        Spacer()
+                        PrimaryButton(title: "Continue as Zara") { step = .home }
+                    }
+                    .padding(.horizontal, Space.xxl)
+                    .padding(.bottom, Space.xxl)
+                }
+            case .home:
+                MainShellView(model: model, onStart: { _ in })
+            }
+        }
+        .statusBarScrim()
+        .environment(\.stageStyle, step == .home ? .flat : .morning)
+        .onAppear {
+            model.setZaraDemoIdentity()
+            let deck = model.presentations.loadZaraDemoDeck()
+            var emptyDeck = deck
+            emptyDeck.brief = PresentationBrief()
+            model.presentations.update(emptyDeck)
+        }
+    }
+}
+
 /// `-review-screen=<name>` renders a screen against a fixture profile, with
 /// no account or purchase needed: `welcome`, `signin`, `existing`, `paywall`,
 /// `attribution`, `microphone`, `reminders`, `setup`, `home`, `profile`, `progress`,
@@ -102,6 +153,9 @@ struct ReviewScreens: View {
             case "rehearsalready":
                 let (deck, _) = model.presentations.loadReviewFixture()
                 RehearsalView(store: model.presentations, deck: deck, language: "en", onClose: {})
+            case "presentationrecording":
+                let (deck, _) = model.presentations.loadReviewFixture()
+                RehearsalView(store: model.presentations, deck: deck, language: "en", onClose: {}, demoRecording: true)
             case "progress", "profile":
                 ProfileView(model: model)
             case "welcome":
@@ -299,38 +353,76 @@ extension Subscriptions {
 
 #if DEBUG
 extension PresentationStore {
-    /// A three-slide deck with one rehearsal, for reviewing the screens.
-    func loadReviewFixture() -> (PresentationDeck, PresentationRehearsal) {
-        if let deck = decks.first, let rehearsal = rehearsals[deck.id]?.first { return (deck, rehearsal) }
+    /// Zara's psychology slides, ready for a first rehearsal in the local demo.
+    func loadZaraDemoDeck() -> PresentationDeck {
+        if let deck = decks.first(where: { $0.fileName == "When Nerves Show Up.pdf" }) { return deck }
         let slides = [
-            ("Q3 Growth Plan", "Where we are, and what we need"),
-            ("Retention is the lever", "Churn fell 18% after onboarding changes"),
-            ("The ask", "Two engineers for one quarter"),
+            ("When nerves show up", "How to present before you feel ready"),
+            ("Your body is trying to help", "A prediction is not a fact; speak with nerves present"),
+            ("Make the first step small", "Feet · easy exhale · first line · one kind listener"),
+            ("A simple shape for a short talk", "Open with a question · explain one idea · land the takeaway"),
+            ("Confidence can come later", "You can be nervous and still be clear and prepared"),
         ]
         let bounds = CGRect(x: 0, y: 0, width: 960, height: 540)
         let data = UIGraphicsPDFRenderer(bounds: bounds).pdfData { context in
-            for (title, subtitle) in slides {
+            for (index, slide) in slides.enumerated() {
                 context.beginPage()
-                UIColor(red: 0.13, green: 0.16, blue: 0.24, alpha: 1).setFill()
+                let title = slide.0
+                let subtitle = slide.1
+                UIColor(red: 0.973, green: 0.953, blue: 0.918, alpha: 1).setFill()
                 context.fill(bounds)
-                (title as NSString).draw(at: CGPoint(x: 64, y: 190), withAttributes: [.font: UIFont.boldSystemFont(ofSize: 54), .foregroundColor: UIColor.white])
-                (subtitle as NSString).draw(at: CGPoint(x: 64, y: 270), withAttributes: [.font: UIFont.systemFont(ofSize: 28), .foregroundColor: UIColor(white: 0.8, alpha: 1)])
+                UIColor(red: 0.89, green: 0.42, blue: 0.40, alpha: 1).setFill()
+                context.cgContext.fill(CGRect(x: 58, y: 481, width: 108, height: 3))
+                ("ZARA  /  PSYCHOLOGY" as NSString).draw(at: CGPoint(x: 58, y: 448), withAttributes: [
+                    .font: UIFont.boldSystemFont(ofSize: 15),
+                    .foregroundColor: UIColor(red: 0.76, green: 0.30, blue: 0.30, alpha: 1),
+                ])
+                let titleFont = UIFont.boldSystemFont(ofSize: index == 0 ? 50 : 42)
+                (title as NSString).draw(in: CGRect(x: 58, y: 286, width: 800, height: 112), withAttributes: [
+                    .font: titleFont,
+                    .foregroundColor: UIColor(red: 0.15, green: 0.13, blue: 0.13, alpha: 1),
+                ])
+                (subtitle as NSString).draw(in: CGRect(x: 60, y: 218, width: 780, height: 78), withAttributes: [
+                    .font: UIFont.systemFont(ofSize: 24),
+                    .foregroundColor: UIColor(red: 0.41, green: 0.37, blue: 0.35, alpha: 1),
+                ])
+                UIColor(red: 1, green: 0.988, blue: 0.969, alpha: 1).setFill()
+                context.cgContext.fillEllipse(in: CGRect(x: 822, y: 78, width: 50, height: 50))
+                ("\(index + 1) / \(slides.count)" as NSString).draw(at: CGPoint(x: 58, y: 46), withAttributes: [
+                    .font: UIFont.systemFont(ofSize: 13),
+                    .foregroundColor: UIColor(red: 0.41, green: 0.37, blue: 0.35, alpha: 1),
+                ])
             }
         }
-        var deck = try! importPDF(data, fileName: "Q3 Growth Plan.pdf")
-        deck.brief = PresentationBrief(audience: "the leadership team", purpose: "approve two engineers for Q3", instructions: "", questionStyle: .curious)
+        var deck = try! importPDF(data, fileName: "When Nerves Show Up.pdf")
+        deck.brief = PresentationBrief(
+            audience: "my psychology class",
+            purpose: "share one way to present while nervous",
+            instructions: "I rush when I feel watched; please keep questions kind.",
+            questionStyle: .supportive
+        )
         update(deck)
+        return deck
+    }
+
+    /// Add a sample transcript and results only when the rehearsal finishes.
+    func loadReviewFixture() -> (PresentationDeck, PresentationRehearsal) {
+        let deck = loadZaraDemoDeck()
+        if let rehearsal = rehearsals[deck.id]?.first { return (deck, rehearsal) }
         let questions = [
-            AudienceQuestion(id: "q1", question: "What happens to retention if we don't get the two engineers?", reason: "Tests the cost of inaction.", slideIndex: 2),
-            AudienceQuestion(id: "q2", question: "How confident are you that the 18% drop came from onboarding and not seasonality?", reason: "Tests the evidence.", slideIndex: 1),
-            AudienceQuestion(id: "q3", question: "What would you cut if we could only give you one engineer?", reason: "Tests priorities.", slideIndex: nil),
+            AudienceQuestion(id: "q1", question: "What could you try if the nerves show up again?", reason: "Connects the idea to everyday life.", slideIndex: 1),
+            AudienceQuestion(id: "q2", question: "Why might practising the first sentence help?", reason: "Invites Zara to explain her preparation choice.", slideIndex: 2),
+            AudienceQuestion(id: "q3", question: "What would you like classmates to remember?", reason: "Gives Zara a chance to land her takeaway.", slideIndex: 4),
         ]
         let rehearsal = PresentationRehearsal(
-            id: UUID(), deckID: deck.id, startedAt: .now.addingTimeInterval(-600), durationMs: 262_000, audioFile: "missing.m4a",
-            transcript: String(repeating: "So the reason retention matters this quarter is that every point we keep is worth more than a new signup. ", count: 30),
-            slideEvents: [SlideEvent(slideIndex: 0, atMs: 0), SlideEvent(slideIndex: 1, atMs: 60_000), SlideEvent(slideIndex: 2, atMs: 180_000)],
+            id: UUID(), deckID: deck.id, startedAt: .now.addingTimeInterval(-600), durationMs: 21_000, audioFile: "missing.m4a",
+            transcript: "I want to look at why speaking nerves show up and one small way to keep going anyway. Sometimes my heart races and I think everyone can tell. I can remind myself that a prediction is not a fact. I can feel nervous and still explain one idea. Before I begin, I will feel my feet, let my breath out, and say my first line slowly. I do not need perfect calm. I just need the next sentence.",
+            slideEvents: [SlideEvent(slideIndex: 0, atMs: 0), SlideEvent(slideIndex: 1, atMs: 5_000), SlideEvent(slideIndex: 2, atMs: 10_000), SlideEvent(slideIndex: 3, atMs: 15_000), SlideEvent(slideIndex: 4, atMs: 18_000)],
             questions: questions,
-            answers: [QuestionAnswer(questionId: "q1", transcript: "Um, I think it would probably go back up, because the onboarding work would stall and we'd lose what we gained.", feedback: "Lead with the number: say how much churn you'd expect to return, then name the one project that would stall.")]
+            answers: [
+                QuestionAnswer(questionId: "q1", transcript: "I can try putting both feet down and starting with the next sentence.", feedback: "Clear and usable. Give one example of how the first sentence could help you restart."),
+                QuestionAnswer(questionId: "q2", transcript: "If I say it slowly once, I don't have to invent my opening while I'm nervous.", feedback: "Nice cause and effect. Pause after “slowly once” so the audience can take it in."),
+            ]
         )
         save(rehearsal)
         return (deck, rehearsal)

@@ -122,8 +122,14 @@ struct SettingsView: View {
         }
         .confirmationDialog("Sign out of Speaking Coach?", isPresented: $confirmingSignOut, titleVisibility: .visible) {
             Button("Sign out", role: .destructive) {
-                dismiss()
-                Task { await model.signOut() }
+                Task {
+                    do {
+                        try await model.signOut()
+                        dismiss()
+                    } catch {
+                        notice = error.localizedDescription
+                    }
+                }
             }
         }
         .sheet(isPresented: $sendingFeedback) {

@@ -203,7 +203,15 @@ struct PaywallView: View {
                 footerLink("Privacy") { UIApplication.shared.open(AppConfig.privacyURL) }
                 if onClose == nil {
                     // The only way off a hard paywall for the wrong account.
-                    footerLink("Sign out") { Task { await model.signOut() } }
+                    footerLink("Sign out") {
+                        Task {
+                            do {
+                                try await model.signOut()
+                            } catch {
+                                notice = (error.localizedDescription, true)
+                            }
+                        }
+                    }
                 }
             }
         }

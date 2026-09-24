@@ -10,7 +10,7 @@ enum PresentationAPI {
     /// Transcribes a recording (AAC in an .m4a) with the server's Scribe
     /// boundary. Signed-in only; files up to 10 MB.
     static func transcribe(_ audio: URL, language: String) async throws -> String {
-        guard let session = try? await Backend.supabase.auth.session else { throw PracticeAPIError.signedOut }
+        let session = try await currentSession()
         let boundary = "Boundary-\(UUID().uuidString)"
         var body = Data()
         func field(_ name: String, _ value: String) {
@@ -100,7 +100,19 @@ enum PresentationAPI {
         request.httpMethod = "POST"
         request.timeoutInterval = 90
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        let session = try await currentSession()
+        request.setValue("Bearer \(session.accessToken)", forHTTPHeaderField: "Authorization")
         return try await send(request, body: try JSONEncoder().encode(body))
+    }
+
+    private static func currentSession() async throws -> Session {
+        do {
+            return try await Backend.supabase.auth.session
+        } catch let error as AuthError where error == .sessionMissing {
+            throw PracticeAPIError.signedOut
+        } catch {
+            throw PracticeAPIError.sessionUnavailable
+        }
     }
 
     private static func send<Response: Decodable>(_ request: URLRequest, body: Data) async throws -> Response {

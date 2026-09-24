@@ -58,8 +58,22 @@ enum AuthService {
         }
     }
 
-    static func signOut() async {
-        try? await auth.signOut()
+    static func signOut() async throws {
+        do {
+            try await auth.signOut(scope: .local)
+        } catch {
+            // Supabase removes the local Keychain session before asking the
+            // server to revoke it. If only that remote request failed, this
+            // device is still signed out and the user should not be blocked.
+            do {
+                _ = try await auth.session
+            } catch let sessionError as AuthError where sessionError == .sessionMissing {
+                return
+            } catch {
+                throw map(error)
+            }
+            throw map(error)
+        }
     }
 
     // MARK: Errors

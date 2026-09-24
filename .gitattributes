@@ -1,0 +1,2 @@
+output/video/*.mp4 filter=lfs diff=lfs merge=lfs -text
+output/pdf/*.pdf binary

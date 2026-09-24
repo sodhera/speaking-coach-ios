@@ -9,6 +9,8 @@ struct RehearsalView: View {
     let deck: PresentationDeck
     let language: String
     let onClose: () -> Void
+    /// Drives a silent, deterministic recording preview in the DEBUG review gallery.
+    var demoRecording = false
 
     enum Stage: Equatable {
         case ready
@@ -54,6 +56,13 @@ struct RehearsalView: View {
         .statusBarScrim()
         .animation(.easeInOut(duration: 0.35), value: stage)
         .persistentSystemOverlays(stage == .recording ? .hidden : .automatic)
+        .onAppear {
+            if demoRecording {
+                startedAt = .now
+                events = [SlideEvent(slideIndex: 0, atMs: 0)]
+                stage = .recording
+            }
+        }
         .onChange(of: scenePhase) { _, phase in
             // The microphone never stays live in the background: leaving
             // mid-talk ends it and keeps what you said.
@@ -132,18 +141,22 @@ struct RehearsalView: View {
                     }
                 }
                 Spacer()
-                HStack(spacing: Space.sm) {
-                    BloomMark(size: 26, level: recorder.level, breathes: false, glow: false)
-                    Text(Self.clock(recorder.elapsed))
-                        .font(Typeface.label(15))
-                        .foregroundStyle(Palette.ink)
-                        .monospacedDigit()
+                TimelineView(.animation(minimumInterval: 1 / 12)) { timeline in
+                    let elapsed = demoRecording ? max(0, timeline.date.timeIntervalSince(startedAt)) : recorder.elapsed
+                    let level = demoRecording ? 0.2 + 0.72 * (0.5 + 0.5 * sin(timeline.date.timeIntervalSinceReferenceDate * 6.5)) : recorder.level
+                    HStack(spacing: Space.sm) {
+                        BloomMark(size: 26, level: level, breathes: false, glow: false)
+                        Text(Self.clock(elapsed))
+                            .font(Typeface.label(15))
+                            .foregroundStyle(Palette.ink)
+                            .monospacedDigit()
+                    }
+                    .padding(.horizontal, Space.lg)
+                    .frame(height: 44)
+                    .glassSurface(cornerRadius: 22)
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel("Recording, \(Self.clock(elapsed))")
                 }
-                .padding(.horizontal, Space.lg)
-                .frame(height: 44)
-                .glassSurface(cornerRadius: 22)
-                .accessibilityElement(children: .combine)
-                .accessibilityLabel("Recording, \(Self.clock(recorder.elapsed))")
                 Spacer()
                 Color.clear.frame(width: 44, height: 44)
             }
@@ -211,6 +224,13 @@ struct RehearsalView: View {
 
     private func finish() {
         guard stage == .recording else { return }
+        #if DEBUG
+        if demoRecording {
+            let (_, rehearsal) = store.loadReviewFixture()
+            stage = .done(rehearsal.id)
+            return
+        }
+        #endif
         let seconds = recorder.stop()
         durationMs = Int(seconds * 1000)
         try? FileManager.default.setAttributes([.protectionKey: FileProtectionType.complete], ofItemAtPath: audioURL.path)

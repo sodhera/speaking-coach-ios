@@ -69,8 +69,8 @@ final class AppModel {
         }
     }
 
-    func signOut() async {
-        await AuthService.signOut()
+    func signOut() async throws {
+        try await AuthService.signOut()
     }
 
     /// "How did you hear about us?" — saved once, on the account.
@@ -117,12 +117,25 @@ final class AppModel {
             throw AuthFailure.message(message ?? "Your account couldn't be deleted. Please try again.")
         }
         if let userID { ProfileService.cache(nil, userID: userID) }
-        await AuthService.signOut()
+        try await AuthService.signOut()
     }
 
     #if DEBUG
     func setReviewProfile(_ profile: CoachProfile) {
         self.profile = profile
+    }
+
+    func setZaraDemoIdentity() {
+        var answers = OnboardingAnswers.reviewFixture(before: .account)
+        answers.name = "Zara"
+        answers.language = "en"
+        answers.category = .presentations
+        answers.moment = .presentation
+        profile = answers.profile()
+        userID = UUID(uuidString: "A711A711-A711-4711-A711-A711A711A711")
+        email = "zara@example.invalid"
+        phase = .ready
+        history.setReviewRecords([])
     }
     #endif
 
