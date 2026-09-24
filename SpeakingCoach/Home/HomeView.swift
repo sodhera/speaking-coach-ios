@@ -1,7 +1,5 @@
 import SwiftUI
 
-/// Two tabs, each with one job — the SleepBlock shell. The system tab bar
-/// becomes Liquid Glass on iOS 26 by itself.
 struct MainShellView: View {
     let model: AppModel
     /// A briefing to open the moment Home appears — the hand-off's "Start
@@ -14,7 +12,9 @@ struct MainShellView: View {
     var body: some View {
         TabView {
             HomeView(model: model, pendingBriefing: pendingBriefing, onStart: onStart, onOpenReport: onOpenReport, onStartCustom: onStartCustom)
-                .tabItem { Label("Home", systemImage: "house.fill") }
+                .tabItem { Label("Practice", systemImage: "mic.fill") }
+            ProgressScreen(model: model, onOpenReport: onOpenReport)
+                .tabItem { Label("Progress", systemImage: "chart.bar.fill") }
             ProfileView(model: model, onOpenReport: onOpenReport)
                 .tabItem { Label("Profile", systemImage: "person.crop.circle") }
         }
@@ -22,16 +22,8 @@ struct MainShellView: View {
     }
 }
 
-/// **Home — go rehearse.** A near-wordless instrument that never scrolls:
-/// a small-caps greeting over the name, the bloom breathing at the centre as
-/// the app's living state, the next rehearsal named in one glass capsule
-/// beneath it, and one action where the thumb rests. Status sits at the
-/// edges — the streak top-left, the full library top-right.
-///
-/// Until the first plan is done, Home *is* the plan: the card the user
-/// committed to before the paywall, with its progress, and the primary
-/// action names the next step. The library and Profile stay one tap away
-/// for anyone who'd rather look around first.
+/// Choose a situation first, then a rehearsal. Progress and an active plan
+/// stay visible without taking over the practice catalog.
 struct HomeView: View {
     let model: AppModel
     var pendingBriefing: Binding<PracticeDefinition?> = .constant(nil)
@@ -40,17 +32,24 @@ struct HomeView: View {
     var onStartCustom: (CustomSituation, PracticeSetup) -> Void = { _, _ in }
 
     @State private var path: [PracticeDefinition] = []
-    @State private var showsLibrary = false
     @State private var showsCheckIn = false
     @State private var openingRetry = false
     @State private var planError: String?
     @State private var showsPreparation = false
+    @State private var showsCustom = false
+    @State private var showsPresentations = false
+    @State private var showsPrompt = false
+    @AppStorage("practice.selectedCategory") private var selectedCategoryID = ""
 
     private var profile: CoachProfile? { model.profile }
-    private var upNext: PracticeDefinition? {
-        preparation?.next
-            ?? profile?.moment?.firstPractice
-            ?? PracticeCatalog.definition("interview_tell_me_about_yourself")
+    private var selectedCategory: PracticeCategory {
+        PracticeCategory(rawValue: selectedCategoryID)
+            ?? PracticeCategory.ordered(firstFor: profile?.moment).first
+            ?? .interviews
+    }
+
+    private var selectedPractices: [PracticeDefinition] {
+        PracticeCatalog.all.filter { $0.category == selectedCategory.rawValue }
     }
 
     /// A preparation plan still in progress leads what's up next.
@@ -71,9 +70,13 @@ struct HomeView: View {
         NavigationStack(path: $path) {
             ZStack {
                 MorningStage(depth: 0.2)
-                content
-                    .padding(.horizontal, Space.xxl)
-                    .safeAreaPadding(.top)
+                ScrollView(showsIndicators: false) {
+                    content
+                        .padding(.horizontal, Space.xxl)
+                        .padding(.top, Space.md)
+                        .padding(.bottom, Space.xxxl)
+                }
+                .safeAreaPadding(.top)
             }
             .toolbar(.hidden, for: .navigationBar)
             .navigationDestination(for: PracticeDefinition.self) { practice in
@@ -82,22 +85,15 @@ struct HomeView: View {
             .navigationDestination(isPresented: $showsPreparation) {
                 PreparationPlanView(model: model, onBack: { showsPreparation = false }, onPractice: { path.append($0) })
             }
+            .navigationDestination(isPresented: $showsCustom) {
+                CustomSituationView(language: profile?.language ?? "en", onBack: { showsCustom = false }, onStart: onStartCustom)
+            }
+            .navigationDestination(isPresented: $showsPresentations) {
+                PresentationsView(store: model.presentations, language: profile?.language ?? "en", onBack: { showsPresentations = false })
+            }
         }
-        .sheet(isPresented: $showsLibrary) {
-            LibraryView(
-                language: model.profile?.language ?? "en",
-                presentations: model.presentations,
-                model: model,
-                onStart: { setup in
-                    showsLibrary = false
-                    onStart(setup)
-                },
-                onStartCustom: { situation, setup in
-                    showsLibrary = false
-                    onStartCustom(situation, setup)
-                }
-            )
-            .presentationDragIndicator(.visible)
+        .fullScreenCover(isPresented: $showsPrompt) {
+            PromptView(routine: model.routine, source: .practice, language: profile?.language ?? "en") { showsPrompt = false }
         }
         .sheet(isPresented: $showsCheckIn) {
             if let plan = FirstPlan(profile: profile, records: model.history.records) {
@@ -106,7 +102,7 @@ struct HomeView: View {
             }
         }
         .onAppear {
-            Analytics.enter("home")
+            Analytics.enter("practice_home")
             openPendingBriefing()
         }
         .onChange(of: pendingBriefing.wrappedValue) { _, _ in openPendingBriefing() }
@@ -122,60 +118,127 @@ struct HomeView: View {
     }
 
     private var content: some View {
-        VStack(spacing: 0) {
-            ZStack(alignment: .top) {
-                VStack(spacing: Space.sm) {
-                    Kicker(text: greeting)
-                    Text(profile?.firstName.isEmpty == false ? profile!.firstName : "Welcome")
-                        .font(Typeface.hero(36))
-                        .foregroundStyle(Palette.ink)
+        VStack(alignment: .leading, spacing: Space.xl) {
+            VStack(alignment: .leading, spacing: Space.sm) {
+                Text("Practice")
+                    .font(Typeface.hero(30))
+                    .foregroundStyle(Palette.ink)
+                HStack(spacing: Space.lg) {
+                    Label("\(model.history.lastSevenDays) this week", systemImage: "waveform")
+                    Label("\(model.history.streak)-day streak", systemImage: "flame")
                 }
-                .padding(.top, Space.huge)
+                .font(Typeface.label(13))
+                .foregroundStyle(Palette.dim)
+                .accessibilityElement(children: .combine)
+            }
 
-                HStack {
-                    StreakChip(count: model.history.streak)
-                    Spacer()
-                    GlassIconButton(systemImage: "square.grid.2x2", size: 44, iconSize: 16, accessibilityLabel: "All rehearsals") {
-                        showsLibrary = true
+            VStack(alignment: .leading, spacing: Space.md) {
+                Text("What would you like to practice?")
+                    .font(Typeface.title(21))
+                    .foregroundStyle(Palette.ink)
+                categoryChoices
+            }
+
+            VStack(alignment: .leading, spacing: Space.md) {
+                Kicker(text: selectedCategory.title)
+                GlassRowGroup {
+                    ForEach(Array(selectedPractices.enumerated()), id: \.element.id) { index, practice in
+                        if index > 0 { GlassRowDivider() }
+                        practiceRow(practice)
                     }
                 }
+                Button { showsCustom = true } label: {
+                    Label("Describe my own situation", systemImage: "square.and.pencil")
+                        .font(Typeface.label(15))
+                        .foregroundStyle(Palette.coralDeep)
+                        .frame(minHeight: 44)
+                }
+                .buttonStyle(.plain)
             }
 
             if let plan {
-                Spacer(minLength: Space.lg)
-                // The action stays with the step it advances. The bloom
-                // steps aside on short screens; the plan never does.
-                ViewThatFits(in: .vertical) {
-                    VStack(spacing: Space.lg) {
-                        BloomMark(size: 72)
-                        PlanCard(plan: plan, compact: true)
-                        planAction(plan)
-                    }
-                    VStack(spacing: Space.md) {
-                        PlanCard(plan: plan, compact: true)
-                        planAction(plan)
-                    }
+                VStack(alignment: .leading, spacing: Space.md) {
+                    Kicker(text: "Continue your plan")
+                    Text("\(plan.practice.title) · step \((plan.current?.rawValue ?? 0) + 1) of 3")
+                        .font(Typeface.label(16))
+                        .foregroundStyle(Palette.ink)
+                    planAction(plan)
                 }
-                .transition(.opacity)
-                Spacer(minLength: Space.lg)
-            } else {
-                Spacer(minLength: Space.xxxl)
-                upNextStack.transition(.opacity)
-                Spacer(minLength: Space.xxxl)
-                VStack(spacing: Space.lg) {
-                    PrimaryButton(title: "Start rehearsal", systemImage: "mic.fill") {
-                        if let upNext { path.append(upNext) }
-                    }
-                    if let last = lastRehearsal {
-                        Text(last)
-                            .font(Typeface.body(14))
-                            .foregroundStyle(Palette.muted)
-                    }
-                }
-                .padding(.bottom, Space.xxxl)
+                .padding(Space.lg)
+                .glassSurface(cornerRadius: Corner.lg)
             }
+
+            if let preparation {
+                Button { showsPreparation = true } label: {
+                    Label("Upcoming event · \(preparation.done) of \(preparation.total) rehearsed", systemImage: "calendar")
+                        .font(Typeface.label(15))
+                        .foregroundStyle(Palette.ink)
+                        .frame(maxWidth: .infinity, minHeight: 54, alignment: .leading)
+                }
+                .buttonStyle(.plain)
+            } else {
+                Button { showsPreparation = true } label: {
+                    Label("Make a preparation plan", systemImage: "calendar.badge.plus")
+                        .font(Typeface.label(15))
+                        .foregroundStyle(Palette.ink)
+                        .frame(maxWidth: .infinity, minHeight: 54, alignment: .leading)
+                }
+                .buttonStyle(.plain)
+            }
+
+            Button { showsPrompt = true } label: {
+                Label("Try today's 30-second prompt", systemImage: "mic")
+                    .font(Typeface.label(15))
+                    .foregroundStyle(Palette.ink)
+                    .frame(maxWidth: .infinity, minHeight: 54, alignment: .leading)
+            }
+            .buttonStyle(.plain)
         }
-        .animation(.easeInOut(duration: 0.3), value: plan)
+    }
+
+    private var categoryChoices: some View {
+        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: Space.sm) {
+            ForEach(PracticeCategory.ordered(firstFor: profile?.moment)) { category in
+                Button {
+                    Haptics.selection()
+                    selectedCategoryID = category.rawValue
+                } label: {
+                    Text(category.title)
+                        .font(Typeface.label(14))
+                        .foregroundStyle(selectedCategory == category ? .white : Palette.ink)
+                        .frame(maxWidth: .infinity, minHeight: 48)
+                        .background(selectedCategory == category ? Palette.coral : Color.white, in: RoundedRectangle(cornerRadius: Corner.md))
+                }
+                .buttonStyle(.plain)
+                .accessibilityAddTraits(selectedCategory == category ? .isSelected : [])
+            }
+            Button { showsPresentations = true } label: {
+                Text("My slides")
+                    .font(Typeface.label(14))
+                    .foregroundStyle(Palette.ink)
+                    .frame(maxWidth: .infinity, minHeight: 48)
+                    .background(Color.white, in: RoundedRectangle(cornerRadius: Corner.md))
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    private func practiceRow(_ practice: PracticeDefinition) -> some View {
+        Button { path.append(practice) } label: {
+            HStack(spacing: Space.md) {
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(practice.title).font(Typeface.label(16)).foregroundStyle(Palette.ink)
+                    Text("\(practice.durationMinutes) min · \(practice.partner)")
+                        .font(Typeface.body(13)).foregroundStyle(Palette.muted)
+                }
+                Spacer(minLength: 8)
+                Image(systemName: "chevron.right").font(.system(size: 12)).foregroundStyle(Palette.faint)
+            }
+            .padding(.vertical, Space.sm)
+            .frame(minHeight: 58)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
     }
 
     private func planAction(_ plan: FirstPlan) -> some View {
@@ -194,44 +257,6 @@ struct HomeView: View {
         }
     }
 
-    private var upNextStack: some View {
-        VStack(spacing: Space.xxl) {
-            BloomMark(size: 170)
-            if let upNext {
-                Button {
-                    Haptics.heavy()
-                    path.append(upNext)
-                } label: {
-                    HStack(spacing: Space.sm) {
-                        Image(systemName: "mic.fill").foregroundStyle(Palette.coral)
-                        Text(upNext.title).foregroundStyle(Palette.ink)
-                        Text("· \(upNext.durationMinutes) min").foregroundStyle(Palette.muted)
-                    }
-                    .font(Typeface.label(15))
-                    .padding(.horizontal, Space.xl)
-                    .frame(minHeight: 44)
-                    .contentShape(Capsule())
-                }
-                .buttonStyle(.plain)
-                .glassSurface(cornerRadius: 999, interactive: true)
-                .accessibilityLabel("Up next: \(upNext.title), \(upNext.durationMinutes) minutes")
-            }
-            if let preparation {
-                Button {
-                    Haptics.heavy()
-                    showsPreparation = true
-                } label: {
-                    Text("Your plan · \(preparation.done) of \(preparation.total) · \(PreparationPlanView.when(preparation.plan).lowercased())")
-                        .font(Typeface.body(14))
-                        .foregroundStyle(Palette.dim)
-                        .frame(minHeight: 44)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .padding(.top, -Space.md)
-            }
-        }
-    }
 
     // MARK: The plan's next step
 
@@ -295,20 +320,6 @@ struct HomeView: View {
         }
     }
 
-    private var greeting: String {
-        let hour = Calendar.current.component(.hour, from: .now)
-        return hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening"
-    }
-
-    /// Only when it can honestly be called recent — never a weeks-old date
-    /// dressed up as "last".
-    private var lastRehearsal: String? {
-        guard let last = model.history.records.first,
-              let days = Calendar.current.dateComponents([.day], from: Calendar.current.startOfDay(for: last.date), to: Calendar.current.startOfDay(for: .now)).day,
-              days <= 6 else { return nil }
-        let when = days == 0 ? "today" : days == 1 ? "yesterday" : "\(days) days ago"
-        return "Last rehearsal \(when)"
-    }
 }
 
 /// The streak at the top-left edge. It shows zero — a `0` where a number is

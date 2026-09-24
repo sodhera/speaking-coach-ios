@@ -49,6 +49,7 @@
 		56A4A205F218E4AA7041FEF6 /* Controls.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A9778AAB3047FF3C89F2D84 /* Controls.swift */; };
 		57EB3CCAC0CEC124B4395138 /* ManagedSettings.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4FDE762B0A2AC2705A0927F8 /* ManagedSettings.framework */; };
 		58CEF14C17A020E2DDDB2E07 /* Glass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01216A54FB17EDE611D0FCEE /* Glass.swift */; };
+		5A5A04ACDD62F60E9F15A873 /* ProgressScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = E61168B69DC7E2708226B80B /* ProgressScreen.swift */; };
 		5B52AF5C5C159F323F7C1E5A /* OnboardingContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8737392A1F95DC94FB8CFCA /* OnboardingContent.swift */; };
 		670DDCC93BA277CE918CC579 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6976B244E4B6B555250E7520 /* Assets.xcassets */; };
 		69286FD1E7A1887779B4B53E /* DeviceActivity.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 33D417A0C6304EF2BD98E77A /* DeviceActivity.framework */; };
@@ -254,6 +255,7 @@
 		E2D5F54F5351FF73E37FCD23 /* AppConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfig.swift; sourceTree = "<group>"; };
 		E57333B83E0F632A1DFE497E /* SpeakingCoachUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = SpeakingCoachUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		E57D1AF86C5FABCAD39BB5EF /* DesignGallery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignGallery.swift; sourceTree = "<group>"; };
+		E61168B69DC7E2708226B80B /* ProgressScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressScreen.swift; sourceTree = "<group>"; };
 		E9E1053D890BC9D8862EF2AF /* MorningStage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MorningStage.swift; sourceTree = "<group>"; };
 		ED7FEE3B55D24D58BF6A4C2E /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
 		EE6F134D13E0992E0B51276F /* PresentationsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresentationsView.swift; sourceTree = "<group>"; };
@@ -496,6 +498,7 @@
 				360C4C91434B00523406053D /* FirstPlan.swift */,
 				3EC2DBF32582E764DC852ED3 /* HomeView.swift */,
 				183AE9A6F803CE3EBDAD6874 /* ProfileView.swift */,
+				E61168B69DC7E2708226B80B /* ProgressScreen.swift */,
 			);
 			path = Home;
 			sourceTree = "<group>";
@@ -914,6 +917,7 @@
 				6F30BC0D748ABBC1A8530B04 /* PresentationsView.swift in Sources */,
 				75F370C1B20705976DD4B842 /* ProfileService.swift in Sources */,
 				51743A07D2BBA6D400676D9F /* ProfileView.swift in Sources */,
+				5A5A04ACDD62F60E9F15A873 /* ProgressScreen.swift in Sources */,
 				18F3539A73C9653AA467D1E9 /* PromptView.swift in Sources */,
 				6E57906B6B564D9FBD9D076C /* RehearsalReviewView.swift in Sources */,
 				545D7A6511A2D098BE0F0949 /* RehearsalView.swift in Sources */,
