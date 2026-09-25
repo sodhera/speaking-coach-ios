@@ -40,7 +40,7 @@ struct DeckView: View {
 
     var body: some View {
         ZStack {
-            MorningStage(depth: 0.3, ripples: false)
+            MorningStage(depth: 0.3)
             VStack(spacing: 0) {
                 // Pinned, so the controls never slide under the status bar's fade.
                 header

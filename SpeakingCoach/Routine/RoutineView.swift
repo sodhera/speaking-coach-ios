@@ -18,7 +18,7 @@ struct RoutineView: View {
 
     var body: some View {
         ZStack {
-            MorningStage(depth: 0.3, ripples: false)
+            MorningStage(depth: 0.3)
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: Space.xxl) {
                     SubpageHeader(

@@ -11,7 +11,7 @@ import SwiftUI
 /// Geometry is measured off the 1024pt icon: petals are ellipses 0.325w long
 /// and 0.142w thick whose centres sit 0.236w from the middle, at 60° steps
 /// starting horizontal.
-struct BloomMark: View {
+struct BloomMark: View, Animatable {
     /// Outer diameter of the flower at rest.
     var size: CGFloat
     var color: Color = Palette.coral
@@ -19,6 +19,14 @@ struct BloomMark: View {
     var level: Double = 0
     var breathes = true
     var glow = true
+    /// 0 is a closed bud, 1 the open flower. Animatable, so a spring past 1
+    /// opens the petals a touch too far before they settle.
+    var openness: Double = 1
+
+    var animatableData: Double {
+        get { openness }
+        set { openness = newValue }
+    }
 
     /// Small marks breathe as one — every petal together, slow and shallow,
     /// like a held breath. A travelling wave deep enough to see at 30pt made
@@ -40,10 +48,11 @@ struct BloomMark: View {
                 drawPetals(in: &context, canvasSize: canvasSize, time: t, animated: animated)
             }
             .frame(width: size * 1.5, height: size * 1.5)
+            .opacity(min(1, max(0, openness) * 2.5))
             .background {
                 if glow {
                     Circle()
-                        .fill(color.opacity(0.16 + 0.22 * level))
+                        .fill(color.opacity((0.16 + 0.22 * level) * min(1, max(0, openness))))
                         .frame(width: size * 1.05, height: size * 1.05)
                         .blur(radius: size * 0.22)
                 }
@@ -72,11 +81,19 @@ struct BloomMark: View {
             // Petals also drift outward a touch as they swell, so the flower
             // opens rather than only lengthening.
             let distance: CGFloat = 0.236 * unit * CGFloat(1 + open * 0.35 + breath * 0.35)
+            // Opening: petals slide out from the centre, lengthen, fill out
+            // and untwist, so the bud turns as it blooms.
+            let bloom = CGFloat(max(0, openness))
 
             var petal = context
             petal.translateBy(x: center.x, y: center.y)
-            petal.rotate(by: .radians(angle))
-            let rect = CGRect(x: distance - length / 2, y: -thickness / 2, width: length, height: thickness)
+            petal.rotate(by: .radians(angle - (1 - openness) * 0.75))
+            let rect = CGRect(
+                x: distance * bloom - length * (0.3 + 0.7 * bloom) / 2,
+                y: -thickness * (0.55 + 0.45 * bloom) / 2,
+                width: length * (0.3 + 0.7 * bloom),
+                height: thickness * (0.55 + 0.45 * bloom)
+            )
             petal.fill(Path(ellipseIn: rect), with: .color(color))
         }
     }

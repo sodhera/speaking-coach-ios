@@ -11,11 +11,16 @@ import SwiftUI
 /// bottom band of this fixed height (the provider stack's natural size;
 /// welcome bottom-aligns its two smaller controls inside the same band).
 enum BrandHeroGeometry {
+    static let wordmark = "Speaking Coach"
     static let markSize: CGFloat = 120
     /// Fits welcome's hero and sign-in's title + subtitle alike.
     static let textBandHeight: CGFloat = 92
     /// Two 58pt provider buttons (Apple, Google) with one `md` gap.
     static let bottomBandHeight: CGFloat = 58 * 2 + Space.md
+    /// How far below its welcome place the splash holds the hero block: half
+    /// the difference between the bottom band and the chevron row, which
+    /// centres it on the screen.
+    static let splashLift: CGFloat = ((bottomBandHeight + Space.xxl) - (44 + Space.md)) / 2
 }
 
 // MARK: - Question layout
@@ -85,7 +90,7 @@ struct SceneScreen<Content: View>: View {
 
     var body: some View {
         ZStack {
-            MorningStage(depth: depth, ripples: false)
+            MorningStage(depth: depth)
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 0) { content }
                     // Claim the full width, or the column shrinks to its

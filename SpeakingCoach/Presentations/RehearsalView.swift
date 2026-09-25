@@ -38,7 +38,7 @@ struct RehearsalView: View {
 
     var body: some View {
         ZStack {
-            MorningStage(depth: 0.8, ripples: false)
+            MorningStage(depth: 0.8)
             Group {
                 switch stage {
                 case .ready: ready

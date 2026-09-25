@@ -18,7 +18,7 @@ struct PracticeSessionView: View {
 
     var body: some View {
         ZStack {
-            MorningStage(depth: 1, ripples: false)
+            MorningStage(depth: 1)
             Group {
                 switch session.stage {
                 case .preparing:

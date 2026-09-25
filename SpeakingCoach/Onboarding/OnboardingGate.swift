@@ -11,17 +11,25 @@ struct OnboardingGate: View {
     /// How far the sun has risen, 0 → 1. Welcome sits at the quiet end; the
     /// flow reports its own progress so the light peaks on the commitment.
     @State private var depth: Double = 0
+    /// Welcome's first appearance takes the splash's hero over in place.
+    @State private var welcomeArrivesFromSplash: Bool
 
     private enum Route: Equatable { case welcome, flow, signIn }
 
-    init(model: AppModel, startAtSignIn: Bool = false) {
+    init(model: AppModel, startAtSignIn: Bool = false, fromSplash: Bool = false) {
         self.model = model
+        _route = State(initialValue: startAtSignIn ? .signIn : Self.opensOnWelcome(model) ? .welcome : .flow)
+        _welcomeArrivesFromSplash = State(initialValue: fromSplash)
+    }
+
+    /// Whether the gate, opened now, starts on welcome rather than the flow.
+    static func opensOnWelcome(_ model: AppModel) -> Bool {
         #if DEBUG
         let reviewing = LaunchFlags.value("-review-onboarding-step") != nil
         #else
         let reviewing = false
         #endif
-        _route = State(initialValue: startAtSignIn ? .signIn : model.phase == .needsSetup || reviewing || OnboardingFlow.hasDraft ? .flow : .welcome)
+        return !(model.phase == .needsSetup || reviewing || OnboardingFlow.hasDraft)
     }
 
     var body: some View {
@@ -32,6 +40,7 @@ struct OnboardingGate: View {
             switch route {
             case .welcome:
                 WelcomeView(
+                    arrivesFromSplash: welcomeArrivesFromSplash,
                     onGetStarted: {
                         Analytics.action("welcome")
                         go(.flow)
@@ -39,7 +48,10 @@ struct OnboardingGate: View {
                     onSignIn: { go(.signIn) }
                 )
                 .transition(.opacity)
-                .onAppear { Analytics.enter("welcome") }
+                .onAppear {
+                    welcomeArrivesFromSplash = false
+                    Analytics.enter("welcome")
+                }
             case .flow:
                 OnboardingFlow(
                     model: model,

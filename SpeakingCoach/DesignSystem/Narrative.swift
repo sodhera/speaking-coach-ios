@@ -102,13 +102,17 @@ struct NarrativePage: View {
 /// The typing rhythm every revealed sentence shares: a character every
 /// 38ms, a soft tick on word boundaries (with a four-character floor, so
 /// short words don't machine-gun), and a firmer `rigid` as the sentence
-/// lands.
+/// lands. The `.soft` feel keeps the same beats but lands them on the soft
+/// generator, for moments that should feel set down rather than struck.
 enum Typewriter {
     static let lead: Duration = .milliseconds(420)
     static let settle: Duration = .milliseconds(380)
+    static let interval: Duration = .milliseconds(38)
+
+    enum Feel { case firm, soft }
 
     @MainActor
-    static func type(_ line: String, skipped: () -> Bool, show: (Int) -> Void) async throws {
+    static func type(_ line: String, interval: Duration = interval, feel: Feel = .firm, skipped: () -> Bool, show: (Int) -> Void) async throws {
         let characters = Array(line)
         var sinceTick = 0
         for character in 1...max(1, characters.count) {
@@ -122,11 +126,11 @@ enum Typewriter {
             let isBoundary = character < characters.count && characters[character - 1] == " "
             if isBoundary, sinceTick >= 4 {
                 sinceTick = 0
-                Haptics.tick(0.34)
+                if feel == .soft { Haptics.soft(0.55) } else { Haptics.tick(0.34) }
             }
-            try await Task.sleep(for: .milliseconds(38))
+            try await Task.sleep(for: interval)
         }
-        Haptics.rigid()
+        if feel == .soft { Haptics.soft(0.9) } else { Haptics.rigid() }
     }
 }
 
@@ -146,6 +150,8 @@ struct TypedParagraphs: View {
     var spacing: CGFloat = Space.xl
     /// Wait before the first word, so it follows whatever arrived above it.
     var delay: Duration = Typewriter.lead
+    var interval: Duration = Typewriter.interval
+    var feel: Typewriter.Feel = .firm
     var onFinished: () -> Void = {}
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -193,7 +199,7 @@ struct TypedParagraphs: View {
                 current = index
                 shown = 0
                 skipCurrent = false
-                try await Typewriter.type(lines[index].text, skipped: { skipCurrent }, show: { shown = $0 })
+                try await Typewriter.type(lines[index].text, interval: interval, feel: feel, skipped: { skipCurrent }, show: { shown = $0 })
                 try await Task.sleep(for: Typewriter.settle)
             }
             finish()
@@ -252,5 +258,147 @@ struct RevealingSentence: UIViewRepresentable {
             text.addAttribute(.foregroundColor, value: UIColor.clear, range: NSRange(location: prefixLength, length: remaining))
         }
         label.attributedText = text
+    }
+}
+
+/// A single line that inks itself in: each letter arrives in the typewriter's
+/// order, but rises out of a soft blur over a few letters' time instead of
+/// snapping on — written rather than printed. A soft tap on each word
+/// boundary and a fuller one as the line lands; a tap on it finishes the line.
+/// Reduce Motion and VoiceOver get the whole line at once.
+///
+/// The per-letter blur needs iOS 18's `TextRenderer`; iOS 17 gets the same
+/// timing as a fade alone.
+struct InkedLine: View {
+    let text: String
+    let font: Font
+    var color: Color = Palette.ink
+    var plays = true
+    var delay: Duration = Typewriter.lead
+    var interval: Duration = .milliseconds(65)
+    var onFinished: () -> Void = {}
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.accessibilityVoiceOverEnabled) private var voiceOver
+
+    @State private var start: Date?
+    @State private var done = false
+    @State private var skipped = false
+
+    /// How many letters' time each letter takes to fully ink in.
+    private static let span: Double = 3.5
+
+    var body: some View {
+        TimelineView(.animation(paused: done || start == nil)) { timeline in
+            label(progress: progress(at: timeline.date))
+        }
+        .contentShape(Rectangle())
+        .onTapGesture {
+            guard start != nil, !done, !skipped else { return }
+            skipped = true
+            Haptics.soft()
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(text)
+        .task { await play() }
+    }
+
+    private var total: Double { Double(text.count) + Self.span }
+    private var seconds: Double { Double(interval.components.attoseconds) / 1e18 + Double(interval.components.seconds) }
+
+    private func progress(at date: Date) -> Double {
+        if done || skipped || !plays { return total }
+        guard let start else { return 0 }
+        return date.timeIntervalSince(start) / seconds
+    }
+
+    @ViewBuilder
+    private func label(progress: Double) -> some View {
+        if #available(iOS 18.0, *) {
+            Text(text)
+                .font(font)
+                .foregroundStyle(color)
+                .textRenderer(InkRenderer(progress: progress, span: Self.span))
+        } else {
+            Text(fadedText(progress: progress))
+                .font(font)
+        }
+    }
+
+    private func fadedText(progress: Double) -> AttributedString {
+        var result = AttributedString()
+        for (index, character) in text.enumerated() {
+            var run = AttributedString(String(character))
+            run.foregroundColor = color.opacity(Self.ink(progress: progress, index: index, span: Self.span))
+            result += run
+        }
+        return result
+    }
+
+    /// How inked the letter at `index` is, 0 → 1, smoothstepped.
+    static func ink(progress: Double, index: Int, span: Double) -> Double {
+        let raw = min(max((progress - Double(index)) / span, 0), 1)
+        return raw * raw * (3 - 2 * raw)
+    }
+
+    private func play() async {
+        guard plays, !reduceMotion, !voiceOver else {
+            done = true
+            onFinished()
+            return
+        }
+        do {
+            Haptics.prepare()
+            try await Task.sleep(for: delay)
+            start = .now
+            let characters = Array(text)
+            var sinceTick = 0
+            for index in characters.indices {
+                if skipped { break }
+                sinceTick += 1
+                if characters[index] == " ", sinceTick >= 4 {
+                    sinceTick = 0
+                    Haptics.soft(0.55)
+                }
+                try await Task.sleep(for: interval)
+            }
+            Haptics.soft(0.9)
+            if !skipped { try await Task.sleep(for: interval * Int(Self.span.rounded(.down))) }
+            done = true
+            try await Task.sleep(for: Typewriter.settle)
+            onFinished()
+        } catch { /* Navigation cancels the reveal. */ }
+    }
+}
+
+/// Draws each glyph at its own point in the ink: faint, blurred and a few
+/// points low as it starts, sharp and in place once it's done.
+@available(iOS 18.0, *)
+private struct InkRenderer: TextRenderer {
+    let progress: Double
+    let span: Double
+
+    var displayPadding: EdgeInsets { EdgeInsets(top: 12, leading: 12, bottom: 12, trailing: 12) }
+
+    func draw(layout: Text.Layout, in context: inout GraphicsContext) {
+        var index = 0
+        for line in layout {
+            for run in line {
+                for glyph in run {
+                    let amount = InkedLine.ink(progress: progress, index: index, span: span)
+                    index += 1
+                    if amount <= 0 { continue }
+                    if amount >= 1 {
+                        context.draw(glyph)
+                        continue
+                    }
+                    var letter = context
+                    letter.opacity = amount
+                    letter.translateBy(x: 0, y: (1 - amount) * 5)
+                    letter.addFilter(.blur(radius: (1 - amount) * 7))
+                    letter.draw(glyph)
+                }
+            }
+        }
     }
 }

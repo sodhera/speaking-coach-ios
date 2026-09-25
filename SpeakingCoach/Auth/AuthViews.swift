@@ -11,9 +11,60 @@ enum AuthIntent {
 /// The first screen: brand mark, name, one line — and two doors. Built to the
 /// `BrandHeroGeometry` contract so it cross-fades into "Welcome back" with
 /// the mark holding perfectly still.
+///
+/// Arriving from the splash, it takes over the splash's mark and name where
+/// they stand — the splash is this same frame with the hero lowered to the
+/// centre — then glides them up into place while the line and the doors
+/// come in beneath.
 struct WelcomeView: View {
     let onGetStarted: () -> Void
     let onSignIn: () -> Void
+
+    @State private var heroSettled: Bool
+    @State private var detailsShown: Bool
+
+    init(arrivesFromSplash: Bool = false, onGetStarted: @escaping () -> Void, onSignIn: @escaping () -> Void) {
+        self.onGetStarted = onGetStarted
+        self.onSignIn = onSignIn
+        _heroSettled = State(initialValue: !arrivesFromSplash)
+        _detailsShown = State(initialValue: !arrivesFromSplash)
+    }
+
+    var body: some View {
+        WelcomeFrame(heroOffset: heroSettled ? 0 : BrandHeroGeometry.splashLift, detailsVisible: detailsShown) {
+            BloomMark(size: BrandHeroGeometry.markSize)
+        } name: {
+            Text(BrandHeroGeometry.wordmark)
+                .font(Typeface.hero(40))
+                .foregroundStyle(Palette.ink)
+        } footer: {
+            VStack(spacing: Space.md) {
+                PrimaryButton(title: "Get started", action: onGetStarted)
+                QuietButton(title: "I already have an account", action: onSignIn)
+            }
+            .allowsHitTesting(detailsShown)
+        }
+        .task {
+            guard !heroSettled else { return }
+            try? await Task.sleep(for: .milliseconds(120))
+            Haptics.soft(0.5)
+            withAnimation(.spring(duration: 1.1, bounce: 0.08)) { heroSettled = true }
+            try? await Task.sleep(for: .milliseconds(320))
+            withAnimation(.easeOut(duration: 0.9)) { detailsShown = true }
+        }
+    }
+}
+
+/// Welcome's layout, shared with the splash so the two agree to the pixel:
+/// the invisible chevron row, the hero block centred between it and the
+/// bottom band, and the band itself. `heroOffset` lowers the block from its
+/// place; `detailsVisible` shows the tagline and the footer.
+struct WelcomeFrame<Mark: View, Name: View, Footer: View>: View {
+    var heroOffset: CGFloat = 0
+    var detailsVisible = true
+    @ViewBuilder var mark: Mark
+    @ViewBuilder var name: Name
+    @ViewBuilder var footer: Footer
 
     var body: some View {
         VStack(spacing: 0) {
@@ -29,31 +80,32 @@ struct WelcomeView: View {
             Spacer()
 
             VStack(spacing: Space.lg) {
-                BloomMark(size: BrandHeroGeometry.markSize)
+                mark
                 VStack(spacing: Space.md) {
-                    Text("Speaking Coach")
-                        .font(Typeface.hero(40))
-                        .foregroundStyle(Palette.ink)
+                    name
                     Text("Practise the conversations that matter.")
                         .font(Typeface.body(16))
                         .foregroundStyle(Palette.dim)
                         .multilineTextAlignment(.center)
                         .lineSpacing(4)
                         .frame(maxWidth: 300)
+                        .opacity(detailsVisible ? 1 : 0)
+                        .offset(y: detailsVisible ? 0 : 8)
+                        .accessibilityHidden(!detailsVisible)
                 }
                 .frame(height: BrandHeroGeometry.textBandHeight, alignment: .top)
             }
             .padding(.horizontal, Space.xxl)
+            .offset(y: heroOffset)
 
             Spacer()
 
-            VStack(spacing: Space.md) {
-                PrimaryButton(title: "Get started", action: onGetStarted)
-                QuietButton(title: "I already have an account", action: onSignIn)
-            }
-            .frame(height: BrandHeroGeometry.bottomBandHeight, alignment: .bottom)
-            .padding(.horizontal, Space.xxl)
-            .padding(.bottom, Space.xxl)
+            footer
+                .frame(height: BrandHeroGeometry.bottomBandHeight, alignment: .bottom)
+                .padding(.horizontal, Space.xxl)
+                .padding(.bottom, Space.xxl)
+                .opacity(detailsVisible ? 1 : 0)
+                .offset(y: detailsVisible ? 0 : 18)
         }
         // No text input here, so keyboard frames must never move this layout.
         .ignoresSafeArea(.keyboard)

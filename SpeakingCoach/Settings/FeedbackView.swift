@@ -21,7 +21,7 @@ struct FeedbackView: View {
 
     var body: some View {
         ZStack {
-            MorningStage(depth: 0.1, ripples: false)
+            MorningStage(depth: 0.1)
             if sent { thanks } else { composer }
         }
         .statusBarScrim()

@@ -19,6 +19,10 @@ enum Haptics {
     }
 
     static func soft() { soft_.impactOccurred(); soft_.prepare() }
+    static func soft(_ intensity: CGFloat) {
+        soft_.impactOccurred(intensity: min(max(intensity, 0), 1))
+        soft_.prepare()
+    }
     static func rigid() { rigid_.impactOccurred(); rigid_.prepare() }
     static func heavy() { heavy_.impactOccurred(); heavy_.prepare() }
     static func selection() { select.selectionChanged(); select.prepare() }

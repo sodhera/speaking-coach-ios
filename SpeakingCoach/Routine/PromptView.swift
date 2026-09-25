@@ -41,7 +41,7 @@ struct PromptView: View {
 
     var body: some View {
         ZStack {
-            MorningStage(depth: 0.8, ripples: false)
+            MorningStage(depth: 0.8)
             VStack(spacing: 0) {
                 HStack {
                     GlassIconButton(systemImage: "xmark", size: 44, iconSize: 15, color: Palette.dim, accessibilityLabel: "Close") {

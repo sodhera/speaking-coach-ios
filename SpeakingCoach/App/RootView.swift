@@ -28,11 +28,16 @@ struct RootView: View {
     /// cross-fade overlaps them and briefly breaks hit-testing).
     @State private var displayedScreen: Screen = .splash
     @State private var contentVisible = true
+    /// The splash's own exit: the mark and wordmark swell and dissolve, and
+    /// on the way into the app the sunrise fades to the app's flat ground so
+    /// Home rises onto the floor it already stands on.
+    @State private var splashLeaving = false
+    @State private var stageVisible = true
+    @State private var arriving = false
+    /// Set when the splash hands its hero to welcome, until the next screen
+    /// change. The gate reads it only as it is created.
+    @State private var welcomeHandoff = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-
-    /// Held long enough that the bloom is actually *seen* breathing — the
-    /// Keychain restore usually resolves in well under a second.
-    private static let splashHold: Duration = .seconds(1.5)
 
     fileprivate enum Screen: Equatable {
         case splash, onboarding, existingAccount, paywall, attribution, microphone, reminders, setupComplete, main
@@ -91,13 +96,14 @@ struct RootView: View {
             model.start()
             remindersNeeded = await SetupChain.needsReminders()
         }
-        .task {
-            try? await Task.sleep(for: Self.splashHold)
-            splashHoldDone = true
-        }
         .task(id: screen) {
             guard screen != displayedScreen else { return }
             guard !reduceMotion else { displayedScreen = screen; return }
+            if displayedScreen == .splash {
+                await leaveSplash(for: screen)
+                return
+            }
+            welcomeHandoff = false
             withAnimation(.easeIn(duration: 0.15)) { contentVisible = false }
             try? await Task.sleep(for: .seconds(0.15))
             displayedScreen = screen
@@ -138,17 +144,27 @@ struct RootView: View {
     @ViewBuilder
     private var routed: some View {
         ZStack {
+            // Always underneath, so a screen fading in never shows the bare
+            // window. It turns flat as the splash heads into the app.
+            MorningStage(depth: 0)
+                .environment(\.stageStyle, displayedScreen == .main || !stageVisible ? .flat : .morning)
             // The shared ground for every gate after onboarding.
             if displayedScreen != .onboarding && displayedScreen != .main {
-                MorningStage(depth: displayedScreen == .splash ? 0 : 1, ripples: displayedScreen != .splash)
+                // Ripples on the splash too: they run on the clock, so they
+                // carry straight on into welcome's own stage.
+                MorningStage(depth: displayedScreen == .splash ? 0 : 1)
+                    .opacity(stageVisible ? 1 : 0)
             }
 
             Group {
                 switch displayedScreen {
                 case .splash:
-                    BloomMark(size: 110)
+                    SplashView(plays: !splashHoldDone) { splashHoldDone = true }
+                        .scaleEffect(splashLeaving ? 1.06 : 1)
+                        .blur(radius: splashLeaving ? 12 : 0)
+                        .opacity(splashLeaving ? 0 : 1)
                 case .onboarding:
-                    OnboardingGate(model: model)
+                    OnboardingGate(model: model, fromSplash: welcomeHandoff)
                         .id(model.phase == .needsSetup)
                 case .existingAccount:
                     ExistingAccountView { model.acknowledgeExistingAccount() }
@@ -174,11 +190,45 @@ struct RootView: View {
             }
             .transition(.identity)
             .opacity(contentVisible ? 1 : 0)
+            .scaleEffect(arriving ? 0.97 : 1)
+            .offset(y: arriving ? 12 : 0)
         }
         .statusBarScrim()
         // This scrim sits over every screen, so it takes the app's flat
         // ground once the user is in; the gates keep the sunrise's paper.
         .environment(\.stageStyle, displayedScreen == .main ? .flat : .morning)
+    }
+
+    /// Into welcome, nothing fades: welcome mounts with the splash's mark and
+    /// name on the same pixels and lifts them into place itself.
+    ///
+    /// Anywhere else, the splash dissolves outward and what follows rises
+    /// into place. Heading into the app, the sunrise fades with it, so Home
+    /// arrives on its own flat ground rather than snapping out of the morning
+    /// sky. Unhurried on purpose, with a soft tap as it lets go and a fainter
+    /// one as the next screen starts to rise.
+    private func leaveSplash(for next: Screen) async {
+        if next == .onboarding, OnboardingGate.opensOnWelcome(model) {
+            welcomeHandoff = true
+            displayedScreen = next
+            return
+        }
+        Haptics.soft(0.6)
+        withAnimation(.easeInOut(duration: 0.8)) {
+            splashLeaving = true
+            if next == .main { stageVisible = false }
+        }
+        try? await Task.sleep(for: .seconds(0.8))
+        contentVisible = false
+        arriving = true
+        displayedScreen = next
+        splashLeaving = false
+        stageVisible = true
+        Haptics.soft(0.35)
+        withAnimation(.smooth(duration: 1.1)) {
+            contentVisible = true
+            arriving = false
+        }
     }
 
     @ViewBuilder
@@ -251,6 +301,66 @@ struct RootView: View {
 
     private var upNextTitle: String? {
         model.profile?.moment?.firstPractice?.title
+    }
+}
+
+/// The bloom opens from a bud over the morning sky and the name inks itself
+/// in beneath it. Laid out on welcome's own frame with the hero lowered to
+/// the centre, so when welcome follows it can lift the same mark and name
+/// straight into place. Reports done once the name has landed and had a beat
+/// to be read, never sooner than the minimum hold — the Keychain restore
+/// usually resolves in well under a second, and the bloom should be *seen*.
+///
+/// Shown again mid-flow (while access resolves), it's already open and named.
+private struct SplashView: View {
+    let plays: Bool
+    let onFinished: () -> Void
+
+    @State private var openness: Double
+    @State private var typed = false
+    @State private var held = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    private static let minimumHold: Duration = .seconds(1.2)
+    private static let readingBeat: Duration = .milliseconds(300)
+
+    init(plays: Bool, onFinished: @escaping () -> Void) {
+        self.plays = plays
+        self.onFinished = onFinished
+        _openness = State(initialValue: plays ? 0 : 1)
+    }
+
+    var body: some View {
+        WelcomeFrame(heroOffset: BrandHeroGeometry.splashLift, detailsVisible: false) {
+            BloomMark(size: BrandHeroGeometry.markSize, openness: openness)
+        } name: {
+            InkedLine(
+                text: BrandHeroGeometry.wordmark,
+                font: Typeface.hero(40),
+                plays: plays,
+                delay: .milliseconds(700),
+                onFinished: { typed = true }
+            )
+        } footer: {
+            Color.clear
+        }
+        .task {
+            guard plays else { return }
+            if reduceMotion {
+                openness = 1
+            } else {
+                try? await Task.sleep(for: .milliseconds(150))
+                Haptics.soft(0.45)
+                withAnimation(.spring(duration: 1.3, bounce: 0.22)) { openness = 1 }
+            }
+            try? await Task.sleep(for: Self.minimumHold)
+            held = true
+        }
+        .task(id: typed && held) {
+            guard typed && held else { return }
+            try? await Task.sleep(for: Self.readingBeat)
+            onFinished()
+        }
     }
 }
 

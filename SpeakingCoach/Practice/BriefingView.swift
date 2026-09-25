@@ -38,7 +38,7 @@ struct BriefingView: View {
 
     var body: some View {
         ZStack {
-            MorningStage(depth: 0.4, ripples: false)
+            MorningStage(depth: 0.4)
             VStack(spacing: 0) {
                 HStack {
                     GlassBackButton(action: onBack)

@@ -185,7 +185,7 @@ struct PlanCheckInView: View {
 
     var body: some View {
         ZStack {
-            MorningStage(depth: 1, ripples: false)
+            MorningStage(depth: 1)
             VStack(spacing: 0) {
                 HStack {
                     Spacer()

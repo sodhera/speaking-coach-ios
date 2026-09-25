@@ -1,9 +1,9 @@
 import SwiftUI
 import UIKit
 
-/// The ground every pre-app screen stands on: warm paper sky, a sunrise
-/// glowing up from below the bottom edge, and slow sound-ripples rising off
-/// it — the app's subject (a voice carrying) as ambient weather.
+/// The ground every pre-app screen stands on: warm paper sky and a sunrise
+/// glowing up from below the bottom edge. (Slow ripple rings once drifted
+/// off the sun; they were removed as background noise.)
 ///
 /// `depth` (0 → 1) is how far the user has come. The sun rises and warms as
 /// it grows, so the brightest light lands on the commitment — the inverse of
@@ -11,9 +11,7 @@ import UIKit
 /// the stage should drift, never jump.
 struct MorningStage: View {
     var depth: Double = 0
-    var ripples = true
 
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     @Environment(\.stageStyle) private var style
 
@@ -49,10 +47,6 @@ struct MorningStage: View {
                     endRadius: sunRadius
                 )
                 .opacity(0.55 + 0.45 * depth)
-
-                if ripples {
-                    RippleField(center: sunCenter, reach: size.height * 0.95, animated: !reduceMotion)
-                }
 
                 GrainOverlay()
             }
@@ -147,43 +141,6 @@ struct AppGround: View {
         startPoint: .top,
         endPoint: .bottom
     )
-}
-
-/// Concentric rings expanding off the sun and fading as they travel —
-/// three at a time, a slow 9s cycle. Quiet enough to live behind text.
-private struct RippleField: View {
-    let center: CGPoint
-    let reach: CGFloat
-    let animated: Bool
-
-    private static let period: Double = 9
-    private static let count = 3
-
-    var body: some View {
-        TimelineView(.animation(minimumInterval: 1 / 30, paused: !animated)) { timeline in
-            let t = animated ? timeline.date.timeIntervalSinceReferenceDate : 2.2
-            Canvas { context, _ in
-                for index in 0..<Self.count {
-                    let phase = (t / Self.period + Double(index) / Double(Self.count)).truncatingRemainder(dividingBy: 1)
-                    let radius = reach * (0.28 + 0.72 * phase)
-                    // Fade in over the first tenth, then out as it travels.
-                    let alpha = min(phase / 0.1, 1) * pow(1 - phase, 1.6) * 0.16
-                    let rect = CGRect(
-                        x: center.x - radius,
-                        y: center.y - radius * 0.62,
-                        width: radius * 2,
-                        height: radius * 1.24
-                    )
-                    context.stroke(
-                        Path(ellipseIn: rect),
-                        with: .color(Palette.coral.opacity(alpha)),
-                        lineWidth: 1.2
-                    )
-                }
-            }
-        }
-        .allowsHitTesting(false)
-    }
 }
 
 /// A fine paper grain so large gradients never band and the ground reads as

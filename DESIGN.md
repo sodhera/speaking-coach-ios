@@ -14,7 +14,7 @@ Speaking Coach is the daytime sibling of SleepBlock. SleepBlock is a quiet night
 
 ## The stage
 
-`MorningStage(depth:)` is a five-stop paper-to-apricot sky (deliberately low-chroma, so coral fills keep their edge) with a sunrise glowing up from below the bottom edge, slow sound ripples rising off it, and a fine paper grain. `depth` (0 → 1) raises and warms the sun as the user moves through onboarding. Ripples freeze under Reduce Motion.
+`MorningStage(depth:)` is a five-stop paper-to-apricot sky (deliberately low-chroma, so coral fills keep their edge) with a sunrise glowing up from below the bottom edge and a fine paper grain. `depth` (0 → 1) raises and warms the sun as the user moves through onboarding. Ripple rings used to drift off the sun; they were removed as noise behind the words.
 
 ## The bloom
 
