@@ -239,7 +239,7 @@ extension ReviewScreens {
                 TranscriptLine(id: "coach-e1", role: .coach, text: practice.opening),
                 TranscriptLine(id: "user-e1", role: .user, text: "Uh, there's this time when I was playing football and I had to figure out how to do free kick."),
                 TranscriptLine(id: "coach-e2", role: .coach, text: "Okay. What part of that was your responsibility?"),
-                TranscriptLine(id: "user-e2", role: .user, text: "We practised a lot as a team, like every day after school, and the coach showed us some videos."),
+                TranscriptLine(id: "user-e2", role: .user, text: "We practiced a lot as a team, like every day after school, and the coach showed us some videos."),
                 TranscriptLine(id: "coach-e3", role: .coach, text: "And what changed because of that?"),
                 TranscriptLine(id: "user-e3", role: .user, text: "It was good. Yeah, it went well."),
                 TranscriptLine(id: "coach-e4", role: .coach, text: "Thanks, that's helpful."),
@@ -248,7 +248,7 @@ extension ReviewScreens {
                 summary: "You gave an example, but it does not yet clearly answer the prompt in the three parts we're checking: situation, your own action, and result.",
                 criteria: [
                     CriterionResult(id: practice.criteria[0].id, level: 2, note: "You briefly set the situation by saying it was a time playing football and working on a free kick.", evidence: [.init(turnId: "user-e1", quote: "there's this time when I was playing football and I had to figure out how to do free kick")]),
-                    CriterionResult(id: practice.criteria[1].id, level: 1, note: "You described what the team did, not what you did yourself.", evidence: [.init(turnId: "user-e2", quote: "We practised a lot as a team")]),
+                    CriterionResult(id: practice.criteria[1].id, level: 1, note: "You described what the team did, not what you did yourself.", evidence: [.init(turnId: "user-e2", quote: "We practiced a lot as a team")]),
                     CriterionResult(id: practice.criteria[2].id, level: 0, note: "You said it went well, but not what actually happened after.", evidence: []),
                 ],
                 adjustment: "Next time, add one sentence that says exactly what you did and one sentence that says what happened after, without using numbers.",
@@ -412,7 +412,7 @@ extension PresentationStore {
         if let rehearsal = rehearsals[deck.id]?.first { return (deck, rehearsal) }
         let questions = [
             AudienceQuestion(id: "q1", question: "What could you try if the nerves show up again?", reason: "Connects the idea to everyday life.", slideIndex: 1),
-            AudienceQuestion(id: "q2", question: "Why might practising the first sentence help?", reason: "Invites Zara to explain her preparation choice.", slideIndex: 2),
+            AudienceQuestion(id: "q2", question: "Why might practicing the first sentence help?", reason: "Invites Zara to explain her preparation choice.", slideIndex: 2),
             AudienceQuestion(id: "q3", question: "What would you like classmates to remember?", reason: "Gives Zara a chance to land her takeaway.", slideIndex: 4),
         ]
         let rehearsal = PresentationRehearsal(

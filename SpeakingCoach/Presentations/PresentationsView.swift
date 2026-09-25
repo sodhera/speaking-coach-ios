@@ -21,7 +21,7 @@ struct PresentationsView: View {
                     VStack(alignment: .leading, spacing: Space.xxl) {
                         SubpageHeader(
                             title: "Presentations",
-                            subtitle: "Practise your talk with your own slides, then answer the questions your audience would ask.",
+                            subtitle: "Practice your talk with your own slides, then answer the questions your audience would ask.",
                             onBack: onBack
                         )
                         if store.decks.isEmpty {
@@ -164,7 +164,7 @@ private struct DeckRow: View {
     private var detail: String {
         let slides = deck.slideCount == 1 ? "1 slide" : "\(deck.slideCount) slides"
         let count = store.rehearsals[deck.id]?.count ?? 0
-        return count == 0 ? "\(slides) · Not practised yet" : "\(slides) · Practised \(count == 1 ? "once" : "\(count) times")"
+        return count == 0 ? "\(slides) · Not practiced yet" : "\(slides) · Practiced \(count == 1 ? "once" : "\(count) times")"
     }
 }
 

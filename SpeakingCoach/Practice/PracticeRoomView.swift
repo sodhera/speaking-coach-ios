@@ -138,7 +138,7 @@ struct PracticeSessionView: View {
             }
         }
         if failure.offersFresh {
-            return StatusScreen.Action(title: "Practise the whole scene") { Task { await session.startFresh() } }
+            return StatusScreen.Action(title: "Practice the whole scene") { Task { await session.startFresh() } }
         }
         if failure.canAssess {
             return StatusScreen.Action(title: "Try feedback again") { Task { await session.retryAssessment() } }

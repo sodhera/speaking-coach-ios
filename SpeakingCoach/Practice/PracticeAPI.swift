@@ -15,7 +15,7 @@ enum PracticeAPIError: LocalizedError {
         case .signedOut: "Please sign in again to practice."
         case .sessionUnavailable: "We couldn't verify your sign-in. Check your connection and try again."
         case .subscriptionRequired: "Your plan isn't active right now."
-        case .retryUsed: "Each session gets one focused retry, and this one has already been started. You can practise the whole scene again instead."
+        case .retryUsed: "Each session gets one focused retry, and this one has already been started. You can practice the whole scene again instead."
         case .server(_, let message): message
         case .offline: "You're offline. Check your connection and try again."
         }

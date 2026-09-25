@@ -45,7 +45,7 @@ struct PreparationPlan: Codable, Equatable {
 
         var label: String {
             switch self {
-            case .used: "I used something I practised"
+            case .used: "I used something I practiced"
             case .notYet: "I haven't used it yet"
             case .didNotHappen: "It didn't happen"
             }

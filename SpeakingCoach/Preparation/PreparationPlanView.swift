@@ -189,7 +189,7 @@ struct PreparationPlanView: View {
                 }
             }
 
-            Text("Practising counts as done. Your feedback shows whether the skill is landing.")
+            Text("Practicing counts as done. Your feedback shows whether the skill is landing.")
                 .font(Typeface.body(13))
                 .foregroundStyle(Palette.muted)
                 .fixedSize(horizontal: false, vertical: true)
@@ -262,7 +262,7 @@ struct PreparationPlanView: View {
     private var action: some View {
         if let plan, !editing {
             if let next = plan.next(in: model.history.records) {
-                PrimaryButton(title: "Practise: \(next.title)", systemImage: "mic.fill") { onPractice(next) }
+                PrimaryButton(title: "Practice: \(next.title)", systemImage: "mic.fill") { onPractice(next) }
             }
         } else {
             VStack(spacing: Space.xs) {

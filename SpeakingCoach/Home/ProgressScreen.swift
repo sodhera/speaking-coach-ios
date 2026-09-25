@@ -218,7 +218,7 @@ struct PracticeWeeks: Equatable {
     /// Sessions this calendar week: the last row.
     var thisWeek: Int { rows.last?.reduce(0) { $0 + $1.count } ?? 0 }
 
-    var daysPractised: Int { rows.joined().filter { $0.count > 0 }.count }
+    var daysPracticed: Int { rows.joined().filter { $0.count > 0 }.count }
 }
 
 /// A session and the retries that went back to it. Ordered by the latest

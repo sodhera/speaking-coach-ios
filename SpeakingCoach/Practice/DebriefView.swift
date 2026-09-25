@@ -450,7 +450,7 @@ struct DebriefView: View {
             PrimaryButton(title: "Retry this moment · 90 sec", systemImage: "arrow.counterclockwise", action: onRetry)
         } else if comparison != nil || report.analysis.custom != nil, let onRehearseAgain {
             PrimaryButton(
-                title: report.analysis.custom == nil ? "Practise the whole scene again" : "Practise it again",
+                title: report.analysis.custom == nil ? "Practice the whole scene again" : "Practice it again",
                 systemImage: "mic.fill",
                 action: onRehearseAgain
             )

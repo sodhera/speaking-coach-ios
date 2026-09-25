@@ -28,7 +28,7 @@ struct MainShellView: View {
 /// 1. **Your streak.** The number, the week as a disc per day, and whether
 ///    today is done. The one piece of the screen about showing up.
 /// 2. **For you.** A carousel whose next card peeks in from the right: what's
-///    up next (the first plan, an event plan, or the next unpractised
+///    up next (the first plan, an event plan, or the next unpracticed
 ///    session), a recommended scene with a hook, and, with no event plan,
 ///    an offer to build one. Dots under it say how many there are.
 /// 3. **Situations.** Five cards, each its own page: Presentations, Work &
@@ -496,7 +496,7 @@ struct SectionPage: View {
                 switch section {
                 case .presentations:
                     GlassRowDivider()
-                    toolRow(title: "Practise with my slides", detail: "Your own deck", action: onSlides)
+                    toolRow(title: "Practice with my slides", detail: "Your own deck", action: onSlides)
                 case .custom:
                     GlassRowDivider()
                     toolRow(title: "Custom situation", detail: "Describe any conversation", action: onCustom)
@@ -608,7 +608,7 @@ private extension Array {
 // MARK: - Streak
 
 /// Showing up, at the top of Home: the streak big, the week as a disc per
-/// day (ticked when practised, today ringed), and whether today is done.
+/// day (ticked when practiced, today ringed), and whether today is done.
 /// A zero streak wears the hollow grey flame; only a live one earns coral.
 private struct StreakCard: View {
     let streak: Int
@@ -617,7 +617,7 @@ private struct StreakCard: View {
 
     private static let disc: CGFloat = 30
 
-    private var practisedToday: Bool { week.rows.last?.contains { $0.isToday && $0.count > 0 } ?? false }
+    private var practicedToday: Bool { week.rows.last?.contains { $0.isToday && $0.count > 0 } ?? false }
 
     var body: some View {
         VStack(alignment: .leading, spacing: Space.lg) {
@@ -635,12 +635,12 @@ private struct StreakCard: View {
                         .foregroundStyle(Palette.dim)
                 }
                 Spacer(minLength: Space.sm)
-                Label(practisedToday ? "Done today" : "Practise today", systemImage: practisedToday ? "checkmark.circle.fill" : "circle.dashed")
+                Label(practicedToday ? "Done today" : "Practice today", systemImage: practicedToday ? "checkmark.circle.fill" : "circle.dashed")
                     .font(Typeface.label(13))
-                    .foregroundStyle(practisedToday ? Palette.sage : Palette.dim)
+                    .foregroundStyle(practicedToday ? Palette.sage : Palette.dim)
                     .padding(.horizontal, Space.md)
                     .padding(.vertical, 6)
-                    .background(Capsule().fill((practisedToday ? Palette.sage : Palette.ink).opacity(0.08)))
+                    .background(Capsule().fill((practicedToday ? Palette.sage : Palette.ink).opacity(0.08)))
             }
 
             HStack(spacing: 0) {
@@ -659,7 +659,7 @@ private struct StreakCard: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .glassSurface(cornerRadius: Corner.lg)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(streak)-day streak. \(practisedToday ? "You've practised today." : "Not practised yet today.")")
+        .accessibilityLabel("\(streak)-day streak. \(practicedToday ? "You've practiced today." : "Not practiced yet today.")")
     }
 
     @ViewBuilder
@@ -893,7 +893,7 @@ struct LibraryView: View {
                             }
                             if presentations != nil {
                                 GlassRowDivider()
-                                ownRow(icon: "rectangle.on.rectangle", title: "Presentations", detail: "Practise a talk with your slides.") {
+                                ownRow(icon: "rectangle.on.rectangle", title: "Presentations", detail: "Practice a talk with your slides.") {
                                     presenting = true
                                 }
                             }

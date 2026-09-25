@@ -83,7 +83,7 @@ struct WelcomeFrame<Mark: View, Name: View, Footer: View>: View {
                 mark
                 VStack(spacing: Space.md) {
                     name
-                    Text("Practise the conversations that matter.")
+                    Text("Practice the conversations that matter.")
                         .font(Typeface.body(16))
                         .foregroundStyle(Palette.dim)
                         .multilineTextAlignment(.center)

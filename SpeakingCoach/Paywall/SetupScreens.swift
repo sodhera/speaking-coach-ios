@@ -84,7 +84,7 @@ struct MicrophonePrimerView: View {
     var body: some View {
         PrimerLayout(
             title: "Your partner needs to hear you",
-            line: "Speaking Coach only listens while you practise. Nothing is recorded outside a session."
+            line: "Speaking Coach only listens while you practice. Nothing is recorded outside a session."
         ) {
             MockPermissionDialog(
                 glyph: "mic.fill",

@@ -17,7 +17,7 @@ final class ZaraRecordingUITests: XCTestCase {
         sleep(2)
         continueAsZara.tap()
 
-        let slides = app.buttons["Practise with my slides"]
+        let slides = app.buttons["Practice with my slides"]
         XCTAssertTrue(slides.waitForExistence(timeout: 15))
         sleep(2)
         app.swipeUp()
@@ -46,9 +46,9 @@ final class ZaraRecordingUITests: XCTestCase {
         gently.tap()
         sleep(2)
 
-        let practise = app.buttons["Practise it"]
-        XCTAssertTrue(practise.waitForExistence(timeout: 10))
-        practise.tap()
+        let practice = app.buttons["Practice it"]
+        XCTAssertTrue(practice.waitForExistence(timeout: 10))
+        practice.tap()
         XCTAssertTrue(app.buttons["Next slide"].waitForExistence(timeout: 10))
         sleep(3)
         for _ in 0..<4 {

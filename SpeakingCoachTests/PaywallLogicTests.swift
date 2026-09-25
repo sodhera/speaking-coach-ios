@@ -20,8 +20,8 @@ final class PaywallLogicTests: XCTestCase {
     }
 
     func testLegacyAccountsGetTheBrandLine() {
-        XCTAssertEqual(PaywallView.headline(for: nil), "Practise the conversations that matter.")
-        XCTAssertEqual(PaywallView.headline(for: profile(nil, [])), "Practise the conversations that matter.")
+        XCTAssertEqual(PaywallView.headline(for: nil), "Practice the conversations that matter.")
+        XCTAssertEqual(PaywallView.headline(for: profile(nil, [])), "Practice the conversations that matter.")
     }
 
     func testUsersOwnMomentCategoryLeadsTheCatalog() {

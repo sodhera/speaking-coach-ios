@@ -3,7 +3,7 @@ import Observation
 import SwiftUI
 
 /// After the talk: the audience's questions first — that's the part people
-/// dread and never practise — then the talk itself, replayed with the
+/// dread and never practice — then the talk itself, replayed with the
 /// slides following along.
 struct RehearsalReviewView: View {
     let store: PresentationStore

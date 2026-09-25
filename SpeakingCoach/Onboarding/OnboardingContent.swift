@@ -245,7 +245,7 @@ enum PainStatement: String, Codable, CaseIterable, Identifiable {
         case .blankOnTheSpot: "My mind goes blank when I'm put on the spot."
         case .rambleWhenNervous: "When I'm nervous, I talk too fast or ramble."
         case .stayQuiet: "I stay quiet, even when I have a good point."
-        case .onlyInMyHead: "I practise conversations in my head, never out loud."
+        case .onlyInMyHead: "I practice conversations in my head, never out loud."
         case .replayAfterwards: "Afterwards, I replay what I should have said."
         }
     }
@@ -286,7 +286,7 @@ enum SpeakingPattern: String, Codable {
 
     var practiceHelp: String {
         switch self {
-        case .blankOut: "We'll practise one question at a time, with room to find your words."
+        case .blankOut: "We'll practice one question at a time, with room to find your words."
         case .rambler: "We'll practice finding your main point and saying it clearly."
         case .holdBack: "We'll give you a place to say it out loud before the real conversation."
         case .replayer: "Here you can try that kind of moment again, at your own pace."
@@ -297,7 +297,7 @@ enum SpeakingPattern: String, Codable {
     /// How the app answers this pattern — the third beat of "how it works".
     var fix: String {
         switch self {
-        case .blankOut: "Practise the exact question until the answer is there."
+        case .blankOut: "Practice the exact question until the answer is there."
         case .rambler: "Practice landing your point in three sentences."
         case .holdBack: "Say it out loud first, so the real time is the second time."
         case .replayer: "Retry the moment in practice, not in your head at 2am."

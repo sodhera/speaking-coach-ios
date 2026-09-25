@@ -58,7 +58,7 @@ final class ProgressTests: XCTestCase {
         XCTAssertEqual(weeks.rows.last?.first?.number, 21) // Monday 21st
         XCTAssertEqual(weeks.rows.first?.first?.number, 24) // Monday 24 August
         XCTAssertEqual(weeks.thisWeek, 2)
-        XCTAssertEqual(weeks.daysPractised, 3)
+        XCTAssertEqual(weeks.daysPracticed, 3)
         XCTAssertEqual(weeks.rows.last?.filter(\.isToday).map(\.number), [24])
         XCTAssertEqual(weeks.rows.last?.filter(\.isFuture).count, 3) // Friday to Sunday
     }

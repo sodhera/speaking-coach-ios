@@ -10,7 +10,7 @@ struct FirstPlan: Equatable {
 
         var title: String {
             switch self {
-            case .rehearse: "Practise it out loud"
+            case .rehearse: "Practice it out loud"
             case .retry: "Retry the moment that trips you up"
             case .finish: "" // In the user's own outcome — see `FirstPlan.title(of:)`.
             }

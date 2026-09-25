@@ -115,7 +115,7 @@ struct DeckView: View {
                 .scrollDismissesKeyboard(.interactively)
                 .bottomEdgeFade()
 
-                PrimaryButton(title: rehearsals.isEmpty ? "Practise it" : "Practise again", systemImage: "mic.fill") {
+                PrimaryButton(title: rehearsals.isEmpty ? "Practice it" : "Practice again", systemImage: "mic.fill") {
                     focus = nil
                     save()
                     rehearsing = true
@@ -167,14 +167,14 @@ struct DeckView: View {
         }
     }
 
-    /// "12 slides · Practised twice", quietly above the title.
+    /// "12 slides · Practiced twice", quietly above the title.
     private var summary: String {
         let slides = deck.slideCount == 1 ? "1 slide" : "\(deck.slideCount) slides"
         switch rehearsals.count {
-        case 0: return "\(slides) · Not practised yet"
-        case 1: return "\(slides) · Practised once"
-        case 2: return "\(slides) · Practised twice"
-        default: return "\(slides) · Practised \(rehearsals.count) times"
+        case 0: return "\(slides) · Not practiced yet"
+        case 1: return "\(slides) · Practiced once"
+        case 2: return "\(slides) · Practiced twice"
+        default: return "\(slides) · Practiced \(rehearsals.count) times"
         }
     }
 
