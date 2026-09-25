@@ -450,7 +450,7 @@ private struct SectionCard: View {
             .contentShape(RoundedRectangle(cornerRadius: Corner.lg, style: .continuous))
         }
         .buttonStyle(.plain)
-        .glassSurface(cornerRadius: Corner.lg, strength: 0.68, interactive: true)
+        .glassSurface(cornerRadius: Corner.lg, whiteness: 0.68, interactive: true)
         .accessibilityElement(children: .combine)
         .accessibilityHint("Opens its sessions")
     }
@@ -660,7 +660,7 @@ private struct StreakCard: View {
         }
         .padding(Space.xl)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .glassSurface(cornerRadius: Corner.lg, strength: 0.58)
+        .glassSurface(cornerRadius: Corner.lg, whiteness: 0.58)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(streak)-day streak. \(practicedToday ? "You've practiced today." : "Not practiced yet today.")")
     }
@@ -793,7 +793,7 @@ private struct UpNextCard: View {
             .contentShape(RoundedRectangle(cornerRadius: Corner.lg, style: .continuous))
         }
         .buttonStyle(.plain)
-        .glassSurface(cornerRadius: Corner.lg, strength: 0.76, interactive: true)
+        .glassSurface(cornerRadius: Corner.lg, whiteness: 0.76, interactive: true)
         .disabled(isLoading)
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(.isButton)

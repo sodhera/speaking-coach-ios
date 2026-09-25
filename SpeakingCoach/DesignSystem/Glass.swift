@@ -17,17 +17,20 @@ import SwiftUI
 struct GlassSurface: ViewModifier {
     var cornerRadius: CGFloat
     var tint: Color?
-    var strength: Double
+    /// A white wash, 0…1, for glass that must read brighter than the
+    /// ground behind it (the Practice cards on their dot grid). Nil leaves
+    /// the glass, and any `tint`, exactly as the system draws them.
+    var whiteness: Double?
     var interactive: Bool
 
     func body(content: Content) -> some View {
         let shape = RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
         if #available(iOS 26.0, *) {
-            content.glassEffect(glass.tint(Color.white.opacity(strength)), in: shape)
+            content.glassEffect(glass, in: shape)
         } else {
             content
-                .background((tint ?? .clear).opacity(strength), in: shape)
-                .background(Palette.glassFill.opacity(strength), in: shape)
+                .background(tint ?? .clear, in: shape)
+                .background(Palette.glassFill.opacity(whiteness ?? 1), in: shape)
                 .background(.ultraThinMaterial, in: shape)
                 .overlay { shape.strokeBorder(Palette.border, lineWidth: 1) }
         }
@@ -36,14 +39,20 @@ struct GlassSurface: ViewModifier {
     @available(iOS 26.0, *)
     private var glass: Glass {
         var glass = Glass.regular
-        if let tint { glass = glass.tint(tint) }
+        // A glass takes one tint: the surface's own colour wins, so a
+        // coral selection or a sage result is never washed out to white.
+        if let tint {
+            glass = glass.tint(tint)
+        } else if let whiteness {
+            glass = glass.tint(Color.white.opacity(whiteness))
+        }
         return interactive ? glass.interactive() : glass
     }
 }
 
 extension View {
-    func glassSurface(cornerRadius: CGFloat = Corner.lg, tint: Color? = nil, strength: Double = 1, interactive: Bool = false) -> some View {
-        modifier(GlassSurface(cornerRadius: cornerRadius, tint: tint, strength: strength, interactive: interactive))
+    func glassSurface(cornerRadius: CGFloat = Corner.lg, tint: Color? = nil, whiteness: Double? = nil, interactive: Bool = false) -> some View {
+        modifier(GlassSurface(cornerRadius: cornerRadius, tint: tint, whiteness: whiteness, interactive: interactive))
     }
 }
 
