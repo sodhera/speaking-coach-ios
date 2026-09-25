@@ -55,7 +55,7 @@ struct ZaraDemoFlow: View {
 /// `-review-screen=<name>` renders a screen against a fixture profile, with
 /// no account or purchase needed: `welcome`, `signin`, `existing`, `paywall`,
 /// `attribution`, `microphone`, `reminders`, `setup`, `home`, `profile`, `progress`,
-/// `library`, `briefing`, `settings`, `checkin`. Add `-review-plan-step=retry|finish|done`
+/// `library`, `briefing`, `settings`, `checkin`, `consent`. Add `-review-plan-step=retry|finish|done`
 /// to see Home (or the hand-off) partway through the first plan; `progress`
 /// brings its own four weeks of practice.
 struct ReviewScreens: View {
@@ -70,6 +70,8 @@ struct ReviewScreens: View {
                     MorningStage(depth: 1)
                     PaywallView(model: model)
                 }
+            case "consent":
+                AIConsentGate(onDecline: {}) { Color.clear }
             case "attribution":
                 ZStack {
                     MorningStage(depth: 1)

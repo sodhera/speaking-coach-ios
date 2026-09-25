@@ -21,6 +21,7 @@ struct PromptView: View {
     @State private var recorder = AudioRecorder()
     @State private var prompt: DailyPrompt
     @State private var skipRequestedAt: Date?
+    @State private var awaitingConsent: (() -> Void)?
 
     /// Long enough for the urge to pass; short enough that nobody is trapped.
     private static let skipWait: TimeInterval = 10
@@ -83,6 +84,7 @@ struct PromptView: View {
         }
         .onDisappear { if recorder.isRecording { recorder.stop() } }
         .onAppear { Analytics.enter("daily_prompt_\(source.rawValue)") }
+        .aiConsentSheet($awaitingConsent)
     }
 
     private var isPassed: Bool { if case .passed = stage { true } else { false } }
@@ -112,7 +114,8 @@ struct PromptView: View {
             switch stage {
             case .ready, .missed:
                 PrimaryButton(title: stage == .ready ? String(localized: "Start speaking", bundle: AppLanguage.bundle) : String(localized: "Try again", bundle: AppLanguage.bundle), systemImage: "mic.fill") {
-                    Task { await listen() }
+                    awaitingConsent = AIConsent.gate { Task { await listen() } }
+                }
                 }
                 skip
             case .listening:

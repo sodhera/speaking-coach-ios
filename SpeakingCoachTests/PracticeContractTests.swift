@@ -60,8 +60,13 @@ final class PracticeContractTests: XCTestCase {
             criterionId: "c1", previous: CriterionResult(id: "c1", level: 1, note: "", evidence: [])
         )
         XCTAssertEqual(PracticePrompt.duration(definition, context), 90)
+        // English sends the checkpoint as the partner's first message.
         XCTAssertEqual(PracticePrompt.firstMessage(definition, context), "Why this role?")
         XCTAssertTrue(PracticePrompt.build(definition, context).contains("Your first line is supplied when the conversation connects: Why this role?"))
+        // Other languages have the partner say it on the begin signal.
+        context.language = "es"
+        XCTAssertNil(PracticePrompt.firstMessage(definition, context))
+        XCTAssertTrue(PracticePrompt.build(definition, context).contains("open with exactly: Why this role?"))
     }
 
     func testNewContextMatchesTheSetup() {

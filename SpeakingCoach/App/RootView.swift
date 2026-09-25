@@ -115,9 +115,17 @@ struct RootView: View {
             withAnimation(.easeOut(duration: 0.30)) { contentVisible = true }
         }
         .fullScreenCover(item: $launch) { launch in
-            sessionView(for: launch)
-                .environment(\.stageStyle, .flat)
-                .inAppLanguage(language.code)
+            Group {
+                // The prompt asks at its own Speak button, so its skip stays
+                // reachable for anyone who says no.
+                if case .prompt = launch {
+                    sessionView(for: launch)
+                } else {
+                    AIConsentGate(onDecline: { self.launch = nil }) { sessionView(for: launch) }
+                }
+            }
+            .environment(\.stageStyle, .flat)
+            .inAppLanguage(language.code)
         }
         .modifier(AppUpdateNotice(availableUpdate: $availableUpdate, isReady: splashHoldDone && launch == nil))
         .onOpenURL { url in

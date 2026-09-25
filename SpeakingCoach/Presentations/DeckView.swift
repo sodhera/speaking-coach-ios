@@ -127,12 +127,14 @@ struct DeckView: View {
         .toolbar(.hidden, for: .tabBar)
         .onDisappear(perform: save)
         .fullScreenCover(isPresented: $rehearsing) {
-            RehearsalView(
-                store: store,
-                deck: current,
-                onClose: { rehearsing = false },
-                demoRecording: LaunchFlags.has("-zara-demo")
-            )
+            AIConsentGate(onDecline: { rehearsing = false }) {
+                RehearsalView(
+                    store: store,
+                    deck: current,
+                    onClose: { rehearsing = false },
+                    demoRecording: LaunchFlags.has("-zara-demo")
+                )
+            }
         }
         .navigationDestination(item: $reviewing) { rehearsal in
             RehearsalReviewView(store: store, deck: current, rehearsalID: rehearsal.id, onBack: { reviewing = nil })

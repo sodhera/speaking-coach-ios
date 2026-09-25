@@ -14,6 +14,7 @@ struct CustomSituationView: View {
     @State private var checking = false
     @State private var confirmation: String?
     @State private var problem: String?
+    @State private var awaitingConsent: (() -> Void)?
     @FocusState private var focus: Field?
 
     private enum Field { case partner, description }
@@ -134,6 +135,7 @@ struct CustomSituationView: View {
         .toolbar(.hidden, for: .tabBar)
         .animation(.easeInOut(duration: 0.25), value: confirmation)
         .onAppear { Analytics.enter("custom_situation") }
+        .aiConsentSheet($awaitingConsent)
     }
 
     @ViewBuilder
@@ -146,7 +148,9 @@ struct CustomSituationView: View {
                 onStart(situation, PracticeSetup(practice: situation.definition, pressure: pressure, persona: persona, situation: trimmedDescription))
             }
         } else {
-            PrimaryButton(title: String(localized: "Set the scene", bundle: AppLanguage.bundle), isLoading: checking) { Task { await check() } }
+            PrimaryButton(title: String(localized: "Set the scene", bundle: AppLanguage.bundle), isLoading: checking) {
+                awaitingConsent = AIConsent.gate { Task { await check() } }
+            }
                 .disabled(!isComplete)
         }
     }
