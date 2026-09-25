@@ -61,4 +61,71 @@ final class PaywallLogicTests: XCTestCase {
         XCTAssertEqual(PaywallView.headline(for: profile(.everyday, [.myself])), "Speak like yourself, every day.")
         XCTAssertFalse(PaywallView.headline(for: profile(.everyday, [.getTheYes])).contains("Walk into"))
     }
+
+    // MARK: Remote copy
+
+    func testEmptyMetadataKeepsTheShippedCopy() {
+        XCTAssertEqual(PaywallCopy(metadata: [:]), PaywallCopy())
+    }
+
+    func testMetadataOverridesEachField() {
+        let copy = PaywallCopy(metadata: [
+            "headline": "  Your voice, ready.  ",
+            "benefits": [["lead": "Rehearse it", "detail": "{practice}"]],
+            "plans_title": "Pick a plan",
+            "reassurance": "Cancel in two taps.",
+            "cta_trial": "Try {trial} free",
+            "cta": "Get {plan}",
+            "default_plan": "monthly",
+            "show_badge": false,
+        ])
+        XCTAssertEqual(copy.headline, "Your voice, ready.")
+        XCTAssertEqual(copy.benefits, [.init(lead: "Rehearse it", detail: "{practice}")])
+        XCTAssertEqual(copy.plansTitle, "Pick a plan")
+        XCTAssertEqual(copy.reassurance, "Cancel in two taps.")
+        XCTAssertEqual(copy.trialCallToAction, "Try {trial} free")
+        XCTAssertEqual(copy.callToAction, "Get {plan}")
+        XCTAssertFalse(copy.preselectsAnnual)
+        XCTAssertFalse(copy.showsBadge)
+    }
+
+    func testMalformedMetadataFallsBack() {
+        let copy = PaywallCopy(metadata: [
+            "headline": "",
+            "plans_title": 42,
+            "benefits": [["lead": "Only a lead"]],
+            "default_plan": "weekly",
+            "show_badge": "no",
+        ])
+        XCTAssertEqual(copy, PaywallCopy())
+    }
+
+    func testUnknownTokensNeverReachTheScreen() {
+        let defaults = PaywallCopy()
+        let copy = PaywallCopy(metadata: [
+            "headline": "Hi {name}",
+            "cta": "Start {practice}",
+            "benefits": [["lead": "Fine", "detail": "{practise}"], ["lead": "Also fine", "detail": "Words."]],
+        ])
+        XCTAssertEqual(copy.headline, defaults.headline)
+        XCTAssertEqual(copy.callToAction, defaults.callToAction)
+        XCTAssertEqual(copy.benefits, defaults.benefits)
+    }
+
+    func testBenefitsAreOneToFour() {
+        let five = Array(repeating: ["lead": "A", "detail": "B"], count: 5)
+        XCTAssertEqual(PaywallCopy(metadata: ["benefits": five]).benefits, PaywallCopy().benefits)
+        XCTAssertEqual(PaywallCopy(metadata: ["benefits": [[String: String]]()]).benefits, PaywallCopy().benefits)
+    }
+
+    func testTokensFillWithTheUsersAnswers() {
+        XCTAssertEqual(PaywallCopy.fill("{headline} {retry}", ["headline": "Walk in calm.", "retry": "Again."]), "Walk in calm. Again.")
+        XCTAssertEqual(PaywallCopy.fill("Start {trial} Free Trial", ["trial": "1-Week"]), "Start 1-Week Free Trial")
+        XCTAssertEqual(PaywallCopy.tokens(in: "{a} and {b_c}"), ["a", "b_c"])
+    }
+
+    func testDefaultBenefitsStillPersonalize() {
+        XCTAssertEqual(PaywallView.practiceLine(for: .presentation), "Your opening, out loud, until it lands.")
+        XCTAssertEqual(PaywallCopy().benefits.first?.detail, "{practice}")
+    }
 }

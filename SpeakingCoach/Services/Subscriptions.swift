@@ -40,6 +40,15 @@ struct Plan: Identifiable, Equatable {
         formatter.allowedUnits = [.day, .weekOfMonth, .month]
         return formatter.string(from: length)
     }
+
+    /// "1-Week", for a button title.
+    var trialAdjective: String? {
+        trialPhrase.map { phrase in
+            phrase.split(separator: " ").enumerated().map { index, part in
+                index == 1 ? String(part.hasSuffix("s") ? part.dropLast() : part).capitalized : String(part)
+            }.joined(separator: "-")
+        }
+    }
 }
 
 /// Subscriptions through RevenueCat, keyed to the Supabase user id — the
@@ -54,6 +63,8 @@ final class Subscriptions {
     private(set) var access: Access = .unknown
     private(set) var plans: [Plan] = []
     private(set) var plansState: PlansState = .idle
+    /// The paywall's words from the current offering's metadata.
+    private(set) var copy = PaywallCopy()
     private(set) var willRenew = true
     private(set) var expiration: Date?
 
@@ -118,6 +129,9 @@ final class Subscriptions {
         // A failed lookup with no cached info still has to resolve somewhere:
         // the gate treats `.unknown` as "hold the splash", so give it an answer.
         if access == .unknown { access = comped ? .entitled : .notEntitled }
+        // Ahead of the paywall, so its remote copy is in place before it
+        // appears rather than swapping in under the reader.
+        if access == .notEntitled { Task { await loadPlans() } }
     }
 
     private func apply(_ info: CustomerInfo) {
@@ -144,6 +158,11 @@ final class Subscriptions {
                 plansState = .failed
                 return
             }
+            #if DEBUG
+            copy = PaywallCopy(metadata: Self.reviewMetadata ?? offering.metadata)
+            #else
+            copy = PaywallCopy(metadata: offering.metadata)
+            #endif
             let available = offering.availablePackages.filter { [.annual, .monthly].contains($0.packageType) }
             let eligibility = await Purchases.shared.checkTrialOrIntroDiscountEligibility(packages: available)
             #if DEBUG
@@ -211,8 +230,16 @@ final class Subscriptions {
     }
 
     #if DEBUG
+    /// `-review-paywall-copy=<json>` previews offering metadata before it
+    /// goes into the RevenueCat dashboard.
+    private static var reviewMetadata: [String: Any]? {
+        guard let json = LaunchFlags.value("-review-paywall-copy"), let data = json.data(using: .utf8) else { return nil }
+        return (try? JSONSerialization.jsonObject(with: data)) as? [String: Any]
+    }
+
     func setReviewPlans(_ plans: [Plan]) {
         self.plans = plans
+        if let metadata = Self.reviewMetadata { copy = PaywallCopy(metadata: metadata) }
         plansState = .loaded
     }
     #endif

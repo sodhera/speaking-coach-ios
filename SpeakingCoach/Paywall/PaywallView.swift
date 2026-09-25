@@ -7,6 +7,9 @@ import SwiftUI
 /// plans sit side by side so the yearly price is read *against* the monthly
 /// one.
 ///
+/// The words come from `PaywallCopy` — the current offering's metadata, so
+/// they change without an update — with the user's answers filled in.
+///
 /// Pricing hierarchy (App Store Guideline 3.1.2(c)): on each card the
 /// **billed amount** for the plan's own period is the largest price. The
 /// struck-through anchor, the savings sticker and the trial are always
@@ -23,9 +26,24 @@ struct PaywallView: View {
 
     private var subscriptions: Subscriptions { model.subscriptions }
     private var profile: CoachProfile? { model.profile }
+    private var copy: PaywallCopy { subscriptions.copy }
     private var selected: Plan? {
-        subscriptions.plans.first { $0.id == selectedID } ?? subscriptions.plans.first
+        let plans = subscriptions.plans
+        return plans.first { $0.id == selectedID }
+            ?? plans.first { $0.isAnnual == copy.preselectsAnnual }
+            ?? plans.first
     }
+
+    /// The user's own answers, for the copy's tokens.
+    private var answers: [String: String] {
+        [
+            "headline": Self.headline(for: profile),
+            "practice": Self.practiceLine(for: profile?.moment),
+            "retry": (profile?.pattern ?? .steady).fix,
+        ]
+    }
+
+    private func fill(_ text: String) -> String { PaywallCopy.fill(text, answers) }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -74,6 +92,7 @@ struct PaywallView: View {
         }
         .animation(.easeInOut(duration: 0.2), value: notice?.text)
         .animation(.easeOut(duration: 0.3), value: subscriptions.plans)
+        .animation(.easeOut(duration: 0.3), value: copy)
         .task {
             Analytics.enter("paywall")
             if subscriptions.plansState != .loaded { await subscriptions.loadPlans() }
@@ -89,7 +108,7 @@ struct PaywallView: View {
 
     private var headline: some View {
         VStack(alignment: .leading, spacing: Space.lg) {
-            Text(Self.headline(for: profile))
+            Text(fill(copy.headline))
                 .font(Typeface.hero(30))
                 .foregroundStyle(Palette.ink)
                 .lineSpacing(2)
@@ -108,17 +127,19 @@ struct PaywallView: View {
 
     // MARK: Benefits
 
-    /// Three, each a reason rather than a feature: a crown, a bold lead and
-    /// one line — JournalBlock's grammar.
+    /// Each a reason rather than a feature: a crown, a bold lead and one
+    /// line — JournalBlock's grammar.
     private var benefits: some View {
         VStack(alignment: .leading, spacing: 18) {
-            BenefitRow(
-                lead: String(localized: "Practice it", bundle: AppLanguage.bundle),
-                detail: profile?.moment?.practiceBenefit ?? String(localized: "Real conversations, out loud, with a partner who plays the other side.", bundle: AppLanguage.bundle)
-            )
-            BenefitRow(lead: String(localized: "Hear it back", bundle: AppLanguage.bundle), detail: String(localized: "Feedback that quotes your own words.", bundle: AppLanguage.bundle))
-            BenefitRow(lead: String(localized: "Retry the moment", bundle: AppLanguage.bundle), detail: (profile?.pattern ?? .steady).fix)
+            ForEach(Array(copy.benefits.enumerated()), id: \.offset) { _, benefit in
+                BenefitRow(lead: fill(benefit.lead), detail: fill(benefit.detail))
+            }
         }
+    }
+
+    /// The practice benefit, written for the user's moment.
+    static func practiceLine(for moment: SpeakingMoment?) -> String {
+        moment?.practiceBenefit ?? String(localized: "Real conversations, out loud, with a partner who plays the other side.", bundle: AppLanguage.bundle)
     }
 
     // MARK: Plans
@@ -126,7 +147,7 @@ struct PaywallView: View {
     @ViewBuilder
     private var plans: some View {
         VStack(spacing: Space.md) {
-            Text("Select a plan that fits you")
+            Text(fill(copy.plansTitle))
                 .font(Typeface.label(16))
                 .foregroundStyle(Palette.ink)
                 .frame(maxWidth: .infinity)
@@ -140,6 +161,7 @@ struct PaywallView: View {
                         PricingCard(
                             plan: plan,
                             savings: plan.isAnnual ? subscriptions.annualSavingsPercent : nil,
+                            showsBadge: copy.showsBadge,
                             isSelected: plan.id == selected?.id
                         ) {
                             Haptics.selection()
@@ -173,7 +195,7 @@ struct PaywallView: View {
                 .accessibilityLabel("Loading plans")
             }
 
-            Text("Change plans or cancel anytime.")
+            Text(fill(copy.reassurance))
                 .font(Typeface.body(13))
                 .foregroundStyle(Palette.dim)
                 .frame(maxWidth: .infinity)
@@ -215,8 +237,9 @@ struct PaywallView: View {
     /// length when there is one, otherwise the plan itself.
     private var callToAction: String {
         guard let selected else { return String(localized: "Continue", bundle: AppLanguage.bundle) }
-        if let trial = selected.trialPhrase { return String(localized: "Try it free for \(trial)", bundle: AppLanguage.bundle, comment: "Slot: the trial's length, e.g. '1 week'.") }
-        return selected.isAnnual ? String(localized: "Continue with Yearly", bundle: AppLanguage.bundle) : String(localized: "Continue with Monthly", bundle: AppLanguage.bundle)
+        let trial = selected.trialAdjective
+        return PaywallCopy.fill(trial == nil ? copy.callToAction : copy.trialCallToAction,
+                                ["trial": trial ?? "", "plan": selected.name])
     }
 
     private func footerLink(_ title: String, action: @escaping () -> Void) -> some View {
@@ -293,6 +316,7 @@ private struct BenefitRow: View {
 private struct PricingCard: View {
     let plan: Plan
     let savings: Int?
+    let showsBadge: Bool
     let isSelected: Bool
     let action: () -> Void
 
@@ -366,6 +390,7 @@ private struct PricingCard: View {
     }
 
     private var sticker: String? {
+        guard showsBadge else { return nil }
         if let trial = plan.trialPhrase { return String(localized: "\(trial) free", bundle: AppLanguage.bundle, comment: "Sticker on the plan. Slot: the trial's length, e.g. '1 week'.").uppercased(with: AppLanguage.locale) }
         return savings.map { String(localized: "Save \($0)%", bundle: AppLanguage.bundle, comment: "Sticker on the yearly plan.").uppercased(with: AppLanguage.locale) }
     }
