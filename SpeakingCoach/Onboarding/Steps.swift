@@ -258,8 +258,8 @@ struct DemoInstrument: View {
     /// One short line, only when there's something to say.
     private var caption: String? {
         switch beat {
-        case .rehearse, .retry: nil
-        case .hearBack: flagged.isEmpty ? nil : "One change: \(script.note)"
+        case .rehearse: nil
+        case .hearBack, .retry: flagged.isEmpty ? nil : "One change: \(script.note)"
         case .done: "Your words, one change, a clearer try."
         }
     }
@@ -268,7 +268,7 @@ struct DemoInstrument: View {
         switch beat {
         case .rehearse: "Play an example"
         case .hearBack: "Finding one change…"
-        case .retry: "Play it with the change"
+        case .retry: "Play with better phrasing"
         case .done: "Play it with the change"
         }
     }
@@ -277,6 +277,12 @@ struct DemoInstrument: View {
 
     private func playTake() {
         guard canPlay, speaking == nil else { return }
+        if beat == .retry {
+            withAnimation(.easeOut(duration: 0.2)) {
+                shown = []
+                flagged = []
+            }
+        }
         isPlaying = true
         Haptics.prepare()
         Haptics.soft()
@@ -344,8 +350,6 @@ struct DemoInstrument: View {
             }
             try await Task.sleep(for: .milliseconds(1100))
             withAnimation(.easeInOut(duration: 0.35)) {
-                shown = []
-                flagged = []
                 cursor = 0
                 beat = .retry
             }
