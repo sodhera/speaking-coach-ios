@@ -83,6 +83,9 @@ struct HomeView: View {
         NavigationStack(path: $path) {
             ZStack {
                 MorningStage(depth: 0.2)
+                DotGridTexture()
+                    .ignoresSafeArea()
+                    .allowsHitTesting(false)
                 ScrollView(showsIndicators: false) {
                     content
                         .padding(.top, Space.sm)
@@ -447,7 +450,7 @@ private struct SectionCard: View {
             .contentShape(RoundedRectangle(cornerRadius: Corner.lg, style: .continuous))
         }
         .buttonStyle(.plain)
-        .glassSurface(cornerRadius: Corner.lg, interactive: true)
+        .background(Color.white, in: RoundedRectangle(cornerRadius: Corner.lg, style: .continuous))
         .accessibilityElement(children: .combine)
         .accessibilityHint("Opens its sessions")
     }
@@ -657,7 +660,7 @@ private struct StreakCard: View {
         }
         .padding(Space.xl)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .glassSurface(cornerRadius: Corner.lg)
+        .background(Color.white, in: RoundedRectangle(cornerRadius: Corner.lg, style: .continuous))
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("\(streak)-day streak. \(practicedToday ? "You've practiced today." : "Not practiced yet today.")")
     }
@@ -790,10 +793,25 @@ private struct UpNextCard: View {
             .contentShape(RoundedRectangle(cornerRadius: Corner.lg, style: .continuous))
         }
         .buttonStyle(.plain)
-        .glassSurface(cornerRadius: Corner.lg, interactive: true)
+        .background(Color.white, in: RoundedRectangle(cornerRadius: Corner.lg, style: .continuous))
         .disabled(isLoading)
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(.isButton)
+    }
+}
+
+/// Quiet drafting-paper dots behind the home cards.
+private struct DotGridTexture: View {
+    var body: some View {
+        Canvas { context, size in
+            let spacing: CGFloat = 22
+            let dot = Path(ellipseIn: CGRect(x: 0, y: 0, width: 1.5, height: 1.5))
+            for x in stride(from: 11.0, through: size.width, by: spacing) {
+                for y in stride(from: 11.0, through: size.height, by: spacing) {
+                    context.fill(dot.offsetBy(dx: x, dy: y), with: .color(Palette.ink.opacity(0.14)))
+                }
+            }
+        }
     }
 }
 
@@ -815,7 +833,6 @@ struct SessionCover: View {
             cover
                 .frame(width: size, height: size)
                 .clipShape(RoundedRectangle(cornerRadius: Corner.md, style: .continuous))
-                .shadow(color: Palette.coral.opacity(0.25), radius: 14, y: 6)
                 .accessibilityHidden(true)
         } else {
             cover.accessibilityHidden(true)
