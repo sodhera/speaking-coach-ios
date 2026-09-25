@@ -179,6 +179,7 @@ struct CustomSituation: Codable, Equatable {
     /// user's own words rather than the catalog.
     var definition: PracticeDefinition {
         if self == .ieltsSpeaking { return Self.ieltsDefinition }
+        if self == .streetHello { return Self.streetHelloDefinition }
         return PracticeDefinition(
             id: "custom", version: 1, rubricVersion: "custom-v1", scenarioId: "custom",
             title: title, category: "custom", format: "rehearsal", durationMinutes: 4,
@@ -210,12 +211,44 @@ extension CustomSituation {
         title: "IELTS Speaking · Part 1"
     )
 
+    /// Impromptu: someone friendly stops you on the street and starts
+    /// talking. No warning and no script; the skill is answering before you
+    /// freeze, warmly, and handing the conversation back. Built in like
+    /// IELTS, so it runs on the custom-situation endpoints.
+    static let streetHello = CustomSituation(
+        description: "A friendly stranger stops me on the street and starts a conversation out of nowhere. I want to answer quickly and warmly instead of freezing, and keep it going for a minute.",
+        partner: "Someone on the street",
+        title: "A stranger says hi"
+    )
+
+    static let builtInScenes: [CustomSituation] = [.ieltsSpeaking, .streetHello]
+
     /// The built-in scene a definition was made from, if any. Built-in
     /// scenes start through the custom path, never `/api/practice/start`.
     static func builtIn(for definition: PracticeDefinition) -> CustomSituation? {
         guard definition.id == "custom" else { return nil }
-        return [CustomSituation.ieltsSpeaking].first { $0.title == definition.title }
+        return builtInScenes.first { $0.title == definition.title }
     }
+
+    fileprivate static let streetHelloDefinition = PracticeDefinition(
+        id: "custom", version: 1, rubricVersion: "custom-v1", scenarioId: "custom",
+        title: streetHello.title, category: "custom", format: "rehearsal", durationMinutes: 2,
+        partner: streetHello.partner,
+        objective: "Answer before you freeze, keep it warm, and hand the conversation back with a question.",
+        opening: "Hey, sorry, random question. Is that café over there any good? You look like you'd know.",
+        criteria: [],
+        beats: [
+            "Open cold and friendly, as a stranger who just stopped them, with one light question.",
+            "React to what they say, then share one small thing about yourself.",
+            "If they go quiet for more than a few seconds, nudge kindly: “Sorry, did I catch you at a bad time?”",
+            "Wrap up naturally after a minute: “Anyway, I'll let you go. Nice chatting!”",
+        ],
+        scaffold: "Answer, then hand it back: “It's great, actually. Are you new around here?”",
+        transfer: "Next time a stranger says hi, answer first and think second. A short warm reply beats a perfect one.",
+        maxUserTurns: 4,
+        recovery: ["If they stall, ask something even simpler about the street or the weather."],
+        variants: []
+    )
 
     fileprivate static let ieltsDefinition = PracticeDefinition(
         id: "custom", version: 1, rubricVersion: "custom-v1", scenarioId: "custom",

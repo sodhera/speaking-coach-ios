@@ -1,11 +1,9 @@
 import SwiftUI
 
-/// **What you've done**, as Profile shows it under your name. Two reads:
-///
-/// 1. **This week.** A disc per day, ticked when they practised. The
-///    streak's number stays on Practice, where it asks for today.
-/// 2. **History.** Every session, newest first, each reopening its
-///    feedback. Retries sit under the session they went back to.
+/// **What you've done**, as Profile shows it under your name: every
+/// session, newest first, each reopening its feedback. Retries sit under
+/// the session they went back to. The week and the streak live at the top
+/// of Practice, where they ask for today.
 ///
 /// Honest by construction: every count is a saved report.
 struct ActivitySections: View {
@@ -20,15 +18,11 @@ struct ActivitySections: View {
     private static let shownAtFirst = 8
 
     private var history: PracticeHistory { model.history }
-    private var week: PracticeWeeks { PracticeWeeks(records: history.records, weeks: 1) }
     private var entries: [RehearsalEntry] { RehearsalEntry.entries(from: history.records) }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            WeekCard(week: week, loaded: history.loaded, isNew: history.loaded && history.records.isEmpty)
-
             SectionTitle(text: "History")
-                .padding(.top, Space.xxxl)
             historyList
                 .padding(.top, Space.md)
         }
@@ -151,13 +145,15 @@ struct ActivitySections: View {
 
 /// How a session is named and dated wherever it's listed.
 enum SessionText {
+    /// The same glyph as the record's situation card on Home.
     static func icon(for record: PracticeRecord) -> String {
         if let id = record.activityID, let practice = PracticeCatalog.definition(id),
-           let category = PracticeCategory(rawValue: practice.category) {
-            return category.icon
+           let section = HomeSection.containing(practice) {
+            return section.icon
         }
-        if record.title == CustomSituation.ieltsSpeaking.title { return "graduationcap" }
-        return record.isCustom ? "square.and.pencil" : "text.bubble"
+        if record.title == CustomSituation.ieltsSpeaking.title { return HomeSection.ielts.icon }
+        if record.title == CustomSituation.streetHello.title || record.isCustom { return HomeSection.custom.icon }
+        return "text.bubble"
     }
 
     /// "Today, 10:43 AM", "Yesterday, 6:10 PM", "Monday, 9:05 AM", then
@@ -242,84 +238,6 @@ struct RehearsalEntry: Identifiable, Equatable {
             .filter { record in record.parentID.map { !ids.contains($0) } ?? true }
             .map { RehearsalEntry(record: $0, retries: (retries[$0.id] ?? []).sorted { $0.date < $1.date }) }
             .sorted { $0.latest > $1.latest }
-    }
-}
-
-// MARK: - This week
-
-/// This week at a glance: a disc per day, ticked in coral when they
-/// practised, today ringed, the rest faint, and the count in the corner.
-private struct WeekCard: View {
-    let week: PracticeWeeks
-    let loaded: Bool
-    /// Nothing practised yet: the card says what it's for.
-    var isNew = false
-
-    private static let disc: CGFloat = 32
-
-    private var count: String {
-        week.thisWeek == 1 ? "1 session" : "\(week.thisWeek) sessions"
-    }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: Space.lg) {
-            HStack(alignment: .firstTextBaseline) {
-                Text("This week")
-                    .font(Typeface.label(15))
-                    .foregroundStyle(Palette.dim)
-                Spacer(minLength: Space.md)
-                Text(loaded ? count : "–")
-                    .font(Typeface.label(15))
-                    .foregroundStyle(Palette.ink)
-                    .contentTransition(.numericText())
-            }
-
-            HStack(spacing: 0) {
-                ForEach(Array((week.rows.last ?? []).enumerated()), id: \.offset) { _, day in
-                    VStack(spacing: Space.sm) {
-                        disc(day)
-                        Text(day.date.formatted(.dateTime.weekday(.narrow)))
-                            .font(Typeface.label(11))
-                            .foregroundStyle(day.isToday ? Palette.ink : Palette.muted)
-                    }
-                    .frame(maxWidth: .infinity)
-                }
-            }
-
-            if isNew {
-                Text("Each day you practise gets a tick.")
-                    .font(Typeface.body(13))
-                    .foregroundStyle(Palette.muted)
-                    .frame(maxWidth: .infinity)
-            }
-        }
-        .padding(Space.xl)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .glassSurface(cornerRadius: Corner.lg)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("This week: \(count).")
-    }
-
-    @ViewBuilder
-    private func disc(_ day: PracticeWeeks.Day) -> some View {
-        if day.count > 0 {
-            Circle()
-                .fill(Palette.coral)
-                .frame(width: Self.disc, height: Self.disc)
-                .overlay {
-                    Image(systemName: "checkmark")
-                        .font(.system(size: 13, weight: .bold))
-                        .foregroundStyle(.white)
-                }
-        } else if day.isToday {
-            Circle()
-                .strokeBorder(Palette.coral, lineWidth: 1.5)
-                .frame(width: Self.disc, height: Self.disc)
-        } else {
-            Circle()
-                .fill(Palette.ink.opacity(day.isFuture ? 0.04 : 0.08))
-                .frame(width: Self.disc, height: Self.disc)
-        }
     }
 }
 

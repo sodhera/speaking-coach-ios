@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// **Profile — you, and what you've done.** Your name as the title, the
-/// gear beside it, then this week and your history. The email, the routine
+/// gear beside it, then your history. The email, the routine
 /// and everything else account-shaped live in Settings.
 struct ProfileView: View {
     let model: AppModel
@@ -31,7 +31,7 @@ struct ProfileView: View {
             .padding(.top, Space.sm)
 
             ActivitySections(model: model, onOpenReport: onOpenReport)
-                .padding(.top, Space.lg)
+                .padding(.top, Space.xxl)
         }
         .refreshable { if let id = model.userID { await model.history.load(userID: id) } }
         .sheet(isPresented: $showsSettings) {

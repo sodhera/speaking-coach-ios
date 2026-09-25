@@ -52,7 +52,7 @@ struct BriefingView: View {
                         // Centred like an album page, so the cover, title
                         // and goal balance the full-width card below.
                         VStack(spacing: 0) {
-                            SessionCover(symbol: PracticeCategory(rawValue: practice.category)?.icon ?? "mic.fill", size: 112)
+                            SessionCover(symbol: HomeSection.containing(practice)?.icon ?? "mic", size: 112)
 
                             Text(practice.title)
                                 .font(Typeface.hero(28))
