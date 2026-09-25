@@ -43,14 +43,14 @@ struct HomeView: View {
     var onOpenReport: (PracticeReport) -> Void = { _ in }
     var onStartCustom: (CustomSituation, PracticeSetup) -> Void = { _, _ in }
 
-    @State private var path: [PracticeDefinition] = []
-    @State private var openSection: HomeSection?
+    /// Every page pushed from Practice, in order. One typed stack, so a
+    /// back swipe always pops exactly the page on top: a situation page
+    /// pushed one way and a briefing another left iOS unsure of their order,
+    /// and swiping back from the briefing skipped past the situation page.
+    @State private var path: [HomeRoute] = []
     @State private var showsCheckIn = false
     @State private var openingRetry = false
     @State private var planError: String?
-    @State private var showsPreparation = false
-    @State private var showsCustom = false
-    @State private var showsPresentations = false
     @State private var showsPrompt = false
     @State private var carouselCard: String?
 
@@ -94,28 +94,27 @@ struct HomeView: View {
             }
             .statusBarScrim()
             .toolbar(.hidden, for: .navigationBar)
-            .navigationDestination(for: PracticeDefinition.self) { practice in
-                BriefingView(practice: practice, onBack: { path.removeLast() }, onStart: onStart)
-            }
-            .navigationDestination(item: $openSection) { section in
-                SectionPage(
-                    section: section,
-                    done: done,
-                    onBack: { openSection = nil },
-                    onPick: { path.append($0) },
-                    onCustom: { showsCustom = true },
-                    onPrompt: { showsPrompt = true },
-                    onSlides: { showsPresentations = true }
-                )
-            }
-            .navigationDestination(isPresented: $showsPreparation) {
-                PreparationPlanView(model: model, onBack: { showsPreparation = false }, onPractice: { path.append($0) })
-            }
-            .navigationDestination(isPresented: $showsCustom) {
-                CustomSituationView(language: profile?.language ?? "en", onBack: { showsCustom = false }, onStart: onStartCustom)
-            }
-            .navigationDestination(isPresented: $showsPresentations) {
-                PresentationsView(store: model.presentations, language: profile?.language ?? "en", onBack: { showsPresentations = false })
+            .navigationDestination(for: HomeRoute.self) { route in
+                switch route {
+                case .briefing(let practice):
+                    BriefingView(practice: practice, onBack: back, onStart: onStart)
+                case .section(let section):
+                    SectionPage(
+                        section: section,
+                        done: done,
+                        onBack: back,
+                        onPick: { path.append(.briefing($0)) },
+                        onCustom: { path.append(.custom) },
+                        onPrompt: { showsPrompt = true },
+                        onSlides: { path.append(.presentations) }
+                    )
+                case .preparation:
+                    PreparationPlanView(model: model, onBack: back, onPractice: { path.append(.briefing($0)) })
+                case .custom:
+                    CustomSituationView(language: profile?.language ?? "en", onBack: back, onStart: onStartCustom)
+                case .presentations:
+                    PresentationsView(store: model.presentations, language: profile?.language ?? "en", onBack: back)
+                }
             }
         }
         .fullScreenCover(isPresented: $showsPrompt) {
@@ -140,7 +139,11 @@ struct HomeView: View {
         pendingBriefing.wrappedValue = nil
         var transaction = Transaction()
         transaction.disablesAnimations = true
-        withTransaction(transaction) { path = [practice] }
+        withTransaction(transaction) { path = [.briefing(practice)] }
+    }
+
+    private func back() {
+        if !path.isEmpty { path.removeLast() }
     }
 
     private var content: some View {
@@ -198,7 +201,7 @@ struct HomeView: View {
                 symbol: "calendar",
                 title: "Something coming up?",
                 meta: "Five sessions that build to your date",
-                run: { showsPreparation = true }
+                run: { path.append(.preparation) }
             )))
         }
         return cards
@@ -268,11 +271,11 @@ struct HomeView: View {
                 symbol: icon(preparation.next),
                 title: preparation.next.title,
                 meta: meta(preparation.next),
-                run: { path.append(preparation.next) }
+                run: { path.append(.briefing(preparation.next)) }
             )
         }
         if let suggestion {
-            return UpNext(label: "Up next", symbol: icon(suggestion), title: suggestion.title, meta: meta(suggestion), run: { path.append(suggestion) })
+            return UpNext(label: "Up next", symbol: icon(suggestion), title: suggestion.title, meta: meta(suggestion), run: { path.append(.briefing(suggestion)) })
         }
         return nil
     }
@@ -288,7 +291,7 @@ struct HomeView: View {
         }
         guard !pool.isEmpty, let pick = pool.rotating(by: Calendar.current.ordinality(of: .day, in: .era, for: .now) ?? 0),
               let practice = pick.practice else { return nil }
-        return UpNext(label: "Recommended", symbol: pick.symbol, title: pick.hook, meta: meta(practice), run: { path.append(practice) })
+        return UpNext(label: "Recommended", symbol: pick.symbol, title: pick.hook, meta: meta(practice), run: { path.append(.briefing(practice)) })
     }
 
     private func meta(_ practice: PracticeDefinition) -> String {
@@ -304,7 +307,7 @@ struct HomeView: View {
         planError = nil
         switch step {
         case .rehearse:
-            path.append(plan.practice)
+            path.append(.briefing(plan.practice))
         case .retry:
             openRetry(plan)
         case .finish:
@@ -317,7 +320,7 @@ struct HomeView: View {
     /// primary action is the retry. A report with no moment to go back to
     /// gets the whole scene again instead.
     private func openRetry(_ plan: FirstPlan) {
-        guard let record = plan.retryFrom else { path.append(plan.practice); return }
+        guard let record = plan.retryFrom else { path.append(.briefing(plan.practice)); return }
         openingRetry = true
         Task {
             do {
@@ -325,7 +328,7 @@ struct HomeView: View {
                 if RetryCheckpoint.make(from: report) != nil {
                     onOpenReport(report)
                 } else {
-                    path.append(plan.practice)
+                    path.append(.briefing(plan.practice))
                 }
             } catch {
                 planError = "Your last session couldn't be opened. Check your connection and try again."
@@ -341,12 +344,23 @@ struct HomeView: View {
         VStack(spacing: Space.sm) {
             LazyVGrid(columns: [GridItem(.flexible(), spacing: Space.sm), GridItem(.flexible(), spacing: Space.sm)], spacing: Space.sm) {
                 ForEach(HomeSection.allCases.filter { $0 != .ielts }) { section in
-                    SectionCard(section: section) { openSection = section }
+                    SectionCard(section: section) { path.append(.section(section)) }
                 }
             }
-            SectionCard(section: .ielts, wide: true) { openSection = .ielts }
+            SectionCard(section: .ielts, wide: true) { path.append(.section(.ielts)) }
         }
     }
+}
+
+// MARK: - Routes
+
+/// A page pushed from Practice.
+enum HomeRoute: Hashable {
+    case briefing(PracticeDefinition)
+    case section(HomeSection)
+    case preparation
+    case custom
+    case presentations
 }
 
 // MARK: - Sections
