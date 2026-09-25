@@ -26,8 +26,8 @@ struct SpeakingCoachApp: App {
     }
 }
 
-/// Routes taps on the app's own notifications — the daily prompt and a
-/// shield's "Open Speaking Coach" — to the link they carry.
+/// Routes taps on the app's own notifications — the daily prompt — to the
+/// link they carry.
 final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
         UNUserNotificationCenter.current().delegate = self

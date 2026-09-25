@@ -1,8 +1,7 @@
 import Foundation
 import NaturalLanguage
 
-/// The one-breath speaking prompt behind the daily reminder and "speak to
-/// unlock": small enough to do standing in a doorway, real enough to count.
+/// The one-breath speaking prompt behind the daily reminder: small enough to do standing in a doorway, real enough to count.
 struct DailyPrompt: Equatable, Identifiable {
     enum Kind: String, Equatable { case sayIt, answer, describe }
 

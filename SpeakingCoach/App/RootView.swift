@@ -116,8 +116,8 @@ struct RootView: View {
         }
         .fullScreenCover(item: $launch) { launch in
             Group {
-                // The prompt asks at its own Speak button, so its skip stays
-                // reachable for anyone who says no.
+                // The prompt asks at its own Speak button, wherever it's
+                // opened from.
                 if case .prompt = launch {
                     sessionView(for: launch)
                 } else {
@@ -146,7 +146,6 @@ struct RootView: View {
         .onChange(of: model.userID) { _, _ in openPendingLink() }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active {
-                model.routine.reconcile()
                 Task { await checkForAppUpdate() }
             }
         }
@@ -291,14 +290,12 @@ struct RootView: View {
         }
     }
 
-    /// Today's prompt, from its reminder or a shielded app. It opens for any
-    /// signed-in user — even one whose plan has lapsed — because it's also
-    /// the way back into their own apps.
+    /// Today's prompt, from its reminder. It opens for any signed-in user,
+    /// even one whose plan has lapsed.
     private func openPendingLink() {
         guard let url = links.pending, model.userID != nil, launch == nil else { return }
         links.pending = nil
         switch url.host() {
-        case "unlock": launch = .prompt(.unlock)
         case "prompt": launch = .prompt(.reminder)
         default: break
         }

@@ -143,15 +143,10 @@ struct SettingsView: View {
         .onAppear { Analytics.enter("settings") }
     }
 
-    /// What the routine is set to, in a word or two: "8:00 AM", "8:00 AM ·
-    /// Unlock", "Unlock", or "Off".
+    /// The daily prompt's time, or "Off".
     private var routineSummary: String {
         let settings = model.routine.settings
-        let parts = [
-            settings.promptEnabled ? RoutineStore.clock(settings.promptMinutes) : nil,
-            settings.unlockEnabled ? String(localized: "Unlock", bundle: AppLanguage.bundle) : nil,
-        ].compactMap { $0 }
-        return parts.isEmpty ? String(localized: "Off", bundle: AppLanguage.bundle) : parts.joined(separator: " · ")
+        return settings.promptEnabled ? RoutineStore.clock(settings.promptMinutes) : String(localized: "Off", bundle: AppLanguage.bundle)
     }
 
     private var subscriptionStatus: String {

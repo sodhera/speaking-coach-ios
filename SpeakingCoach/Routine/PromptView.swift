@@ -2,10 +2,9 @@ import AVFAudio
 import SwiftUI
 
 /// Today's prompt, full screen: one line to say, the bloom listening, and
-/// a kind check. Opened by the daily reminder, by a shielded app's "Open
-/// Speaking Coach", or by hand from the routine.
+/// a kind check. Opened by the daily reminder, or by hand from the routine.
 struct PromptView: View {
-    enum Source: String { case unlock, reminder, practice }
+    enum Source: String { case reminder, practice }
 
     let routine: RoutineStore
     let source: Source
@@ -20,12 +19,8 @@ struct PromptView: View {
     @State private var stage: Stage = .ready
     @State private var recorder = AudioRecorder()
     @State private var prompt: DailyPrompt
-    @State private var skipRequestedAt: Date?
     @State private var awaitingConsent: (() -> Void)?
 
-    /// Long enough for the urge to pass; short enough that nobody is trapped.
-    private static let skipWait: TimeInterval = 10
-    private static let skipMinutes = 5
     private static let maxAnswer: TimeInterval = 30
 
     init(routine: RoutineStore, source: Source, onClose: @escaping () -> Void) {
@@ -35,7 +30,6 @@ struct PromptView: View {
         _prompt = State(initialValue: DailyPrompt.today())
     }
 
-    private var unlocks: Bool { routine.settings.unlockEnabled && routine.isSupported }
     private var answerURL: URL { FileManager.default.temporaryDirectory.appending(path: "daily-prompt.m4a") }
 
     var body: some View {
@@ -92,7 +86,7 @@ struct PromptView: View {
     private var kicker: String {
         switch stage {
         case .listening: String(localized: "Listening · \(RehearsalView.clock(recorder.elapsed))", bundle: AppLanguage.bundle)
-        default: source == .unlock || (unlocks && routine.isShieldUp) ? String(localized: "Speak to unlock", bundle: AppLanguage.bundle) : String(localized: "Today's prompt", bundle: AppLanguage.bundle)
+        default: String(localized: "Today's prompt", bundle: AppLanguage.bundle)
         }
     }
 
@@ -116,8 +110,7 @@ struct PromptView: View {
                 PrimaryButton(title: stage == .ready ? String(localized: "Start speaking", bundle: AppLanguage.bundle) : String(localized: "Try again", bundle: AppLanguage.bundle), systemImage: "mic.fill") {
                     awaitingConsent = AIConsent.gate { Task { await listen() } }
                 }
-                }
-                skip
+                notNow
             case .listening:
                 PrimaryButton(title: String(localized: "Done", bundle: AppLanguage.bundle), systemImage: "checkmark") { Task { await check() } }
             case .checking:
@@ -128,30 +121,9 @@ struct PromptView: View {
         }
     }
 
-    /// The way out that always exists: ask, wait ten seconds, then open the
-    /// apps for five minutes. The wait is the whole mechanism — most urges
-    /// pass inside it — and it means no failure can ever lock anyone out.
     @ViewBuilder
-    private var skip: some View {
-        if unlocks, routine.isShieldUp {
-            if let requested = skipRequestedAt {
-                TimelineView(.periodic(from: .now, by: 1)) { context in
-                    let left = Int(ceil(Self.skipWait - context.date.timeIntervalSince(requested)))
-                    if left > 0 {
-                        QuietButton(title: String(localized: "You can skip in \(left)s", bundle: AppLanguage.bundle), color: Palette.muted) {}
-                            .disabled(true)
-                    } else {
-                        QuietButton(title: String(localized: "Skip and open my apps for \(Self.skipMinutes) minutes", bundle: AppLanguage.bundle, comment: "Pluralized.")) {
-                            routine.grant(minutes: Self.skipMinutes)
-                            Analytics.action("daily_prompt_skip")
-                            onClose()
-                        }
-                    }
-                }
-            } else {
-                QuietButton(title: String(localized: "Skip", bundle: AppLanguage.bundle)) { skipRequestedAt = .now }
-            }
-        } else if source != .practice {
+    private var notNow: some View {
+        if source != .practice {
             QuietButton(title: String(localized: "Not now", bundle: AppLanguage.bundle), action: onClose)
         }
     }
@@ -182,12 +154,7 @@ struct PromptView: View {
             if result.passed {
                 Haptics.success()
                 Analytics.action("daily_prompt_\(source.rawValue)")
-                if unlocks, routine.isShieldUp || source == .unlock {
-                    routine.grant()
-                    stage = .passed("\(result.note) \(String(localized: "Your apps are open for \(routine.settings.unlockMinutes) minutes.", bundle: AppLanguage.bundle, comment: "Pluralized."))")
-                } else {
-                    stage = .passed(result.note)
-                }
+                stage = .passed(result.note)
             } else {
                 Haptics.error()
                 stage = .missed(result.note)

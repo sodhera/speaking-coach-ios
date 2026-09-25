@@ -13,9 +13,8 @@
 			<string>NSPrivacyAccessedAPICategoryUserDefaults</string>
 			<key>NSPrivacyAccessedAPITypeReasons</key>
 			<array>
-				<!-- CA92.1: the app's own settings. 1C8F.1: the Speak to unlock routine, shared with its extensions through the app group. -->
+				<!-- CA92.1: the app's own settings, read only by the app. -->
 				<string>CA92.1</string>
-				<string>1C8F.1</string>
 			</array>
 		</dict>
 	</array>

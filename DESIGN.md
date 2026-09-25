@@ -172,7 +172,7 @@ Two tabs: Practice and Profile. Progress and Profile were separate tabs, each to
 - **Profile: you, and what you've done.** The user's name is the title, with the gear beside it, then **History**: every session, newest first. Each row has a situation icon, the title and a relative date, and reopens that session's feedback. Retries sit under the session they went back to, and eight rows show before "Show more". The week and streak live on Practice, where they ask for today.
 
   Removed on purpose: a Skills card and a "How ready you feel" track, which were accurate but hard to read at a glance; an identity card (the email lives in Settings); and "A good next step", which repeated Up next.
-- **Settings** is a sheet from the gear: a hero title with a 44pt ✕, then grouped glass rows under quiet sentence-case labels (Account, Subscription, Practice, Help and legal). Practice holds the practice routine (its row's value says what it's set to: "8:00 AM · Unlock", or "Off"), language and the daily reminder. Sign out and Delete account close the list as rows of their own, not loose buttons. The Practice routine page uses section titles.
+- **Settings** is a sheet from the gear: a hero title with a 44pt ✕, then grouped glass rows under quiet sentence-case labels (Account, Subscription, Practice, Help and legal). Practice holds the practice routine (its row's value is the prompt's time, or "Off"), language and the daily reminder. Sign out and Delete account close the list as rows of their own, not loose buttons. The Practice routine page uses section titles.
 
 Review route: `-review-screen=progress` brings four weeks of fixture practice.
 
@@ -264,14 +264,8 @@ Review routes: `plan`, `planprogress`.
 ### Practice routine
 
 - **Daily prompt:** a thirty-second speaking prompt on chosen days, as a notification that opens it. Prompts rotate daily and come in three kinds: say a line, answer a question, describe a scene. The check is kind. It asks only that you really spoke, and never judges accent or grammar. Non-English users get the open questions.
-- **Speak to unlock:** chosen apps are shielded during a window until you speak (15 minutes by default). This is SleepBlock's Screen Time architecture with three extensions: a monitor puts the shield up and down, the shield itself carries the app icon, and "Open Speaking Coach" on the shield posts a notification that opens the prompt. `Shared/RoutineShared.swift` is the single rule all four processes read.
-- **Nobody can be locked out:**
-  - Turning it off clears the shield.
-  - Signing out turns it off.
-  - The app reconciles the shield every time it comes forward.
-  - The prompt opens for any signed-in user, even one whose plan has lapsed.
-  - **Skip** always exists. It's a slow door (ask, wait 10 s, then 5 minutes open). The wait is the mechanism.
-- **Signing:** the simulator build leaves Family Controls out, as SleepBlock does. Device builds carry it. Shipping it needs Apple's Family Controls *distribution* entitlement for `com.sodhera.speakingcoach` and its three extensions (`.block-monitor`, `.shield-config`, `.shield-action`).
+- The prompt opens for any signed-in user, even one whose plan has lapsed. Signing out turns its reminders off.
+- There is no Screen Time "speak to unlock": the routine is notifications only, so the app ships with no extensions and no Family Controls entitlement.
 
 Review routes: `routine`, `prompt`.
 

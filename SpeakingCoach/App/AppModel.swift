@@ -175,7 +175,7 @@ final class AppModel {
             profile = nil
             history.reset()
             preparation.clearLocal()
-            // Signed out, nobody can speak to unlock — so nothing stays shut.
+            // The next account on this phone shouldn't get this one's reminders.
             routine.clearOnSignOut()
             Analytics.identify(userID: nil, profile: nil)
             phase = .signedOut
