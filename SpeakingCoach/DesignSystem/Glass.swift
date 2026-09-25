@@ -17,16 +17,17 @@ import SwiftUI
 struct GlassSurface: ViewModifier {
     var cornerRadius: CGFloat
     var tint: Color?
+    var strength: Double
     var interactive: Bool
 
     func body(content: Content) -> some View {
         let shape = RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
         if #available(iOS 26.0, *) {
-            content.glassEffect(glass, in: shape)
+            content.glassEffect(glass.tint(Color.white.opacity(strength)), in: shape)
         } else {
             content
-                .background(tint ?? .clear, in: shape)
-                .background(Palette.glassFill, in: shape)
+                .background((tint ?? .clear).opacity(strength), in: shape)
+                .background(Palette.glassFill.opacity(strength), in: shape)
                 .background(.ultraThinMaterial, in: shape)
                 .overlay { shape.strokeBorder(Palette.border, lineWidth: 1) }
         }
@@ -41,8 +42,8 @@ struct GlassSurface: ViewModifier {
 }
 
 extension View {
-    func glassSurface(cornerRadius: CGFloat = Corner.lg, tint: Color? = nil, interactive: Bool = false) -> some View {
-        modifier(GlassSurface(cornerRadius: cornerRadius, tint: tint, interactive: interactive))
+    func glassSurface(cornerRadius: CGFloat = Corner.lg, tint: Color? = nil, strength: Double = 1, interactive: Bool = false) -> some View {
+        modifier(GlassSurface(cornerRadius: cornerRadius, tint: tint, strength: strength, interactive: interactive))
     }
 }
 
