@@ -207,7 +207,7 @@ enum CustomSituationAPI {
 
     private static func shouldRetryAnalysis(after error: Error) -> Bool {
         guard let error = error as? PracticeAPIError else { return false }
-        switch error {
+        return switch error {
         case .offline:
             true
         case .server(let status, _):
