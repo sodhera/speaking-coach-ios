@@ -5,6 +5,8 @@ import Foundation
 enum AppConfig {
     static let supabaseURL = URL(string: "https://kaqimqvijjwzfajeazme.supabase.co")!
     static let supabaseAnonKey = "sb_publishable_RkLMCBjOK6GJkOZMl2m3BQ_uolTyZXd"
+    static let postHogProjectToken = Bundle.main.object(forInfoDictionaryKey: "PostHogProjectToken") as? String ?? ""
+    static let postHogHost = Bundle.main.object(forInfoDictionaryKey: "PostHogHost") as? String ?? "https://us.i.posthog.com"
     static let apiBaseURL = URL(string: "https://dating-coach-sodheras-projects.vercel.app")!
     /// The two ElevenLabs voice partners (public agent ids). Custom
     /// situations fetch their own token for these; catalog rehearsals get

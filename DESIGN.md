@@ -68,7 +68,7 @@ The practice language is asked first, because the partner, the scenes and IELTS 
 - **Outcomes fit the situation.** IELTS and everyday conversations offer "I keep going, without freezing". Work and presentations offer "I get what I asked for".
 - **The sun peaks on the commitment.** Stage depth is the step position divided by the commit step's position.
 - **Drafts resume.** Answers and the current step persist on every change. A relaunch lands on the same step, except that commit and account resume on the plan, so the user re-reads what they're committing to. The draft is cleared only once the answers are saved to an account.
-- **Analytics:** each step is page `ob_<step>` in `product_page_events`, with its index, enter/leave/action and duration. Answers, names and free text are never sent.
+- **Analytics:** each step is page `ob_<step>` in `product_page_events`, with its index, enter/leave/action and duration. PostHog also receives allowlisted language, category, moment, timing, readiness (0–10), challenge ratings, costs, and outcomes. Names, free text, and spoken content are never sent.
 
 ## Accounts
 

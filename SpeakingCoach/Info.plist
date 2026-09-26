@@ -38,6 +38,10 @@
 	<true/>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Speaking Coach uses your microphone only while you practice, so your partner can hear you and give feedback on your words.</string>
+	<key>PostHogHost</key>
+	<string>$(POSTHOG_HOST)</string>
+	<key>PostHogProjectToken</key>
+	<string>$(POSTHOG_PROJECT_TOKEN)</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>DMSans.ttf</string>

@@ -206,7 +206,11 @@ struct OnboardingFlow: View {
         case .timing:
             QuestionLayout(title: moment.timingQuestion) {
                 options(MomentTiming.allCases, icon: \.icon, title: \.title, isSelected: { answers.timing == $0 }) {
+                    if let old = answers.timing, old != $0 {
+                        trackChoice("timing", old.rawValue, selected: false)
+                    }
                     answers.timing = $0
+                    trackChoice("timing", $0.rawValue, selected: true)
                 }
             }
 
@@ -241,11 +245,15 @@ struct OnboardingFlow: View {
         case .cost:
             QuestionLayout(title: "What has it cost you so far?", subtitle: "Choose any that fit.") {
                 options(SpeakingCost.allCases, icon: \.icon, title: \.title, isSelected: { answers.costs.contains($0) }) { choice in
+                    let previous = answers.costs
                     if choice == .nothingYet {
                         answers.costs = answers.costs.contains(.nothingYet) ? [] : [.nothingYet]
                     } else {
                         answers.costs.remove(.nothingYet)
                         answers.costs.formSymmetricDifference([choice])
+                    }
+                    for value in SpeakingCost.allCases where previous.contains(value) != answers.costs.contains(value) {
+                        trackChoice("cost", value.rawValue, selected: answers.costs.contains(value))
                     }
                 }
             }
@@ -262,7 +270,9 @@ struct OnboardingFlow: View {
         case .outcome:
             QuestionLayout(title: moment.outcomeQuestion, subtitle: "Choose any that fit.") {
                 options(moment.outcomeOptions, icon: \.icon, title: \.title, isSelected: { answers.outcomes.contains($0) }) {
+                    let wasSelected = answers.outcomes.contains($0)
                     answers.outcomes.formSymmetricDifference([$0])
+                    trackChoice("outcome", $0.rawValue, selected: !wasSelected)
                 }
             }
 
@@ -390,41 +400,66 @@ struct OnboardingFlow: View {
     // MARK: Choosing
 
     private func chooseLanguage(_ language: String) {
+        trackChoice("language", language, selected: true)
         answers.language = language
         // IELTS is English-only: switching away from English closes that door.
         if answers.category == .ielts, !SpeakingCategory.available(forPracticeLanguage: language).contains(.ielts) {
+            trackChoice("category", SpeakingCategory.ielts.rawValue, selected: false)
+            trackChoice("moment", SpeakingMoment.ielts.rawValue, selected: false)
             answers.category = nil
             answers.moment = nil
         }
     }
 
     private func chooseCategory(_ category: SpeakingCategory) {
+        if let old = answers.category, old != category {
+            trackChoice("category", old.rawValue, selected: false)
+        }
+        trackChoice("category", category.rawValue, selected: true)
         answers.category = category
         if category.moments.count == 1 {
             chooseMoment(category.moments[0])
         } else if let moment = answers.moment, !category.moments.contains(moment) {
+            trackChoice("moment", moment.rawValue, selected: false)
             answers.moment = nil
         }
     }
 
     private func chooseMoment(_ moment: SpeakingMoment) {
         let wasGeneral = answers.moment?.isGeneral == true
+        if let old = answers.moment, old != moment {
+            trackChoice("moment", old.rawValue, selected: false)
+        }
+        trackChoice("moment", moment.rawValue, selected: true)
         answers.moment = moment
         // No event, so no date: the timing step is skipped and "no date" is
         // recorded for them. Switching back to a specific moment clears
         // that, so they answer it themselves.
         if moment.isGeneral {
+            if let old = answers.timing, old != .noDate {
+                trackChoice("timing", old.rawValue, selected: false)
+            }
+            if answers.timing != .noDate {
+                trackChoice("timing", MomentTiming.noDate.rawValue, selected: true)
+            }
             answers.timing = .noDate
         } else if wasGeneral {
+            trackChoice("timing", MomentTiming.noDate.rawValue, selected: false)
             answers.timing = nil
         }
         // Outcomes are offered per moment; drop any the new one doesn't offer.
+        let previousOutcomes = answers.outcomes
         answers.outcomes.formIntersection(moment.outcomeOptions)
+        for outcome in SpeakingOutcome.allCases where previousOutcomes.contains(outcome) && !answers.outcomes.contains(outcome) {
+            trackChoice("outcome", outcome.rawValue, selected: false)
+        }
     }
 
     private func answerDeck(_ agreement: Agreement) {
         let statement = PainStatement.allCases[deckIndex]
+        trackChoice("challenge_rating", agreement.rawValue, context: statement.rawValue)
         let hadPain = answers.reportsPain
+        let previousCosts = answers.costs
         answers.statements[statement] = agreement
         // No pain reported means the cost question is skipped and "nothing
         // yet" recorded for them — cleared again if pain appears, so they
@@ -435,6 +470,9 @@ struct OnboardingFlow: View {
             } else if !hadPain, answers.costs == [.nothingYet] {
                 answers.costs = []
             }
+        }
+        for cost in SpeakingCost.allCases where previousCosts.contains(cost) != answers.costs.contains(cost) {
+            trackChoice("cost", cost.rawValue, selected: answers.costs.contains(cost))
         }
         let answeredIndex = deckIndex
         Task { @MainActor in
@@ -453,6 +491,7 @@ struct OnboardingFlow: View {
     // name field's return key.
     private func advance() {
         guard isStepValid || step == .deck || step == .commit else { return }
+        recordCurrentAnswer()
         Analytics.action(pageID(step), step: currentIndex)
         let nextIndex = currentIndex + 1
         guard nextIndex < steps.count else { return }
@@ -468,6 +507,56 @@ struct OnboardingFlow: View {
             return
         }
         setStep(next, forward: true)
+    }
+
+    /// Captures the final bounded response on each question page, including
+    /// the default practice language. The name and narrative pages are omitted.
+    private func recordCurrentAnswer() {
+        func record(_ field: String, _ value: String, selected: Bool? = nil) {
+            Analytics.onboardingChoice(
+                page: pageID(step), field: field, value: value,
+                selected: selected, event: "onboarding_answer", step: currentIndex
+            )
+        }
+        switch step {
+        case .language:
+            record("language", answers.language)
+        case .category:
+            if let category = answers.category { record("category", category.rawValue, selected: true) }
+            if let moment = answers.moment { record("moment", moment.rawValue, selected: true) }
+        case .moment:
+            if let moment = answers.moment { record("moment", moment.rawValue, selected: true) }
+        case .timing:
+            if let timing = answers.timing { record("timing", timing.rawValue, selected: true) }
+        case .readiness where answers.readinessTouched:
+            record("readiness", String(min(max(answers.readiness, 0), 10)))
+        case .deck:
+            for statement in PainStatement.allCases {
+                if let answer = answers.statements[statement] {
+                    Analytics.onboardingChoice(
+                        page: pageID(step), field: "challenge_rating", value: answer.rawValue,
+                        context: statement.rawValue, event: "onboarding_answer", step: currentIndex
+                    )
+                }
+            }
+        case .cost:
+            for cost in SpeakingCost.allCases where answers.costs.contains(cost) {
+                record("cost", cost.rawValue, selected: true)
+            }
+        case .outcome:
+            for outcome in SpeakingOutcome.allCases where answers.outcomes.contains(outcome) {
+                record("outcome", outcome.rawValue, selected: true)
+            }
+        default:
+            break
+        }
+    }
+
+    private func trackChoice(_ field: String, _ value: String, selected: Bool? = nil, context: String? = nil) {
+        Analytics.onboardingChoice(
+            page: pageID(step), field: field, value: value,
+            selected: selected, context: context, step: currentIndex
+        )
     }
 
     private func goBack() {

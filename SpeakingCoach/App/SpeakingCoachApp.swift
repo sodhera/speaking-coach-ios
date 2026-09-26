@@ -6,6 +6,7 @@ struct SpeakingCoachApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
 
     init() {
+        Analytics.configurePostHog()
         Haptics.prepare()
         #if DEBUG
         if LaunchFlags.has("-fresh-start") {

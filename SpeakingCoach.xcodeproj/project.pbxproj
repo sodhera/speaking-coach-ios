@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		0204773111B73CAA4EF9EA17 /* practice-content.json in Resources */ = {isa = PBXBuildFile; fileRef = 22DE98F9AFB1C24CA6BBE25E /* practice-content.json */; };
+		03A6A6EA0EEDF70096712C3B /* PostHog in Frameworks */ = {isa = PBXBuildFile; productRef = 0E1337A89A60A715DA95E63C /* PostHog */; };
 		09E7FACCA18F3A3D380D94CD /* ManagedSettings.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4FDE762B0A2AC2705A0927F8 /* ManagedSettings.framework */; };
 		0B540E1222F49DBBD745FAB8 /* FirstPlan.swift in Sources */ = {isa = PBXBuildFile; fileRef = 360C4C91434B00523406053D /* FirstPlan.swift */; };
 		0C12F3E28767B591F8ABD3CE /* PaywallLogicTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D34D1AE6A0EDE8A798DE8D0 /* PaywallLogicTests.swift */; };
@@ -266,6 +267,7 @@
 		FB7A68AAA0307C0CFE6348BE /* SetupScreens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetupScreens.swift; sourceTree = "<group>"; };
 		FC21D6564C47B64F7DDBC243 /* PracticePrompt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PracticePrompt.swift; sourceTree = "<group>"; };
 		FE34CCFC5BA19AA32A9B3113 /* SpeakingCoachApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeakingCoachApp.swift; sourceTree = "<group>"; };
+		"TEMP_59E66E80-201E-45A4-A6BD-C52739E22CB5" /* PostHogConfig.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = PostHogConfig.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -296,6 +298,7 @@
 				FF01B093CF1EC0735262238D /* Supabase in Frameworks */,
 				AA3E11B982FB37115985A704 /* RevenueCat in Frameworks */,
 				F23E3A47CD599C5F3E5C187B /* ElevenLabs in Frameworks */,
+				03A6A6EA0EEDF70096712C3B /* PostHog in Frameworks */,
 				4F364511A336FB7D8CE24994 /* FamilyControls.framework in Frameworks */,
 				2819BE78AE8F8AA8433F2E3D /* DeviceActivity.framework in Frameworks */,
 				09E7FACCA18F3A3D380D94CD /* ManagedSettings.framework in Frameworks */,
@@ -618,6 +621,14 @@
 			path = Fonts;
 			sourceTree = "<group>";
 		};
+		"TEMP_312E3E34-7BD9-41BE-B9A6-1FF9BCC752DA" /* Speaking Coach */ = {
+			isa = PBXGroup;
+			children = (
+				"TEMP_59E66E80-201E-45A4-A6BD-C52739E22CB5" /* PostHogConfig.xcconfig */,
+			);
+			path = "Speaking Coach";
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -660,6 +671,7 @@
 				A398FE8FEABFD30BD81DDD92 /* Supabase */,
 				A3710C14A575F6186A73935B /* RevenueCat */,
 				F2CBA82FEA3CFE66C039BAC0 /* ElevenLabs */,
+				0E1337A89A60A715DA95E63C /* PostHog */,
 			);
 			productName = SpeakingCoach;
 			productReference = 3B96BCC2A907DE3412939450 /* SpeakingCoach.app */;
@@ -783,6 +795,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				2FC36B7BDCC6D75DC00EF180 /* XCRemoteSwiftPackageReference "elevenlabs-swift-sdk" */,
+				9D04F489DC18CD95EF4D1F67 /* XCRemoteSwiftPackageReference "posthog-ios" */,
 				2878B36DCB7EDEC0CC653603 /* XCRemoteSwiftPackageReference "purchases-ios-spm" */,
 				C200D126050527565769D2C6 /* XCRemoteSwiftPackageReference "supabase-swift" */,
 			);
@@ -1055,6 +1068,7 @@
 		};
 		4A640BF5C88F8677F322DF42 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = "TEMP_59E66E80-201E-45A4-A6BD-C52739E22CB5" /* PostHogConfig.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -1230,6 +1244,7 @@
 		};
 		C9D13250DD2E45CEEFFD711A /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = "TEMP_59E66E80-201E-45A4-A6BD-C52739E22CB5" /* PostHogConfig.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -1421,6 +1436,14 @@
 				minimumVersion = 2.0.0;
 			};
 		};
+		9D04F489DC18CD95EF4D1F67 /* XCRemoteSwiftPackageReference "posthog-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/PostHog/posthog-ios";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 3.0.0;
+			};
+		};
 		C200D126050527565769D2C6 /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/supabase/supabase-swift";
@@ -1432,6 +1455,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		0E1337A89A60A715DA95E63C /* PostHog */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 9D04F489DC18CD95EF4D1F67 /* XCRemoteSwiftPackageReference "posthog-ios" */;
+			productName = PostHog;
+		};
 		A3710C14A575F6186A73935B /* RevenueCat */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 2878B36DCB7EDEC0CC653603 /* XCRemoteSwiftPackageReference "purchases-ios-spm" */;

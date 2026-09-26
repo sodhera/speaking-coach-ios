@@ -23,6 +23,9 @@ packages:
   ElevenLabs:
     url: https://github.com/elevenlabs/elevenlabs-swift-sdk
     majorVersion: 2.0.0
+  PostHog:
+    url: https://github.com/PostHog/posthog-ios
+    majorVersion: 3.0.0
 targets:
   SpeakingCoach:
     type: application
@@ -38,6 +41,8 @@ targets:
         product: RevenueCat
       - package: ElevenLabs
         product: ElevenLabs
+      - package: PostHog
+        product: PostHog
       - target: SpeakingCoachMonitor
       - target: SpeakingCoachShieldConfig
       - target: SpeakingCoachShieldAction
@@ -59,6 +64,9 @@ targets:
         CODE_SIGN_STYLE: Automatic
         GENERATE_INFOPLIST_FILE: NO
         INFOPLIST_FILE: SpeakingCoach/Info.plist
+    configFiles:
+      Debug: PostHogConfig.xcconfig
+      Release: PostHogConfig.xcconfig
     info:
       path: SpeakingCoach/Info.plist
       properties:
@@ -68,6 +76,8 @@ targets:
         LSRequiresIPhoneOS: true
         ITSAppUsesNonExemptEncryption: false
         NSMicrophoneUsageDescription: Speaking Coach uses your microphone only while you practice, so your partner can hear you and give feedback on your words.
+        PostHogProjectToken: $(POSTHOG_PROJECT_TOKEN)
+        PostHogHost: $(POSTHOG_HOST)
         UIAppFonts:
           - DMSans.ttf
           - DMSans-Italic.ttf
