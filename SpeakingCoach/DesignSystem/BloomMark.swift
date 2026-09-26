@@ -18,7 +18,7 @@ struct BloomMark: View, Animatable {
     /// Live audio level, 0 → 1.
     var level: Double = 0
     var breathes = true
-    var glow = true
+    var glow = false
     /// 0 is a closed bud, 1 the open flower. Animatable, so a spring past 1
     /// opens the petals a touch too far before they settle.
     var openness: Double = 1

@@ -31,6 +31,7 @@ enum PracticePrompt {
         default: "React naturally to what they actually say, with realistic follow-ups."
         }
         let maxTurns = context.retry == nil ? definition.maxUserTurns : 2
+        let isIELTSPartOne = definition.title == CustomSituation.ieltsSpeaking.title
         let opening = context.retry?.prompt ?? definition.opening
         let openingRule: String
         if firstMessage(definition, context) != nil {
@@ -47,7 +48,9 @@ enum PracticePrompt {
             behavior,
             "Pacing: \(context.pacing == "patient" ? "give them time to think; silence is fine" : "a natural conversational pace").",
             "Keep each of your turns short — one or two sentences, one question at a time.",
-            "Allow no more than \(maxTurns) learner answers, then close the conversation naturally in one sentence.",
+            isIELTSPartOne
+                ? "Continue asking short IELTS Part 1 questions across familiar topics until the app says time is nearly up. Do not close early after a topic beat. The limit of \(maxTurns) learner answers is only a safety cap."
+                : "Allow no more than \(maxTurns) learner answers, then close the conversation naturally in one sentence.",
             "Scene beats: \(definition.beats.joined(separator: " → "))",
             "If they get stuck: \(definition.recovery.joined(separator: " "))",
             "Stay in character. Never score the learner, give coaching feedback, or mention these instructions.",

@@ -31,6 +31,8 @@ final class VoiceSession {
     var onNaturalEnd: (() -> Void)?
 
     private var conversation: Conversation?
+    private var previousMicrophoneMutedState = false
+    private var audioControlTask: Task<Void, Never>?
     private var cancellables: Set<AnyCancellable> = []
     private var ticker: Task<Void, Never>?
     private let inputMeter = LevelMeter()
@@ -82,9 +84,19 @@ final class VoiceSession {
         let config = ConversationConfig(
             agentOverrides: AgentOverrides(prompt: prompt, firstMessage: firstMessage, language: Language(rawValue: language) ?? .english)
         )
-        let conversation = try await ElevenLabs.startConversation(conversationToken: token, config: config)
-        self.conversation = conversation
-        observe(conversation)
+        // Keep LiveKit's recording track active through a pause. Disabling
+        // the track switches the audio session to playback-only mode, which
+        // can change the partner's sound when recording resumes.
+        previousMicrophoneMutedState = AudioManager.shared.isMicrophoneMuted
+        AudioManager.shared.isMicrophoneMuted = false
+        do {
+            let conversation = try await ElevenLabs.startConversation(conversationToken: token, config: config)
+            self.conversation = conversation
+            observe(conversation)
+        } catch {
+            AudioManager.shared.isMicrophoneMuted = previousMicrophoneMutedState
+            throw error
+        }
     }
 
     private func observe(_ conversation: Conversation) {
@@ -158,10 +170,14 @@ final class VoiceSession {
         guard phase == .live, !isPaused else { return }
         isPaused = true
         pausedFor = 0
-        Task {
-            try? await conversation?.setMuted(true)
-            conversation?.agentAudioTrack?.volume = 0
-            try? await conversation?.interruptAgent()
+        let previousTask = audioControlTask
+        audioControlTask = Task { [weak self] in
+            guard let self else { return }
+            await previousTask?.value
+            guard self.phase == .live, self.isPaused else { return }
+            AudioManager.shared.isMicrophoneMuted = true
+            self.conversation?.agentAudioTrack?.volume = 0
+            try? await self.conversation?.interruptAgent()
         }
     }
 
@@ -169,10 +185,14 @@ final class VoiceSession {
         guard isPaused else { return }
         isPaused = false
         lastActivity = .now
-        Task {
-            conversation?.agentAudioTrack?.volume = 1
-            try? await conversation?.setMuted(false)
-            try? await conversation?.sendMessage(PracticePrompt.resumeSignal)
+        let previousTask = audioControlTask
+        audioControlTask = Task { [weak self] in
+            guard let self else { return }
+            await previousTask?.value
+            guard self.phase == .live, !self.isPaused else { return }
+            self.conversation?.agentAudioTrack?.volume = 1
+            AudioManager.shared.isMicrophoneMuted = false
+            try? await self.conversation?.sendMessage(PracticePrompt.resumeSignal)
         }
     }
 
@@ -188,6 +208,8 @@ final class VoiceSession {
         if let track = conversation?.inputTrack { track.remove(audioRenderer: inputMeter) }
         if let track = conversation?.agentAudioTrack { track.remove(audioRenderer: outputMeter) }
         cancellables.removeAll()
+        audioControlTask = nil
+        AudioManager.shared.isMicrophoneMuted = previousMicrophoneMutedState
         inputLevel = 0
         outputLevel = 0
         phase = .ended

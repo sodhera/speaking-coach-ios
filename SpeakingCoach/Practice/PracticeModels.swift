@@ -252,20 +252,20 @@ extension CustomSituation {
 
     fileprivate static let ieltsDefinition = PracticeDefinition(
         id: "custom", version: 1, rubricVersion: "custom-v1", scenarioId: "custom",
-        title: ieltsSpeaking.title, category: "custom", format: "rehearsal", durationMinutes: 4,
+        title: ieltsSpeaking.title, category: "custom", format: "rehearsal", durationMinutes: 5,
         partner: ieltsSpeaking.partner,
         objective: "Answer the examiner's Part 1 questions in full: answer, then extend with a reason or an example.",
         opening: "Good morning. My name is Alex, and I'll be your examiner today. Can you tell me your full name, please?",
         criteria: [],
         beats: [
             "Ask for their full name, then where they're from.",
-            "Ask two or three short questions on one familiar topic: work or studies, home, or free time.",
-            "Move to a second familiar topic with two short questions.",
-            "Close as the examiner does: “Thank you. That's the end of Part 1.”",
+            "Ask several short questions on familiar topics such as work or studies, home, and free time, one at a time.",
+            "React naturally to each answer and continue across another familiar topic. Keep the exchange going until the app says time is nearly up.",
+            "Only then close as the examiner does: “Thank you. That's the end of Part 1.”",
         ],
         scaffold: "Answer, then add why: “Yes, I really enjoy it, because…”",
         transfer: "In the test, give every answer a reason or an example, never just yes or no.",
-        maxUserTurns: 7,
+        maxUserTurns: 24,
         recovery: ["If they stall, repeat the question once, slowly, exactly as an examiner would. Never help with the answer."],
         variants: []
     )

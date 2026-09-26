@@ -194,7 +194,27 @@ enum CustomSituationAPI {
             language: language,
             transcript: transcript
         )
-        return try await post("api/analyze", body, timeout: 90)
+        for attempt in 0..<2 {
+            do {
+                return try await post("api/analyze", body, timeout: 90)
+            } catch {
+                guard attempt == 0, shouldRetryAnalysis(after: error), !Task.isCancelled else { throw error }
+                try await Task.sleep(for: .milliseconds(800))
+            }
+        }
+        throw PracticeAPIError.server(status: 0, message: "Feedback couldn't finish. Your words are saved; please try again.")
+    }
+
+    private static func shouldRetryAnalysis(after error: Error) -> Bool {
+        guard let error = error as? PracticeAPIError else { return false }
+        switch error {
+        case .offline:
+            true
+        case .server(let status, _):
+            status == 429 || (500..<600).contains(status)
+        default:
+            false
+        }
     }
 
     /// Saves the finished custom rehearsal to history and returns it in the
@@ -219,11 +239,11 @@ enum CustomSituationAPI {
             let analysis: PracticeReport.Analysis
             let score: Int
         }
-        try await Backend.supabase.from("reports").insert(Row(
+        try await Backend.supabase.from("reports").upsert(Row(
             id: report.id, user_id: userID, persona_id: context.personaId ?? "female",
             goal_text: String(custom.description.prefix(500)), transcript: transcript,
             analysis: report.analysis, score: analysis.score
-        )).execute()
+        ), onConflict: "id").execute()
         return report
     }
 
