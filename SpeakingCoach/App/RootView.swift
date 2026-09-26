@@ -1,3 +1,4 @@
+import Foundation
 import SwiftUI
 
 /// The gate chain: onboarding → account → **paywall** → "how did you hear
@@ -10,6 +11,8 @@ import SwiftUI
 struct RootView: View {
     @State private var model = AppModel()
     @State private var launch: SessionLaunch?
+    @State private var availableUpdate: AppUpdateChecker.Update?
+    @State private var lastUpdateCheckAt: Date?
 
     @State private var splashHoldDone = false
     @State private var attributionDone = false
@@ -95,6 +98,7 @@ struct RootView: View {
             #endif
             model.start()
             remindersNeeded = await SetupChain.needsReminders()
+            await checkForAppUpdate()
         }
         .task(id: screen) {
             guard screen != displayedScreen else { return }
@@ -113,6 +117,7 @@ struct RootView: View {
             sessionView(for: launch)
                 .environment(\.stageStyle, .flat)
         }
+        .modifier(AppUpdateNotice(availableUpdate: $availableUpdate, isReady: splashHoldDone && launch == nil))
         .onOpenURL { url in
             if url.scheme == AppConfig.authCallback.scheme,
                url.host == AppConfig.authCallback.host,
@@ -130,7 +135,10 @@ struct RootView: View {
         .onChange(of: links.pending) { _, _ in openPendingLink() }
         .onChange(of: model.userID) { _, _ in openPendingLink() }
         .onChange(of: scenePhase) { _, phase in
-            if phase == .active { model.routine.reconcile() }
+            if phase == .active {
+                model.routine.reconcile()
+                Task { await checkForAppUpdate() }
+            }
         }
         // A rehearsal cut short (crash, dropped call, killed app) is offered
         // back the next time Home appears, so spoken words are never lost.
@@ -278,6 +286,15 @@ struct RootView: View {
         }
     }
 
+    @MainActor
+    private func checkForAppUpdate() async {
+        guard launch == nil,
+              availableUpdate == nil,
+              lastUpdateCheckAt.map({ Date.now.timeIntervalSince($0) >= 6 * 60 * 60 }) ?? true else { return }
+        lastUpdateCheckAt = .now
+        availableUpdate = await AppUpdateChecker.availableUpdate()
+    }
+
     /// Asked once per account, after the paywall. Old-app accounts never
     /// went through this onboarding, so they're never asked.
     private var needsAttribution: Bool {
@@ -301,6 +318,93 @@ struct RootView: View {
 
     private var upNextTitle: String? {
         model.profile?.moment?.firstPractice?.title
+    }
+}
+
+private enum AppUpdateChecker {
+    struct Update: Identifiable {
+        let version: String
+        let storeURL: URL
+
+        var id: String { version }
+    }
+
+    private struct LookupResponse: Decodable {
+        let results: [Listing]
+    }
+
+    private struct Listing: Decodable {
+        let bundleId: String
+        let version: String
+        let trackViewUrl: URL
+    }
+
+    static func availableUpdate(for bundle: Bundle = .main) async -> Update? {
+        guard let bundleID = bundle.bundleIdentifier,
+              let installedVersion = bundle.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String,
+              !bundleID.isEmpty, !installedVersion.isEmpty else { return nil }
+
+        let country = Locale.current.region?.identifier.lowercased() ?? "us"
+        if let update = await lookup(bundleID: bundleID, installedVersion: installedVersion, country: country) {
+            return update
+        }
+        guard country != "us" else { return nil }
+        return await lookup(bundleID: bundleID, installedVersion: installedVersion, country: "us")
+    }
+
+    private static func lookup(bundleID: String, installedVersion: String, country: String) async -> Update? {
+        guard var components = URLComponents(string: "https://itunes.apple.com/lookup") else { return nil }
+        components.queryItems = [
+            URLQueryItem(name: "bundleId", value: bundleID),
+            URLQueryItem(name: "country", value: country),
+        ]
+        guard let url = components.url else { return nil }
+
+        var request = URLRequest(url: url)
+        request.timeoutInterval = 8
+        request.cachePolicy = .reloadIgnoringLocalCacheData
+        guard let (data, response) = try? await URLSession.shared.data(for: request),
+              (response as? HTTPURLResponse)?.statusCode == 200,
+              let result = try? JSONDecoder().decode(LookupResponse.self, from: data),
+              let listing = result.results.first(where: { $0.bundleId == bundleID }),
+              isNewer(listing.version, than: installedVersion),
+              listing.trackViewUrl.host == "apps.apple.com" else { return nil }
+
+        return Update(version: listing.version, storeURL: listing.trackViewUrl)
+    }
+
+    private static func isNewer(_ candidate: String, than installed: String) -> Bool {
+        let candidateParts = candidate.split(separator: ".").compactMap { Int($0) }
+        let installedParts = installed.split(separator: ".").compactMap { Int($0) }
+        guard !candidateParts.isEmpty, !installedParts.isEmpty else { return false }
+
+        for index in 0..<max(candidateParts.count, installedParts.count) {
+            let candidatePart = index < candidateParts.count ? candidateParts[index] : 0
+            let installedPart = index < installedParts.count ? installedParts[index] : 0
+            if candidatePart != installedPart { return candidatePart > installedPart }
+        }
+        return false
+    }
+}
+
+private struct AppUpdateNotice: ViewModifier {
+    @Binding var availableUpdate: AppUpdateChecker.Update?
+    let isReady: Bool
+
+    func body(content: Content) -> some View {
+        content.alert(item: Binding(
+            get: { isReady ? availableUpdate : nil },
+            set: { availableUpdate = $0 }
+        )) { update in
+            Alert(
+                title: Text("Update available"),
+                message: Text("Speaking Coach \(update.version) is ready. Update to get the latest improvements."),
+                primaryButton: .default(Text("Update now")) {
+                    UIApplication.shared.open(update.storeURL)
+                },
+                secondaryButton: .cancel(Text("Later"))
+            )
+        }
     }
 }
 
