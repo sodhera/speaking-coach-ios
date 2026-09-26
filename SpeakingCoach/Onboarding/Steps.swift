@@ -17,7 +17,7 @@ struct NameField: View {
     @State private var focusTask: Task<Void, Never>?
 
     var body: some View {
-        TextField("Your first name", text: $name, prompt: Text("Your first name").foregroundStyle(Palette.muted))
+        TextField("", text: $name, prompt: Text("Your first name").foregroundStyle(Palette.muted))
             .textContentType(.givenName)
             .textInputAutocapitalization(.words)
             .autocorrectionDisabled()
@@ -66,7 +66,7 @@ struct DeckInstrument: View {
 
     var body: some View {
         VStack(spacing: Space.xxl) {
-            Text("“\(statement.text)”")
+            Text(statement.text)
                 .font(Typeface.title(22))
                 .foregroundStyle(Palette.ink)
                 .multilineTextAlignment(.center)
@@ -81,9 +81,9 @@ struct DeckInstrument: View {
 
             GlassGroup(spacing: Space.md) {
                 VStack(spacing: Space.md) {
-                    OptionRow(icon: "checkmark", title: "That's me", isSelected: selected == .yes) { onAnswer(.yes) }
-                    OptionRow(icon: "circle.lefthalf.filled", title: "Sometimes", isSelected: selected == .sometimes) { onAnswer(.sometimes) }
-                    OptionRow(icon: "xmark", title: "Not me", isSelected: selected == .no) { onAnswer(.no) }
+                    OptionRow(icon: "checkmark", title: String(localized: "That's me", bundle: AppLanguage.bundle), isSelected: selected == .yes) { onAnswer(.yes) }
+                    OptionRow(icon: "circle.lefthalf.filled", title: String(localized: "Sometimes", bundle: AppLanguage.bundle), isSelected: selected == .sometimes) { onAnswer(.sometimes) }
+                    OptionRow(icon: "xmark", title: String(localized: "Not me", bundle: AppLanguage.bundle), isSelected: selected == .no) { onAnswer(.no) }
                 }
             }
         }
@@ -102,7 +102,7 @@ struct MirrorInstrument: View {
 
     var body: some View {
         VStack(spacing: Space.xl) {
-            BloomMark(size: 80, glow: false)
+            BrandMark(size: 80)
                 .revealIn(after: 0.1)
 
             // Typed word by word with a tick per word, like the promise
@@ -195,7 +195,7 @@ struct DemoInstrument: View {
                         .foregroundStyle(Palette.muted)
                         .padding(.trailing, Space.xs)
                         .transition(.opacity)
-                    FlowLayout(spacing: 5, lineSpacing: 6) {
+                    FlowLayout(spacing: DemoScript.spacesWords ? 5 : 0, lineSpacing: 6) {
                         ForEach(shown) { word in
                             Text(word.text)
                                 .font(Typeface.body(17))
@@ -259,17 +259,17 @@ struct DemoInstrument: View {
     private var caption: String? {
         switch beat {
         case .rehearse: nil
-        case .hearBack, .retry: flagged.isEmpty ? nil : "One change: \(script.note)"
-        case .done: "Your words, one change, a clearer try."
+        case .hearBack, .retry: flagged.isEmpty ? nil : String(localized: "One change: \(script.note)", bundle: AppLanguage.bundle, comment: "Slot: a one-line tip, e.g. 'Lead with who you are now.'")
+        case .done: String(localized: "Your words, one change, a clearer try.", bundle: AppLanguage.bundle)
         }
     }
 
     private var actionTitle: String {
         switch beat {
-        case .rehearse: "Play an example"
-        case .hearBack: "Finding one change…"
-        case .retry: "Play with better phrasing"
-        case .done: "Play it with the change"
+        case .rehearse: String(localized: "Play an example", bundle: AppLanguage.bundle)
+        case .hearBack: String(localized: "Finding one change…", bundle: AppLanguage.bundle)
+        case .retry: String(localized: "Play with better phrasing", bundle: AppLanguage.bundle)
+        case .done: String(localized: "Play it with the change", bundle: AppLanguage.bundle)
         }
     }
 
@@ -295,7 +295,7 @@ struct DemoInstrument: View {
                     // A voice has rhythm: short words are quick, fillers
                     // quicker, and a comma or full stop takes a breath.
                     let word = take[cursor - 1]
-                    let pause = word.text.last.map { ",.?—".contains($0) } == true ? 150 : 0
+                    let pause = word.text.last.map { ",.?!—、。，？！".contains($0) } == true ? 150 : 0
                     try await Task.sleep(for: .milliseconds((word.isFiller ? 120 : 150) + word.text.count * 14 + pause))
                 }
                 finishTake()
@@ -425,12 +425,12 @@ struct PlanInstrument: View {
         VStack(spacing: Space.lg) {
             VStack(alignment: .leading, spacing: 0) {
                 VStack(alignment: .leading, spacing: Space.xs) {
-                    Kicker(text: "First session · \(practice?.durationMinutes ?? 4) min", color: Palette.coralDeep)
-                    Text(practice?.title ?? "Your first session")
+                    Kicker(text: String(localized: "First session · \(practice?.durationMinutes ?? 4) min", bundle: AppLanguage.bundle), color: Palette.coralDeep)
+                    Text(practice?.title ?? String(localized: "Your first session", bundle: AppLanguage.bundle))
                         .font(Typeface.hero(24))
                         .foregroundStyle(Palette.ink)
                     if let practice {
-                        Text("With \(practice.partner.lowercasedFirst)")
+                        Text(practice.partner)
                             .font(Typeface.body(15))
                             .foregroundStyle(Palette.dim)
                     }
@@ -479,8 +479,4 @@ private struct PlanRow: View {
                 .foregroundStyle(Palette.ink)
         }
     }
-}
-
-extension String {
-    var lowercasedFirst: String { prefix(1).lowercased() + dropFirst() }
 }

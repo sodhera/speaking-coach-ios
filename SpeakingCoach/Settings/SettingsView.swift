@@ -22,7 +22,7 @@ struct SettingsView: View {
         NavigationStack {
             content
                 .navigationDestination(isPresented: $showsRoutine) {
-                    RoutineView(routine: model.routine, language: model.profile?.language ?? "en", onBack: { showsRoutine = false })
+                    RoutineView(routine: model.routine, onBack: { showsRoutine = false })
                 }
         }
     }
@@ -34,37 +34,37 @@ struct SettingsView: View {
                     .font(Typeface.hero(28))
                     .foregroundStyle(Palette.ink)
                 Spacer()
-                GlassIconButton(systemImage: "xmark", size: 44, iconSize: 15, color: Palette.dim, accessibilityLabel: "Close") { dismiss() }
+                GlassIconButton(systemImage: "xmark", size: 44, iconSize: 15, color: Palette.dim, accessibilityLabel: String(localized: "Close", bundle: AppLanguage.bundle)) { dismiss() }
             }
             .padding(.top, Space.lg)
 
             VStack(alignment: .leading, spacing: Space.xxl) {
-                section("Account") {
-                    GlassRow(icon: "person", title: model.profile?.name.isEmpty == false ? model.profile!.name : "Your account", value: model.email)
+                section(String(localized: "Account", bundle: AppLanguage.bundle)) {
+                    GlassRow(icon: "person", title: model.profile?.name.isEmpty == false ? model.profile!.name : String(localized: "Your account", bundle: AppLanguage.bundle), value: model.email)
                 }
 
-                section("Subscription") {
+                section(String(localized: "Subscription", bundle: AppLanguage.bundle)) {
                     GlassRow(icon: "sparkles", title: "Speaking Coach", value: subscriptionStatus)
                     GlassRowDivider()
-                    rowButton(GlassRow(icon: "creditcard", title: "Manage subscription", showsChevron: true)) { manage() }
+                    rowButton(GlassRow(icon: "creditcard", title: String(localized: "Manage subscription", bundle: AppLanguage.bundle), showsChevron: true)) { manage() }
                     GlassRowDivider()
-                    rowButton(GlassRow(icon: "arrow.clockwise", title: "Restore purchases", showsChevron: true)) {
+                    rowButton(GlassRow(icon: "arrow.clockwise", title: String(localized: "Restore purchases", bundle: AppLanguage.bundle), showsChevron: true)) {
                         Task { notice = await subscriptions.restore().message }
                     }
                 }
 
-                section("Practice") {
-                    rowButton(GlassRow(icon: "alarm", title: "Practice routine", value: routineSummary, showsChevron: true)) { showsRoutine = true }
+                section(String(localized: "Practice", bundle: AppLanguage.bundle)) {
+                    rowButton(GlassRow(icon: "alarm", title: String(localized: "Practice routine", bundle: AppLanguage.bundle), value: routineSummary, showsChevron: true)) { showsRoutine = true }
                     GlassRowDivider()
                     Menu {
-                        Picker("Practice language", selection: Binding(
-                            get: { model.profile?.language ?? "en" },
-                            set: { model.updateLanguage($0) }
+                        Picker(String(localized: "Language", bundle: AppLanguage.bundle), selection: Binding(
+                            get: { AppLanguage.code },
+                            set: { model.changeLanguage(to: $0) }
                         )) {
-                            ForEach(PracticeLanguage.all) { Text($0.name).tag($0.id) }
+                            ForEach(AppLanguage.supported, id: \.self) { Text(AppLanguage.autonym($0)).tag($0) }
                         }
                     } label: {
-                        GlassRow(icon: "globe", title: "Language", value: PracticeLanguage.named(model.profile?.language ?? "en"), showsChevron: true)
+                        GlassRow(icon: "globe", title: String(localized: "Language", bundle: AppLanguage.bundle), value: AppLanguage.autonym(AppLanguage.code), showsChevron: true)
                     }
                     GlassRowDivider()
                     HStack(spacing: Space.md) {
@@ -77,7 +77,7 @@ struct SettingsView: View {
                                     Task {
                                         let title = model.profile?.moment?.firstPractice?.title
                                         remindersOn = await Reminders.enable(practiceTitle: title)
-                                        if !remindersOn { notice = "Turn on notifications for Speaking Coach in the Settings app." }
+                                        if !remindersOn { notice = String(localized: "Turn on notifications for Speaking Coach in the Settings app.", bundle: AppLanguage.bundle) }
                                     }
                                 } else {
                                     Reminders.disable()
@@ -95,12 +95,12 @@ struct SettingsView: View {
                     .padding(.vertical, Space.md)
                 }
 
-                section("Help and legal") {
-                    rowButton(GlassRow(icon: "bubble.left", title: "Send feedback", showsChevron: true)) { sendingFeedback = true }
+                section(String(localized: "Help and legal", bundle: AppLanguage.bundle)) {
+                    rowButton(GlassRow(icon: "bubble.left", title: String(localized: "Send feedback", bundle: AppLanguage.bundle), showsChevron: true)) { sendingFeedback = true }
                     GlassRowDivider()
-                    rowButton(GlassRow(icon: "hand.raised", title: "Privacy policy", showsChevron: true)) { UIApplication.shared.open(AppConfig.privacyURL) }
+                    rowButton(GlassRow(icon: "hand.raised", title: String(localized: "Privacy policy", bundle: AppLanguage.bundle), showsChevron: true)) { UIApplication.shared.open(AppConfig.privacyURL) }
                     GlassRowDivider()
-                    rowButton(GlassRow(icon: "doc.text", title: "Terms of use", showsChevron: true)) { UIApplication.shared.open(AppConfig.termsURL) }
+                    rowButton(GlassRow(icon: "doc.text", title: String(localized: "Terms of use", bundle: AppLanguage.bundle), showsChevron: true)) { UIApplication.shared.open(AppConfig.termsURL) }
                 }
 
                 if let notice {
@@ -108,9 +108,9 @@ struct SettingsView: View {
                 }
 
                 GlassRowGroup {
-                    rowButton(GlassRow(icon: "rectangle.portrait.and.arrow.right", iconColor: Palette.dim, title: "Sign out")) { confirmingSignOut = true }
+                    rowButton(GlassRow(icon: "rectangle.portrait.and.arrow.right", iconColor: Palette.dim, title: String(localized: "Sign out", bundle: AppLanguage.bundle))) { confirmingSignOut = true }
                     GlassRowDivider()
-                    rowButton(GlassRow(icon: "trash", iconColor: Palette.danger, title: "Delete account", titleColor: Palette.danger)) { deleting = true }
+                    rowButton(GlassRow(icon: "trash", iconColor: Palette.danger, title: String(localized: "Delete account", bundle: AppLanguage.bundle), titleColor: Palette.danger)) { deleting = true }
                 }
 
                 Text("Version \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "")")
@@ -149,19 +149,19 @@ struct SettingsView: View {
         let settings = model.routine.settings
         let parts = [
             settings.promptEnabled ? RoutineStore.clock(settings.promptMinutes) : nil,
-            settings.unlockEnabled ? "Unlock" : nil,
+            settings.unlockEnabled ? String(localized: "Unlock", bundle: AppLanguage.bundle) : nil,
         ].compactMap { $0 }
-        return parts.isEmpty ? "Off" : parts.joined(separator: " · ")
+        return parts.isEmpty ? String(localized: "Off", bundle: AppLanguage.bundle) : parts.joined(separator: " · ")
     }
 
     private var subscriptionStatus: String {
         switch subscriptions.access {
         case .entitled:
-            guard let date = subscriptions.expiration else { return "Active" }
-            let day = date.formatted(.dateTime.month(.abbreviated).day())
-            return subscriptions.willRenew ? "Renews \(day)" : "Ends \(day)"
-        case .notEntitled: return "Not active"
-        case .unknown: return "Checking…"
+            guard let date = subscriptions.expiration else { return String(localized: "Active", bundle: AppLanguage.bundle) }
+            let day = date.formatted(.dateTime.month(.abbreviated).day().locale(AppLanguage.locale))
+            return subscriptions.willRenew ? String(localized: "Renews \(day)", bundle: AppLanguage.bundle) : String(localized: "Ends \(day)", bundle: AppLanguage.bundle)
+        case .notEntitled: return String(localized: "Not active", bundle: AppLanguage.bundle)
+        case .unknown: return String(localized: "Checking…", bundle: AppLanguage.bundle)
         }
     }
 

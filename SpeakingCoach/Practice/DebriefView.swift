@@ -55,7 +55,7 @@ struct DebriefView: View {
 
     private var title: String {
         let base = report.analysis.custom?.title ?? definition.title
-        return comparison == nil ? base : "Retry · \(definition.title)"
+        return comparison == nil ? base : String(localized: "Retry · \(definition.title)", bundle: AppLanguage.bundle)
     }
 
     var body: some View {
@@ -99,7 +99,7 @@ struct DebriefView: View {
         HStack(spacing: Space.md) {
             if hasConversation { DebriefTabs(selection: $tab) }
             Spacer(minLength: 0)
-            GlassIconButton(systemImage: "xmark", size: 44, iconSize: 14, color: Palette.dim, accessibilityLabel: "Close", action: onDone)
+            GlassIconButton(systemImage: "xmark", size: 44, iconSize: 14, color: Palette.dim, accessibilityLabel: String(localized: "Close", bundle: AppLanguage.bundle), action: onDone)
         }
         .padding(.horizontal, Space.xxl)
         .padding(.top, Space.sm)
@@ -126,7 +126,7 @@ struct DebriefView: View {
                 if assessment == nil { legacyFeedback }
 
                 if let strength {
-                    card(title: "Keep this") {
+                    card(title: String(localized: "Keep this", bundle: AppLanguage.bundle)) {
                         Text(strength.note)
                             .font(Typeface.body(16))
                             .foregroundStyle(Palette.ink)
@@ -137,14 +137,14 @@ struct DebriefView: View {
                 }
 
                 if let adjustment = assessment?.adjustment {
-                    card(title: "Try one change", surface: Palette.coral.opacity(0.07)) {
+                    card(title: String(localized: "Try one change", bundle: AppLanguage.bundle), surface: Palette.coral.opacity(0.07)) {
                         Text(adjustment)
                             .font(Typeface.body(17))
                             .foregroundStyle(Palette.ink)
                             .fixedSize(horizontal: false, vertical: true)
                         if let checkpoint, onRetry != nil {
                             VStack(alignment: .leading, spacing: Space.sm) {
-                                MarkLabel(text: "The moment to retry", systemImage: "arrow.counterclockwise", color: Palette.coralDeep)
+                                MarkLabel(text: String(localized: "The moment to retry", bundle: AppLanguage.bundle), systemImage: "arrow.counterclockwise", color: Palette.coralDeep)
                                 bubbleButton(lineID: momentLineID) {
                                     SpeechBubble(text: AttributedString(checkpoint.prompt), speaker: .partner, size: 15)
                                 }
@@ -157,7 +157,7 @@ struct DebriefView: View {
                 }
 
                 if assessment != nil {
-                    card(title: "Take it into real life") {
+                    card(title: String(localized: "Take it into real life", bundle: AppLanguage.bundle)) {
                         Text(definition.transfer)
                             .font(Typeface.body(16))
                             .foregroundStyle(Palette.ink)
@@ -190,7 +190,7 @@ struct DebriefView: View {
     }
 
     private var verdict: some View {
-        Text(assessment?.summary ?? report.analysis.summary ?? "Your session is saved.")
+        Text(assessment?.summary ?? report.analysis.summary ?? String(localized: "Your session is saved.", bundle: AppLanguage.bundle))
             .font(Typeface.title(20))
             .foregroundStyle(Palette.ink)
             .lineSpacing(2)
@@ -204,7 +204,7 @@ struct DebriefView: View {
     /// below talk about are named, so the cards read as part of this.
     private func scorecard(_ assessment: PracticeAssessment) -> some View {
         VStack(alignment: .leading, spacing: Space.md) {
-            SectionTitle(text: "How you did")
+            SectionTitle(text: String(localized: "How you did", bundle: AppLanguage.bundle))
             VStack(spacing: 0) {
                 ForEach(Array(assessment.criteria.enumerated()), id: \.element.id) { index, criterion in
                     if index > 0 { GlassRowDivider() }
@@ -240,7 +240,7 @@ struct DebriefView: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .accessibilityHint(isOpen ? "Hides why" : "Shows why")
+            .accessibilityHint(isOpen ? String(localized: "Hides why", bundle: AppLanguage.bundle) : String(localized: "Shows why", bundle: AppLanguage.bundle))
 
             if isOpen {
                 VStack(alignment: .leading, spacing: Space.md) {
@@ -257,7 +257,7 @@ struct DebriefView: View {
     }
 
     private func criterionLabel(_ id: String) -> String {
-        definition.criteria.first { $0.id == id }?.name ?? "Criterion"
+        definition.criteria.first { $0.id == id }?.name ?? String(localized: "Criterion", bundle: AppLanguage.bundle)
     }
 
     // MARK: Older reports
@@ -267,7 +267,7 @@ struct DebriefView: View {
     @ViewBuilder
     private var legacyFeedback: some View {
         if let subscores = report.analysis.subscores, !subscores.isEmpty {
-            card(title: "How it went") {
+            card(title: String(localized: "How it went", bundle: AppLanguage.bundle)) {
                 ForEach(subscores, id: \.label) { subscore in
                     VStack(alignment: .leading, spacing: Space.xs) {
                         HStack {
@@ -287,7 +287,7 @@ struct DebriefView: View {
         }
 
         if let improvements = report.analysis.improvements, !improvements.isEmpty {
-            card(title: report.analysis.custom == nil ? "What to work on" : "Try these") {
+            card(title: report.analysis.custom == nil ? String(localized: "What to work on", bundle: AppLanguage.bundle) : String(localized: "Try these", bundle: AppLanguage.bundle)) {
                 ForEach(Array(improvements.enumerated()), id: \.offset) { index, item in
                     HStack(alignment: .top, spacing: Space.sm) {
                         Text("\(index + 1)")
@@ -303,7 +303,7 @@ struct DebriefView: View {
         }
 
         if let rewrites = report.analysis.rewrites, !rewrites.isEmpty {
-            card(title: "Say it better") {
+            card(title: String(localized: "Say it better", bundle: AppLanguage.bundle)) {
                 ForEach(rewrites, id: \.original) { rewrite in
                     VStack(alignment: .leading, spacing: Space.sm) {
                         Text("You said").font(Typeface.label(12)).foregroundStyle(Palette.muted)
@@ -357,7 +357,7 @@ struct DebriefView: View {
         let marks = marks(for: line)
         return VStack(alignment: isUser ? .trailing : .leading, spacing: 6) {
             if showsName {
-                Text(isUser ? "You" : definition.partner)
+                Text(isUser ? String(localized: "You", bundle: AppLanguage.bundle) : definition.partner)
                     .font(Typeface.label(12))
                     .foregroundStyle(Palette.muted)
                     .padding(.horizontal, Space.xs)
@@ -384,9 +384,9 @@ struct DebriefView: View {
 
         var title: String {
             switch self {
-            case .keep: "Keep this"
-            case .focus: "Your focus"
-            case .moment: "The moment to retry"
+            case .keep: String(localized: "Keep this", bundle: AppLanguage.bundle)
+            case .focus: String(localized: "Your focus", bundle: AppLanguage.bundle)
+            case .moment: String(localized: "The moment to retry", bundle: AppLanguage.bundle)
             }
         }
 
@@ -447,10 +447,10 @@ struct DebriefView: View {
     @ViewBuilder
     private var actions: some View {
         if checkpoint != nil, let onRetry {
-            PrimaryButton(title: "Retry this moment · 90 sec", systemImage: "arrow.counterclockwise", action: onRetry)
+            PrimaryButton(title: String(localized: "Retry this moment · 90 sec", bundle: AppLanguage.bundle), systemImage: "arrow.counterclockwise", action: onRetry)
         } else if comparison != nil || report.analysis.custom != nil, let onRehearseAgain {
             PrimaryButton(
-                title: report.analysis.custom == nil ? "Practice the whole scene again" : "Practice it again",
+                title: report.analysis.custom == nil ? String(localized: "Practice the whole scene again", bundle: AppLanguage.bundle) : String(localized: "Practice it again", bundle: AppLanguage.bundle),
                 systemImage: "mic.fill",
                 action: onRehearseAgain
             )
@@ -461,20 +461,20 @@ struct DebriefView: View {
 
     private func whatChanged(_ comparison: RetryComparison) -> some View {
         let headline = comparison.change > 0
-            ? "Clearer this time."
-            : comparison.change == 0 ? "The same level, so far." : "This one needs another go."
+            ? String(localized: "Clearer this time.", bundle: AppLanguage.bundle)
+            : comparison.change == 0 ? String(localized: "The same level, so far.", bundle: AppLanguage.bundle) : String(localized: "This one needs another go.", bundle: AppLanguage.bundle)
         return VStack(alignment: .leading, spacing: Space.md) {
-            SectionTitle(text: "What changed")
+            SectionTitle(text: String(localized: "What changed", bundle: AppLanguage.bundle))
             VStack(alignment: .leading, spacing: Space.lg) {
                 Text(headline)
                     .font(Typeface.title(22))
                     .foregroundStyle(comparison.change > 0 ? Palette.sage : Palette.ink)
-                Text(definition.criteria.contains { $0.id == comparison.after.id } ? criterionLabel(comparison.after.id) : "The moment you retried")
+                Text(definition.criteria.contains { $0.id == comparison.after.id } ? criterionLabel(comparison.after.id) : String(localized: "The moment you retried", bundle: AppLanguage.bundle))
                     .font(Typeface.body(15))
                     .foregroundStyle(Palette.dim)
                     .fixedSize(horizontal: false, vertical: true)
-                beforeAfterRow("Before", comparison.before, faded: true)
-                beforeAfterRow("Now", comparison.after, faded: false)
+                beforeAfterRow(String(localized: "Before", bundle: AppLanguage.bundle), comparison.before, faded: true)
+                beforeAfterRow(String(localized: "Now", bundle: AppLanguage.bundle), comparison.after, faded: false)
                 Text("One session compared with one retry. A direction, not proof of lasting change.")
                     .font(Typeface.body(12))
                     .foregroundStyle(Palette.muted)
@@ -506,7 +506,7 @@ struct DebriefView: View {
 
     /// Words, not a bare number: a score out of 100 means nothing on its own.
     static func band(_ score: Int) -> String {
-        score >= 75 ? "Strong" : score >= 50 ? "Getting there" : "Needs work"
+        score >= 75 ? String(localized: "Strong", bundle: AppLanguage.bundle) : score >= 50 ? String(localized: "Getting there", bundle: AppLanguage.bundle) : String(localized: "Needs work", bundle: AppLanguage.bundle)
     }
 
     /// A quote cut from a longer line gets an ellipsis at each cut end, so a
@@ -566,8 +566,8 @@ private struct DebriefTabs: View {
 
     var body: some View {
         HStack(spacing: 0) {
-            segment("Feedback", .feedback)
-            segment("Conversation", .conversation)
+            segment(String(localized: "Feedback", bundle: AppLanguage.bundle), .feedback)
+            segment(String(localized: "Conversation", bundle: AppLanguage.bundle), .conversation)
         }
         .padding(4)
         .glassSurface(cornerRadius: 22)
@@ -634,7 +634,9 @@ private struct SpeechBubble: View {
                 )
             }
             .accessibilityElement(children: .combine)
-            .accessibilityLabel("\(speaker == .user ? "You" : "Partner"): \(String(text.characters))")
+            .accessibilityLabel(speaker == .user
+                ? String(localized: "You: \(String(text.characters))", bundle: AppLanguage.bundle)
+                : String(localized: "Partner: \(String(text.characters))", bundle: AppLanguage.bundle))
     }
 }
 
@@ -669,7 +671,7 @@ struct LevelPill: View {
     var faded = false
 
     static func name(_ level: Int) -> String {
-        ["Not yet", "Partly", "Clearly"][min(max(level, 0), 2)]
+        [String(localized: "Not yet", bundle: AppLanguage.bundle), String(localized: "Partly", bundle: AppLanguage.bundle), String(localized: "Clearly", bundle: AppLanguage.bundle)][min(max(level, 0), 2)]
     }
 
     static func color(_ level: Int) -> Color {
@@ -685,7 +687,7 @@ struct LevelPill: View {
             .padding(.vertical, 4)
             .background(Capsule().fill(color.opacity(0.12)))
             .fixedSize()
-            .accessibilityLabel(["Not yet shown", "Partly shown", "Clearly shown"][min(max(level, 0), 2)])
+            .accessibilityLabel([String(localized: "Not yet shown", bundle: AppLanguage.bundle), String(localized: "Partly shown", bundle: AppLanguage.bundle), String(localized: "Clearly shown", bundle: AppLanguage.bundle)][min(max(level, 0), 2)])
     }
 }
 

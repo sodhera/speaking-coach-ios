@@ -4,7 +4,6 @@ import SwiftUI
 /// questions — who, and what you need to say — then a quick check that
 /// hands the scene back in one friendly line before the partner plays it.
 struct CustomSituationView: View {
-    let language: String
     let onBack: () -> Void
     let onStart: (CustomSituation, PracticeSetup) -> Void
 
@@ -57,14 +56,14 @@ struct CustomSituationView: View {
                         // Both questions in one card, each asked inside it, like
                         // the presentation's audience card.
                         GlassRowGroup {
-                            question("Who will you be talking to?", focus: .partner) {
+                            question(String(localized: "Who will you be talking to?", bundle: AppLanguage.bundle), focus: .partner) {
                                 TextField("", text: $partner, prompt: Text("e.g. my landlord").foregroundStyle(Palette.faint))
                                     .focused($focus, equals: .partner)
                                     .submitLabel(.next)
                                     .onSubmit { focus = .description }
                             }
                             GlassRowDivider()
-                            question("What do you need to say?", focus: .description) {
+                            question(String(localized: "What do you need to say?", bundle: AppLanguage.bundle), focus: .description) {
                                 TextField(
                                     "",
                                     text: $description,
@@ -81,15 +80,15 @@ struct CustomSituationView: View {
                             }
                         }
 
-                        Segmented(title: "Pressure", options: PracticeSetup.Pressure.allCases, selection: $pressure) {
+                        Segmented(title: String(localized: "Pressure", bundle: AppLanguage.bundle), options: PracticeSetup.Pressure.allCases, selection: $pressure) {
                             switch $0 {
-                            case .supportive: "Gentle"
-                            case .realistic: "Realistic"
-                            case .challenging: "Tough"
+                            case .supportive: String(localized: "Gentle", bundle: AppLanguage.bundle)
+                            case .realistic: String(localized: "Realistic", bundle: AppLanguage.bundle)
+                            case .challenging: String(localized: "Tough", bundle: AppLanguage.bundle)
                             }
                         }
-                        Segmented(title: "Partner's voice", options: PracticeSetup.Persona.allCases, selection: $persona) {
-                            $0 == .female ? "Female" : "Male"
+                        Segmented(title: String(localized: "Partner's voice", bundle: AppLanguage.bundle), options: PracticeSetup.Persona.allCases, selection: $persona) {
+                            $0 == .female ? String(localized: "Female", bundle: AppLanguage.bundle) : String(localized: "Male", bundle: AppLanguage.bundle)
                         }
 
                         if let confirmation {
@@ -140,14 +139,14 @@ struct CustomSituationView: View {
     @ViewBuilder
     private var action: some View {
         if confirmation != nil {
-            PrimaryButton(title: "Start speaking", systemImage: "mic.fill") {
+            PrimaryButton(title: String(localized: "Start speaking", bundle: AppLanguage.bundle), systemImage: "mic.fill") {
                 focus = nil
                 Analytics.action("custom_situation")
                 let situation = CustomSituation(description: trimmedDescription, partner: trimmedPartner, title: Self.title(for: trimmedPartner))
                 onStart(situation, PracticeSetup(practice: situation.definition, pressure: pressure, persona: persona, situation: trimmedDescription))
             }
         } else {
-            PrimaryButton(title: "Set the scene", isLoading: checking) { Task { await check() } }
+            PrimaryButton(title: String(localized: "Set the scene", bundle: AppLanguage.bundle), isLoading: checking) { Task { await check() } }
                 .disabled(!isComplete)
         }
     }
@@ -160,7 +159,7 @@ struct CustomSituationView: View {
         problem = nil
         defer { checking = false }
         do {
-            let result = try await CustomSituationAPI.evaluate("\(trimmedDescription) (I'll be talking to \(trimmedPartner).)", language: language)
+            let result = try await CustomSituationAPI.evaluate("\(trimmedDescription) (I'll be talking to \(trimmedPartner).)", language: AppLanguage.code)
             if result.isAppropriate {
                 confirmation = result.message
                 Haptics.success()
@@ -169,13 +168,13 @@ struct CustomSituationView: View {
                 Haptics.error()
             }
         } catch {
-            problem = (error as? LocalizedError)?.errorDescription ?? "That didn't work. Please try again."
+            problem = (error as? LocalizedError)?.errorDescription ?? String(localized: "That didn't work. Please try again.", bundle: AppLanguage.bundle)
         }
     }
 
+    /// A short name for history: who it was with, as the user wrote it.
     static func title(for partner: String) -> String {
-        let lowered = partner.prefix(1).lowercased() + partner.dropFirst()
-        return "Talking to \(lowered)"
+        partner.prefix(1).uppercased(with: AppLanguage.locale) + partner.dropFirst()
     }
 
     /// One question of the card: asked small and grey, answered below it.

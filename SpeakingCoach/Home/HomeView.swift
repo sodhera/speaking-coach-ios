@@ -13,7 +13,7 @@ struct MainShellView: View {
         TabView {
             HomeView(model: model, pendingBriefing: pendingBriefing, onStart: onStart, onOpenReport: onOpenReport, onStartCustom: onStartCustom)
                 // The brand's petals, as a template image the tab bar tints.
-                .tabItem { Label("Practice", image: "TabBloom") }
+                .tabItem { Label("Practice", image: "TabMark") }
             ProfileView(model: model, onOpenReport: onOpenReport)
                 .tabItem { Label("Profile", systemImage: "person.crop.circle") }
         }
@@ -31,8 +31,8 @@ struct MainShellView: View {
 ///    up next (the first plan, an event plan, or the next unpracticed
 ///    session), a recommended scene with a hook, and, with no event plan,
 ///    an offer to build one. Dots under it say how many there are.
-/// 3. **Situations.** Five cards, each its own page: Presentations, Work &
-///    interviews, Friends & family, Custom & impromptu, IELTS.
+/// 3. **Situations.** Four cards, each its own page: Presentations, Work &
+///    interviews, Friends & family, Custom & impromptu.
 ///
 /// A situation dropdown was tried first and people missed it; cards make
 /// every choice visible.
@@ -83,9 +83,6 @@ struct HomeView: View {
         NavigationStack(path: $path) {
             ZStack {
                 MorningStage(depth: 0.2)
-                DotGridTexture()
-                    .ignoresSafeArea()
-                    .allowsHitTesting(false)
                 ScrollView(showsIndicators: false) {
                     content
                         .padding(.top, Space.sm)
@@ -111,14 +108,14 @@ struct HomeView: View {
                 case .preparation:
                     PreparationPlanView(model: model, onBack: back, onPractice: { path.append(.briefing($0)) })
                 case .custom:
-                    CustomSituationView(language: profile?.language ?? "en", onBack: back, onStart: onStartCustom)
+                    CustomSituationView(onBack: back, onStart: onStartCustom)
                 case .presentations:
-                    PresentationsView(store: model.presentations, language: profile?.language ?? "en", onBack: back)
+                    PresentationsView(store: model.presentations, onBack: back)
                 }
             }
         }
         .fullScreenCover(isPresented: $showsPrompt) {
-            PromptView(routine: model.routine, source: .practice, language: profile?.language ?? "en") { showsPrompt = false }
+            PromptView(routine: model.routine, source: .practice) { showsPrompt = false }
         }
         .sheet(isPresented: $showsCheckIn) {
             if let plan = FirstPlan(profile: profile, records: model.history.records, startedRetries: model.history.startedRetries) {
@@ -164,13 +161,13 @@ struct HomeView: View {
             .padding(.horizontal, Space.xxl)
             .padding(.top, Space.lg)
 
-            SectionTitle(text: "For you")
+            SectionTitle(text: String(localized: "For you", bundle: AppLanguage.bundle))
                 .padding(.horizontal, Space.xxl)
                 .padding(.top, Space.xxxl)
             carousel
                 .padding(.top, Space.md)
 
-            SectionTitle(text: "Situations")
+            SectionTitle(text: String(localized: "Situations", bundle: AppLanguage.bundle))
                 .padding(.horizontal, Space.xxl)
                 .padding(.top, Space.xxxl)
             sections
@@ -180,13 +177,19 @@ struct HomeView: View {
     }
 
     private var greeting: String {
-        let hello = switch Calendar.current.component(.hour, from: .now) {
-        case 5..<12: "Good morning"
-        case 12..<17: "Good afternoon"
-        default: "Good evening"
+        let hour = Calendar.current.component(.hour, from: .now)
+        guard let name = profile?.firstName, !name.isEmpty else {
+            return switch hour {
+            case 5..<12: String(localized: "Good morning", bundle: AppLanguage.bundle)
+            case 12..<17: String(localized: "Good afternoon", bundle: AppLanguage.bundle)
+            default: String(localized: "Good evening", bundle: AppLanguage.bundle)
+            }
         }
-        guard let name = profile?.firstName, !name.isEmpty else { return hello }
-        return "\(hello), \(name)"
+        return switch hour {
+        case 5..<12: String(localized: "Good morning, \(name)", bundle: AppLanguage.bundle, comment: "Slot: the user's first name.")
+        case 12..<17: String(localized: "Good afternoon, \(name)", bundle: AppLanguage.bundle, comment: "Slot: the user's first name.")
+        default: String(localized: "Good evening, \(name)", bundle: AppLanguage.bundle, comment: "Slot: the user's first name.")
+        }
     }
 
     // MARK: For you
@@ -197,10 +200,10 @@ struct HomeView: View {
         if let recommended { cards.append(("recommended", recommended)) }
         if preparation == nil, plan == nil {
             cards.append(("prepare", UpNext(
-                label: "Plan ahead",
+                label: String(localized: "Plan ahead", bundle: AppLanguage.bundle),
                 symbol: "calendar",
-                title: "Something coming up?",
-                meta: "Five sessions that build to your date",
+                title: String(localized: "Something coming up?", bundle: AppLanguage.bundle),
+                meta: String(localized: "Five sessions that build to your date", bundle: AppLanguage.bundle),
                 run: { path.append(.preparation) }
             )))
         }
@@ -250,24 +253,24 @@ struct HomeView: View {
     private var upNext: UpNext? {
         if let plan, let step = plan.current {
             // The step marks say which step; the label only says whose.
-            let label = "Your plan"
+            let label = String(localized: "Your plan", bundle: AppLanguage.bundle)
             let go = { advance(plan, step) }
             switch step {
             case .rehearse:
                 return UpNext(label: label, step: step.rawValue, symbol: icon(plan.practice), title: plan.practice.title, meta: meta(plan.practice), run: go)
             case .retry:
-                return UpNext(label: label, step: step.rawValue, symbol: "arrow.counterclockwise", title: "Try one change", meta: plan.practice.title, run: go)
+                return UpNext(label: label, step: step.rawValue, symbol: "arrow.counterclockwise", title: String(localized: "Try one change", bundle: AppLanguage.bundle), meta: plan.practice.title, run: go)
             case .finish:
                 return UpNext(
-                    label: label, step: step.rawValue, symbol: "checkmark", title: "Check in on how you feel",
-                    meta: plan.baseline.map { "One question · you started at \($0)/10" } ?? "One question",
+                    label: label, step: step.rawValue, symbol: "checkmark", title: String(localized: "Check in on how you feel", bundle: AppLanguage.bundle),
+                    meta: plan.baseline.map { String(localized: "One question · you started at \($0)/10", bundle: AppLanguage.bundle) } ?? String(localized: "One question", bundle: AppLanguage.bundle),
                     run: go
                 )
             }
         }
         if let preparation {
             return UpNext(
-                label: "Your event · \(preparation.done) of \(preparation.total) done",
+                label: String(localized: "Your event · \(preparation.done) of \(preparation.total) done", bundle: AppLanguage.bundle),
                 symbol: icon(preparation.next),
                 title: preparation.next.title,
                 meta: meta(preparation.next),
@@ -275,7 +278,7 @@ struct HomeView: View {
             )
         }
         if let suggestion {
-            return UpNext(label: "Up next", symbol: icon(suggestion), title: suggestion.title, meta: meta(suggestion), run: { path.append(.briefing(suggestion)) })
+            return UpNext(label: String(localized: "Up next", bundle: AppLanguage.bundle), symbol: icon(suggestion), title: suggestion.title, meta: meta(suggestion), run: { path.append(.briefing(suggestion)) })
         }
         return nil
     }
@@ -286,16 +289,16 @@ struct HomeView: View {
         let taken = [plan?.practice.id, preparation?.next.id, suggestion?.id].compactMap { $0 }
         let pool = Recommendation.all.filter { rec in
             guard let practice = rec.practice else { return false }
-            if practice.id == "custom" { return !taken.contains(practice.title) && !(upNext?.title == practice.title) }
+            if practice.id == "custom" { return !taken.contains(practice.id) && upNext?.title != practice.title }
             return !taken.contains(practice.id) && !done.contains(practice.id)
         }
         guard !pool.isEmpty, let pick = pool.rotating(by: Calendar.current.ordinality(of: .day, in: .era, for: .now) ?? 0),
               let practice = pick.practice else { return nil }
-        return UpNext(label: "Recommended", symbol: pick.symbol, title: pick.hook, meta: meta(practice), run: { path.append(.briefing(practice)) })
+        return UpNext(label: String(localized: "Recommended", bundle: AppLanguage.bundle), symbol: pick.symbol, title: pick.hook, meta: meta(practice), run: { path.append(.briefing(practice)) })
     }
 
     private func meta(_ practice: PracticeDefinition) -> String {
-        "\(practice.partner) · \(practice.durationMinutes) min"
+        practice.meta
     }
 
     private func icon(_ practice: PracticeDefinition) -> String {
@@ -331,7 +334,7 @@ struct HomeView: View {
                     path.append(.briefing(plan.practice))
                 }
             } catch {
-                planError = "Your last session couldn't be opened. Check your connection and try again."
+                planError = String(localized: "Your last session couldn't be opened. Check your connection and try again.", bundle: AppLanguage.bundle)
             }
             openingRetry = false
         }
@@ -339,15 +342,12 @@ struct HomeView: View {
 
     // MARK: Situations
 
-    /// Four cards two by two, IELTS across the bottom.
+    /// Four cards, two by two.
     private var sections: some View {
-        VStack(spacing: Space.sm) {
-            LazyVGrid(columns: [GridItem(.flexible(), spacing: Space.sm), GridItem(.flexible(), spacing: Space.sm)], spacing: Space.sm) {
-                ForEach(HomeSection.allCases.filter { $0 != .ielts }) { section in
-                    SectionCard(section: section) { path.append(.section(section)) }
-                }
+        LazyVGrid(columns: [GridItem(.flexible(), spacing: Space.sm), GridItem(.flexible(), spacing: Space.sm)], spacing: Space.sm) {
+            ForEach(HomeSection.allCases) { section in
+                SectionCard(section: section) { path.append(.section(section)) }
             }
-            SectionCard(section: .ielts, wide: true) { path.append(.section(.ielts)) }
         }
     }
 }
@@ -365,29 +365,27 @@ enum HomeRoute: Hashable {
 
 // MARK: - Sections
 
-/// The five ways into practice on Home. Each is a page of its own.
+/// The four ways into practice on Home. Each is a page of its own.
 enum HomeSection: String, CaseIterable, Identifiable, Hashable {
-    case presentations, work, friends, custom, ielts
+    case presentations, work, friends, custom
 
     var id: String { rawValue }
 
     var title: String {
         switch self {
-        case .presentations: "Presentations"
-        case .work: "Work & interviews"
-        case .friends: "Friends & family"
-        case .custom: "Custom & impromptu"
-        case .ielts: "IELTS"
+        case .presentations: String(localized: "Presentations", bundle: AppLanguage.bundle)
+        case .work: String(localized: "Work & interviews", bundle: AppLanguage.bundle)
+        case .friends: String(localized: "Friends & family", bundle: AppLanguage.bundle)
+        case .custom: String(localized: "Custom & impromptu", bundle: AppLanguage.bundle)
         }
     }
 
     var subtitle: String {
         switch self {
-        case .presentations: "Open strong and keep the room with you."
-        case .work: "Interviews, updates, asks, and the hard talks."
-        case .friends: "Meet people and keep the conversation going."
-        case .custom: "Your own scene, or a quick one with no warning."
-        case .ielts: "Speaking Part 1, with an examiner."
+        case .presentations: String(localized: "Open strong and keep the room with you.", bundle: AppLanguage.bundle)
+        case .work: String(localized: "Interviews, updates, asks, and the hard talks.", bundle: AppLanguage.bundle)
+        case .friends: String(localized: "Meet people and keep the conversation going.", bundle: AppLanguage.bundle)
+        case .custom: String(localized: "Your own scene, or a quick one with no warning.", bundle: AppLanguage.bundle)
         }
     }
 
@@ -397,7 +395,6 @@ enum HomeSection: String, CaseIterable, Identifiable, Hashable {
         case .work: "briefcase"
         case .friends: "person.2"
         case .custom: "bolt"
-        case .ielts: "graduationcap"
         }
     }
 
@@ -408,7 +405,6 @@ enum HomeSection: String, CaseIterable, Identifiable, Hashable {
         case .work: PracticeCategory.interviews.practices + PracticeCategory.work.practices + PracticeCategory.difficult.practices
         case .friends: PracticeCategory.social.practices
         case .custom: [CustomSituation.streetHello.definition]
-        case .ielts: [CustomSituation.ieltsSpeaking.definition]
         }
     }
 
@@ -422,9 +418,7 @@ enum HomeSection: String, CaseIterable, Identifiable, Hashable {
     }
 
     static func containing(_ practice: PracticeDefinition) -> HomeSection? {
-        if practice.id == "custom" {
-            return practice.title == CustomSituation.ieltsSpeaking.title ? .ielts : .custom
-        }
+        if practice.id == "custom" { return .custom }
         return allCases.first { $0.practices.contains { $0.id == practice.id } }
     }
 }
@@ -432,7 +426,6 @@ enum HomeSection: String, CaseIterable, Identifiable, Hashable {
 /// A situation on Home: its glyph, its name, how much is inside.
 private struct SectionCard: View {
     let section: HomeSection
-    var wide = false
     let action: () -> Void
 
     var body: some View {
@@ -440,25 +433,12 @@ private struct SectionCard: View {
             Haptics.selection()
             action()
         } label: {
-            Group {
-                if wide {
-                    HStack(spacing: Space.md) {
-                        glyph
-                        titles
-                        Spacer(minLength: 0)
-                        Image(systemName: "chevron.right")
-                            .font(.system(size: 12, weight: .medium))
-                            .foregroundStyle(Palette.faint)
-                    }
-                } else {
-                    VStack(alignment: .leading, spacing: 0) {
-                        glyph
-                        Spacer(minLength: Space.md)
-                        titles
-                    }
-                    .frame(maxWidth: .infinity, minHeight: 88, alignment: .topLeading)
-                }
+            VStack(alignment: .leading, spacing: 0) {
+                glyph
+                Spacer(minLength: Space.md)
+                titles
             }
+            .frame(maxWidth: .infinity, minHeight: 88, alignment: .topLeading)
             .padding(Space.lg)
             .frame(maxWidth: .infinity, alignment: .leading)
             .contentShape(RoundedRectangle(cornerRadius: Corner.lg, style: .continuous))
@@ -483,7 +463,7 @@ private struct SectionCard: View {
                 .foregroundStyle(Palette.ink)
                 .lineLimit(2)
                 .fixedSize(horizontal: false, vertical: true)
-            Text(section.count == 1 ? "1 session" : "\(section.count) sessions")
+            Text("\(section.count) sessions", comment: "Number of sessions on a Home card. Pluralized.")
                 .font(Typeface.body(13))
                 .foregroundStyle(Palette.muted)
         }
@@ -513,12 +493,12 @@ struct SectionPage: View {
                 switch section {
                 case .presentations:
                     GlassRowDivider()
-                    toolRow(title: "Practice with my slides", detail: "Your own deck", action: onSlides)
+                    toolRow(title: String(localized: "Practice with my slides", bundle: AppLanguage.bundle), detail: String(localized: "Your own deck", bundle: AppLanguage.bundle), action: onSlides)
                 case .custom:
                     GlassRowDivider()
-                    toolRow(title: "Custom situation", detail: "Describe any conversation", action: onCustom)
+                    toolRow(title: String(localized: "Custom situation", bundle: AppLanguage.bundle), detail: String(localized: "Describe any conversation", bundle: AppLanguage.bundle), action: onCustom)
                     GlassRowDivider()
-                    toolRow(title: "30-second prompt", detail: "One question, no warning", action: onPrompt)
+                    toolRow(title: String(localized: "30-second prompt", bundle: AppLanguage.bundle), detail: String(localized: "One question, no warning", bundle: AppLanguage.bundle), action: onPrompt)
                 default:
                     EmptyView()
                 }
@@ -540,7 +520,7 @@ struct SectionPage: View {
                         .font(Typeface.label(16))
                         .foregroundStyle(Palette.ink)
                         .multilineTextAlignment(.leading)
-                    Text("\(practice.partner) · \(practice.durationMinutes) min")
+                    Text(practice.meta)
                         .font(Typeface.body(13))
                         .foregroundStyle(Palette.muted)
                 }
@@ -605,14 +585,14 @@ private struct Recommendation {
         return practiceID.flatMap(PracticeCatalog.definition)
     }
 
-    static let all: [Recommendation] = [
-        Recommendation(hook: "A stranger stops you to chat. Don't freeze.", symbol: "figure.walk", practiceID: nil, builtIn: .streetHello),
-        Recommendation(hook: "Your manager wants an update. Right now.", symbol: "briefcase", practiceID: "clear_work_update"),
-        Recommendation(hook: "The interview question you didn't prepare for.", symbol: "questionmark.bubble", practiceID: "interview_pressure"),
-        Recommendation(hook: "A colleague wants more. Say no, kindly.", symbol: "hand.raised", practiceID: "set_a_boundary"),
-        Recommendation(hook: "A party, and someone new says hi.", symbol: "person.2", practiceID: "meet_someone_new"),
-        Recommendation(hook: "You disagree in a meeting. Say it.", symbol: "bubble.left.and.bubble.right", practiceID: "disagree_in_meeting"),
-    ]
+    static var all: [Recommendation] { [
+        Recommendation(hook: String(localized: "A stranger stops you to chat. Don't freeze.", bundle: AppLanguage.bundle), symbol: "figure.walk", practiceID: nil, builtIn: .streetHello),
+        Recommendation(hook: String(localized: "Your manager wants an update. Right now.", bundle: AppLanguage.bundle), symbol: "briefcase", practiceID: "clear_work_update"),
+        Recommendation(hook: String(localized: "The interview question you didn't prepare for.", bundle: AppLanguage.bundle), symbol: "questionmark.bubble", practiceID: "interview_pressure"),
+        Recommendation(hook: String(localized: "A colleague wants more. Say no, kindly.", bundle: AppLanguage.bundle), symbol: "hand.raised", practiceID: "set_a_boundary"),
+        Recommendation(hook: String(localized: "A party, and someone new says hi.", bundle: AppLanguage.bundle), symbol: "person.2", practiceID: "meet_someone_new"),
+        Recommendation(hook: String(localized: "You disagree in a meeting. Say it.", bundle: AppLanguage.bundle), symbol: "bubble.left.and.bubble.right", practiceID: "disagree_in_meeting"),
+    ] }
 }
 
 private extension Array {
@@ -647,12 +627,12 @@ private struct StreakCard: View {
                         .font(Typeface.hero(30))
                         .foregroundStyle(Palette.ink)
                         .contentTransition(.numericText(value: Double(streak)))
-                    Text(streak == 1 ? "day streak" : "day streak")
+                    Text("day streak", comment: "Under the streak number. Use a form that reads right after any number.")
                         .font(Typeface.label(13))
                         .foregroundStyle(Palette.dim)
                 }
                 Spacer(minLength: Space.sm)
-                Label(practicedToday ? "Done today" : "Practice today", systemImage: practicedToday ? "checkmark.circle.fill" : "circle.dashed")
+                Label(practicedToday ? String(localized: "Done today", bundle: AppLanguage.bundle) : String(localized: "Practice today", bundle: AppLanguage.bundle), systemImage: practicedToday ? "checkmark.circle.fill" : "circle.dashed")
                     .font(Typeface.label(13))
                     .foregroundStyle(practicedToday ? Palette.sage : Palette.dim)
                     .padding(.horizontal, Space.md)
@@ -676,7 +656,9 @@ private struct StreakCard: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .glassSurface(cornerRadius: Corner.lg, whiteness: 0.58)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(streak)-day streak. \(practicedToday ? "You've practiced today." : "Not practiced yet today.")")
+        .accessibilityLabel(practicedToday
+            ? String(localized: "\(streak)-day streak. You've practiced today.", bundle: AppLanguage.bundle)
+            : String(localized: "\(streak)-day streak. Not practiced yet today.", bundle: AppLanguage.bundle))
     }
 
     @ViewBuilder
@@ -814,21 +796,6 @@ private struct UpNextCard: View {
     }
 }
 
-/// Quiet drafting-paper dots behind the home cards.
-private struct DotGridTexture: View {
-    var body: some View {
-        Canvas { context, size in
-            let spacing: CGFloat = 22
-            let dot = Path(ellipseIn: CGRect(x: 0, y: 0, width: 1.5, height: 1.5))
-            for x in stride(from: 11.0, through: size.width, by: spacing) {
-                for y in stride(from: 11.0, through: size.height, by: spacing) {
-                    context.fill(dot.offsetBy(dx: x, dy: y), with: .color(Palette.ink.opacity(0.14)))
-                }
-            }
-        }
-    }
-}
-
 /// A session's cover: the coral gradient with its situation's symbol. The
 /// Up next card and the briefing share it, so one leads into the other.
 /// `size` nil fills whatever frame it's given, square corners and all.
@@ -871,168 +838,11 @@ private struct PlanSteps: View {
     }
 }
 
-// MARK: - Library
-
-/// Every rehearsal, grouped, one tap from its briefing.
-struct LibraryView: View {
-    var language = "en"
-    var presentations: PresentationStore?
-    /// Enables the preparation plan, which reads history and the profile.
-    var model: AppModel?
-    let onStart: (PracticeSetup) -> Void
-    var onStartCustom: (CustomSituation, PracticeSetup) -> Void = { _, _ in }
-
-    @Environment(\.dismiss) private var dismiss
-    @State private var path: [PracticeDefinition] = []
-    @State private var composing = false
-    @State private var presenting = false
-    @State private var planning = false
-    @State private var routining = false
-
-    var body: some View {
-        NavigationStack(path: $path) {
-            SceneScreen(depth: 0.2) {
-                HStack(alignment: .center) {
-                    Text("All sessions")
-                        .font(Typeface.hero(28))
-                        .foregroundStyle(Palette.ink)
-                    Spacer()
-                    GlassIconButton(systemImage: "xmark", size: 40, iconSize: 14, color: Palette.dim, accessibilityLabel: "Close") { dismiss() }
-                }
-                .padding(.top, Space.xl)
-                .padding(.bottom, Space.xxl)
-
-                VStack(alignment: .leading, spacing: Space.xxl) {
-                    // Your own material: anything the catalog doesn't have.
-                    VStack(alignment: .leading, spacing: Space.md) {
-                        Kicker(text: "Your own")
-                        GlassRowGroup {
-                            ownRow(icon: "square.and.pencil", title: "Custom situation", detail: "Describe any conversation you need to have.") {
-                                composing = true
-                            }
-                            if let model {
-                                GlassRowDivider()
-                                ownRow(icon: "calendar", title: "Preparation plan", detail: planDetail(model)) {
-                                    planning = true
-                                }
-                            }
-                            if let model {
-                                GlassRowDivider()
-                                ownRow(icon: "alarm", title: "Practice routine", detail: "A daily prompt, and speak to unlock your apps.") {
-                                    routining = true
-                                }
-                            }
-                            if presentations != nil {
-                                GlassRowDivider()
-                                ownRow(icon: "rectangle.on.rectangle", title: "Presentations", detail: "Practice a talk with your slides.") {
-                                    presenting = true
-                                }
-                            }
-                        }
-                    }
-
-                    ForEach(PracticeCategory.allCases) { category in
-                        let items = PracticeCatalog.all.filter { $0.category == category.rawValue }
-                        if !items.isEmpty {
-                            VStack(alignment: .leading, spacing: Space.md) {
-                                Kicker(text: category.title)
-                                GlassRowGroup {
-                                    ForEach(Array(items.enumerated()), id: \.element.id) { index, practice in
-                                        if index > 0 { GlassRowDivider() }
-                                        Button {
-                                            Haptics.heavy()
-                                            path.append(practice)
-                                        } label: {
-                                            HStack(spacing: Space.md) {
-                                                VStack(alignment: .leading, spacing: 3) {
-                                                    Text(practice.title).font(Typeface.label(16)).foregroundStyle(Palette.ink)
-                                                    Text("\(practice.partner) · \(practice.durationMinutes) min")
-                                                        .font(Typeface.body(13)).foregroundStyle(Palette.muted)
-                                                }
-                                                Spacer()
-                                                Image(systemName: "chevron.right")
-                                                    .font(.system(size: 12, weight: .medium)).foregroundStyle(Palette.faint)
-                                            }
-                                            .padding(.vertical, Space.md)
-                                            .frame(minHeight: 60)
-                                            .contentShape(Rectangle())
-                                        }
-                                        .buttonStyle(.plain)
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            .navigationDestination(for: PracticeDefinition.self) { practice in
-                BriefingView(practice: practice, onBack: { path.removeLast() }, onStart: onStart)
-            }
-            .navigationDestination(isPresented: $composing) {
-                CustomSituationView(language: language, onBack: { composing = false }, onStart: onStartCustom)
-            }
-            .navigationDestination(isPresented: $planning) {
-                if let model {
-                    PreparationPlanView(model: model, onBack: { planning = false }, onPractice: { path.append($0) })
-                }
-            }
-            .navigationDestination(isPresented: $routining) {
-                if let model {
-                    RoutineView(routine: model.routine, language: language, onBack: { routining = false })
-                }
-            }
-            .navigationDestination(isPresented: $presenting) {
-                if let presentations {
-                    PresentationsView(store: presentations, language: language, onBack: { presenting = false })
-                }
-            }
-        }
-    }
-
-    private func planDetail(_ model: AppModel) -> String {
-        guard let plan = model.preparation.plan, let program = plan.program else { return "Five sessions toward a date." }
-        return "\(plan.completedIDs(in: model.history.records).count) of \(program.practiceIDs.count) done · \(PreparationPlanView.when(plan))"
-    }
-
-    private func ownRow(icon: String, title: String, detail: String, action: @escaping () -> Void) -> some View {
-        Button {
-            Haptics.heavy()
-            action()
-        } label: {
-            HStack(spacing: Space.md) {
-                GlassRowIcon(icon: icon)
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(title).font(Typeface.label(16)).foregroundStyle(Palette.ink)
-                    Text(detail).font(Typeface.body(13)).foregroundStyle(Palette.muted)
-                }
-                Spacer()
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 12, weight: .medium)).foregroundStyle(Palette.faint)
-            }
-            .padding(.vertical, Space.md)
-            .frame(minHeight: 64)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-    }
-}
-
 // MARK: - Categories
 
-enum PracticeCategory: String, CaseIterable, Identifiable {
+/// The catalog's own grouping, used to order suggestions.
+enum PracticeCategory: String, CaseIterable {
     case interviews, work, difficult, big_moments, social
-
-    var id: String { rawValue }
-
-    var title: String {
-        switch self {
-        case .interviews: "Interviews"
-        case .work: "Work"
-        case .difficult: "Difficult conversations"
-        case .big_moments: "Presentations"
-        case .social: "Social"
-        }
-    }
 
     /// The user's own kind of moment leads the list.
     static func ordered(firstFor moment: SpeakingMoment?) -> [PracticeCategory] {
@@ -1042,8 +852,7 @@ enum PracticeCategory: String, CaseIterable, Identifiable {
         case .hardConversation: .difficult
         case .presentation: .big_moments
         case .meetingPeople, .everyday: .social
-        // The IELTS scene is built in, not a catalog category.
-        case .ielts, nil: nil
+        case nil: nil
         }
         guard let lead else { return allCases }
         return [lead] + allCases.filter { $0 != lead }
@@ -1051,25 +860,5 @@ enum PracticeCategory: String, CaseIterable, Identifiable {
 
     var practices: [PracticeDefinition] {
         PracticeCatalog.all.filter { $0.category == rawValue }
-    }
-
-    var icon: String {
-        switch self {
-        case .interviews: "briefcase"
-        case .work: "person.2"
-        case .difficult: "bubble.left.and.bubble.right"
-        case .big_moments: "megaphone"
-        case .social: "hand.wave"
-        }
-    }
-
-    var subtitle: String {
-        switch self {
-        case .interviews: "Answer out loud before the real thing."
-        case .work: "Updates, disagreements and asks at work."
-        case .difficult: "Say the hard thing clearly and kindly."
-        case .big_moments: "Open strong and keep the room with you."
-        case .social: "Meet people and keep the conversation going."
-        }
     }
 }

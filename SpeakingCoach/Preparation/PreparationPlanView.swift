@@ -33,9 +33,9 @@ struct PreparationPlanView: View {
                 ScrollView(showsIndicators: false) {
                     VStack(alignment: .leading, spacing: Space.xxl) {
                         SubpageHeader(
-                            title: "Preparation plan",
+                            title: String(localized: "Preparation plan", bundle: AppLanguage.bundle),
                             subtitle: editing || plan == nil
-                                ? "Five sessions, in the order that builds. Add a date if something's coming up."
+                                ? String(localized: "Five sessions, in the order that builds. Add a date if something's coming up.", bundle: AppLanguage.bundle)
                                 : nil,
                             onBack: onBack
                         )
@@ -141,7 +141,7 @@ struct PreparationPlanView: View {
         return VStack(alignment: .leading, spacing: Space.xxl) {
             VStack(alignment: .leading, spacing: Space.md) {
                 Kicker(text: Self.when(plan), color: Palette.coralDeep)
-                Text(plan.eventName.isEmpty ? (plan.program?.title ?? "Your plan") : plan.eventName)
+                Text(plan.eventName.isEmpty ? (plan.program?.title ?? String(localized: "Your plan", bundle: AppLanguage.bundle)) : plan.eventName)
                     .font(Typeface.title(24))
                     .foregroundStyle(Palette.ink)
                     .fixedSize(horizontal: false, vertical: true)
@@ -174,7 +174,7 @@ struct PreparationPlanView: View {
                                 .foregroundStyle(isDone || practice.id == next?.id ? Palette.coral : Palette.faint)
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(practice.title).font(Typeface.label(16)).foregroundStyle(Palette.ink)
-                                Text("\(practice.partner) · \(practice.durationMinutes) min")
+                                Text(practice.meta)
                                     .font(Typeface.body(13)).foregroundStyle(Palette.muted)
                             }
                             Spacer()
@@ -197,11 +197,11 @@ struct PreparationPlanView: View {
             reflection(plan)
 
             HStack(spacing: Space.md) {
-                SecondaryButton(title: "Edit plan") {
+                SecondaryButton(title: String(localized: "Edit plan", bundle: AppLanguage.bundle)) {
                     fill(from: plan)
                     editing = true
                 }
-                QuietButton(title: "Remove", color: Palette.danger) { confirmingRemove = true }
+                QuietButton(title: String(localized: "Remove", bundle: AppLanguage.bundle), color: Palette.danger) { confirmingRemove = true }
                     .frame(width: 100)
             }
         }
@@ -212,7 +212,7 @@ struct PreparationPlanView: View {
     private func reflection(_ plan: PreparationPlan) -> some View {
         if (plan.daysUntilEvent() ?? 0) <= 0 {
             VStack(alignment: .leading, spacing: Space.md) {
-                Kicker(text: "How did it go in real life?")
+                Kicker(text: String(localized: "How did it go in real life?", bundle: AppLanguage.bundle))
                 ForEach(PreparationPlan.Outcome.allCases, id: \.self) { option in
                     OptionRow(icon: icon(option), title: option.label, isSelected: outcome == option) {
                         outcome = option
@@ -227,7 +227,7 @@ struct PreparationPlanView: View {
                             if value.count > 1000 { note = String(value.prefix(1000)) }
                         }
                     if outcome != plan.reflection?.outcome || note != (plan.reflection?.note ?? "") {
-                        PrimaryButton(title: "Save reflection", isLoading: saving) {
+                        PrimaryButton(title: String(localized: "Save reflection", bundle: AppLanguage.bundle), isLoading: saving) {
                             var updated = plan
                             updated.reflection = PreparationPlan.Reflection(outcome: outcome!, note: note.trimmingCharacters(in: .whitespacesAndNewlines), recordedAt: .now)
                             Task { await save(updated) }
@@ -247,12 +247,12 @@ struct PreparationPlanView: View {
     }
 
     static func when(_ plan: PreparationPlan) -> String {
-        guard let days = plan.daysUntilEvent() else { return plan.eventName.isEmpty ? "At your own pace" : plan.program?.title ?? "" }
+        guard let days = plan.daysUntilEvent() else { return plan.eventName.isEmpty ? String(localized: "At your own pace", bundle: AppLanguage.bundle) : plan.program?.title ?? "" }
         switch days {
-        case ..<0: return "It's been and gone"
-        case 0: return "It's today"
-        case 1: return "Tomorrow"
-        default: return "In \(days) days"
+        case ..<0: return String(localized: "It's been and gone", bundle: AppLanguage.bundle)
+        case 0: return String(localized: "It's today", bundle: AppLanguage.bundle)
+        case 1: return String(localized: "Tomorrow", bundle: AppLanguage.bundle)
+        default: return String(localized: "In \(days) days", bundle: AppLanguage.bundle, comment: "Pluralized.")
         }
     }
 
@@ -262,17 +262,17 @@ struct PreparationPlanView: View {
     private var action: some View {
         if let plan, !editing {
             if let next = plan.next(in: model.history.records) {
-                PrimaryButton(title: "Practice: \(next.title)", systemImage: "mic.fill") { onPractice(next) }
+                PrimaryButton(title: String(localized: "Practice: \(next.title)", bundle: AppLanguage.bundle), systemImage: "mic.fill") { onPractice(next) }
             }
         } else {
             VStack(spacing: Space.xs) {
-                PrimaryButton(title: plan == nil ? "Start this plan" : "Save changes", isLoading: saving) {
+                PrimaryButton(title: plan == nil ? String(localized: "Start this plan", bundle: AppLanguage.bundle) : String(localized: "Save changes", bundle: AppLanguage.bundle), isLoading: saving) {
                     focus = nil
                     Task { await save(draft) }
                 }
                 .disabled(programID.isEmpty)
                 if plan != nil {
-                    QuietButton(title: "Cancel") {
+                    QuietButton(title: String(localized: "Cancel", bundle: AppLanguage.bundle)) {
                         fill(from: plan)
                         editing = false
                     }

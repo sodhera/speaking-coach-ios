@@ -20,8 +20,8 @@ final class ShieldActionHandler: ShieldActionDelegate {
     private func respond(to action: ShieldAction, _ completionHandler: @escaping (ShieldActionResponse) -> Void) {
         if action == .primaryButtonPressed {
             let content = UNMutableNotificationContent()
-            content.title = "Speak to unlock"
-            content.body = "Tap for today's prompt. One sentence, out loud."
+            content.title = String(localized: "Speak to unlock", table: "Shield", bundle: AppLanguage.bundle)
+            content.body = String(localized: "Tap for today's prompt. One sentence, out loud.", table: "Shield", bundle: AppLanguage.bundle)
             content.sound = .default
             content.userInfo = ["url": RoutineShared.deepLink.absoluteString]
             UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: "sc.routine.unlock", content: content, trigger: nil))

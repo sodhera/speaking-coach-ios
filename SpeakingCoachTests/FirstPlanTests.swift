@@ -2,6 +2,11 @@ import XCTest
 @testable import SpeakingCoach
 
 final class FirstPlanTests: XCTestCase {
+    override func setUp() {
+        super.setUp()
+        AppLanguage.choose("en")
+    }
+
     private func profile(_ moment: SpeakingMoment? = .raise, legacy: Bool = false) -> CoachProfile {
         CoachProfile(
             name: "Sam", language: "en", moment: moment, timing: .thisWeek, readiness: 5,
@@ -61,19 +66,6 @@ final class FirstPlanTests: XCTestCase {
         XCTAssertNil(FirstPlan(profile: profile(legacy: true), records: []))
         XCTAssertNil(FirstPlan(profile: profile(nil), records: []))
         XCTAssertNil(FirstPlan(profile: nil, records: []))
-    }
-
-    func testIELTSPlanCountsItsBuiltInSceneAndASecondRunAsTheRetry() {
-        let title = CustomSituation.ieltsSpeaking.title
-        func scene() -> PracticeRecord {
-            PracticeRecord(id: UUID(), activityID: nil, title: title, date: .now, score: nil, parentID: nil)
-        }
-        XCTAssertEqual(FirstPlan(profile: profile(.ielts), records: [])?.current, .rehearse)
-        XCTAssertEqual(FirstPlan(profile: profile(.ielts), records: [record("interview_tell_me_about_yourself")])?.current, .rehearse)
-        let once = FirstPlan(profile: profile(.ielts), records: [scene()])
-        XCTAssertEqual(once?.current, .retry)
-        XCTAssertNil(once?.retryFrom, "A built-in scene has no focused retry; step two runs the scene again")
-        XCTAssertEqual(FirstPlan(profile: profile(.ielts), records: [scene(), scene()])?.current, .finish)
     }
 
     func testGeneralFinishNeverPromisesWalkingIn() {

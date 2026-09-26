@@ -58,7 +58,7 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.sodhera.speakingcoach
         PRODUCT_NAME: Speaking Coach
         PRODUCT_MODULE_NAME: SpeakingCoach
-        TARGETED_DEVICE_FAMILY: "1"
+        TARGETED_DEVICE_FAMILY: "1,2"
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
         CODE_SIGN_STYLE: Automatic
@@ -109,7 +109,7 @@ targets:
         CODE_SIGN_STYLE: Automatic
         CODE_SIGN_ENTITLEMENTS: SpeakingCoachMonitor/SpeakingCoachMonitor.entitlements
         "CODE_SIGN_ENTITLEMENTS[sdk=iphoneos*]": SpeakingCoachMonitor/SpeakingCoachMonitor-device.entitlements
-        TARGETED_DEVICE_FAMILY: "1"
+        TARGETED_DEVICE_FAMILY: "1,2"
         SKIP_INSTALL: YES
   SpeakingCoachShieldConfig:
     type: app-extension
@@ -129,7 +129,7 @@ targets:
         CODE_SIGN_STYLE: Automatic
         CODE_SIGN_ENTITLEMENTS: SpeakingCoachShieldConfig/SpeakingCoachShieldConfig.entitlements
         "CODE_SIGN_ENTITLEMENTS[sdk=iphoneos*]": SpeakingCoachShieldConfig/SpeakingCoachShieldConfig-device.entitlements
-        TARGETED_DEVICE_FAMILY: "1"
+        TARGETED_DEVICE_FAMILY: "1,2"
         SKIP_INSTALL: YES
   SpeakingCoachShieldAction:
     type: app-extension
@@ -148,7 +148,7 @@ targets:
         CODE_SIGN_STYLE: Automatic
         CODE_SIGN_ENTITLEMENTS: SpeakingCoachShieldAction/SpeakingCoachShieldAction.entitlements
         "CODE_SIGN_ENTITLEMENTS[sdk=iphoneos*]": SpeakingCoachShieldAction/SpeakingCoachShieldAction-device.entitlements
-        TARGETED_DEVICE_FAMILY: "1"
+        TARGETED_DEVICE_FAMILY: "1,2"
         SKIP_INSTALL: YES
   SpeakingCoachTests:
     type: bundle.unit-test

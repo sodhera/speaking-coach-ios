@@ -80,7 +80,7 @@ struct BriefingView: View {
                 }
                 .scrollDismissesKeyboard(.interactively)
 
-                PrimaryButton(title: "Start speaking", systemImage: "mic.fill") {
+                PrimaryButton(title: String(localized: "Start speaking", bundle: AppLanguage.bundle), systemImage: "mic.fill") {
                     situationFocused = false
                     Analytics.action("briefing")
                     var final = setup
@@ -123,15 +123,15 @@ struct BriefingView: View {
     /// out of the way.
     private var details: some View {
         GlassRowGroup {
-            detailRow("Partner", practice.partner)
+            detailRow(String(localized: "Partner", bundle: AppLanguage.bundle), practice.partner)
             GlassRowDivider()
-            detailRow("Length", "\(practice.durationMinutes) min")
+            detailRow(String(localized: "Length", bundle: AppLanguage.bundle), String(localized: "\(practice.durationMinutes) min", bundle: AppLanguage.bundle))
             GlassRowDivider()
-            detailRow("Pressure", pressureName(setup.pressure))
+            detailRow(String(localized: "Pressure", bundle: AppLanguage.bundle), pressureName(setup.pressure))
             let situation = setup.situation.trimmingCharacters(in: .whitespacesAndNewlines)
             if !situation.isEmpty {
                 GlassRowDivider()
-                detailRow("Your situation", situation)
+                detailRow(String(localized: "Your situation", bundle: AppLanguage.bundle), situation)
             }
             GlassRowDivider()
             Button {
@@ -173,9 +173,9 @@ struct BriefingView: View {
 
     private func pressureName(_ pressure: PracticeSetup.Pressure) -> String {
         switch pressure {
-        case .supportive: "Gentle"
-        case .realistic: "Realistic"
-        case .challenging: "Tough"
+        case .supportive: String(localized: "Gentle", bundle: AppLanguage.bundle)
+        case .realistic: String(localized: "Realistic", bundle: AppLanguage.bundle)
+        case .challenging: String(localized: "Tough", bundle: AppLanguage.bundle)
         }
     }
 
@@ -209,12 +209,12 @@ struct BriefingView: View {
             .contentShape(Rectangle())
             .onTapGesture { situationFocused = true }
             .glassSurface(cornerRadius: Corner.lg)
-            Segmented(title: "Pressure", options: PracticeSetup.Pressure.allCases, selection: $setup.pressure, label: pressureName)
-            Segmented(title: "Pace", options: PracticeSetup.Pacing.allCases, selection: $setup.pacing) {
-                $0 == .patient ? "Time to think" : "Natural"
+            Segmented(title: String(localized: "Pressure", bundle: AppLanguage.bundle), options: PracticeSetup.Pressure.allCases, selection: $setup.pressure, label: pressureName)
+            Segmented(title: String(localized: "Pace", bundle: AppLanguage.bundle), options: PracticeSetup.Pacing.allCases, selection: $setup.pacing) {
+                $0 == .patient ? String(localized: "Time to think", bundle: AppLanguage.bundle) : String(localized: "Natural", bundle: AppLanguage.bundle)
             }
-            Segmented(title: "Partner's voice", options: PracticeSetup.Persona.allCases, selection: $setup.persona) {
-                $0 == .female ? "Female" : "Male"
+            Segmented(title: String(localized: "Partner's voice", bundle: AppLanguage.bundle), options: PracticeSetup.Persona.allCases, selection: $setup.persona) {
+                $0 == .female ? String(localized: "Female", bundle: AppLanguage.bundle) : String(localized: "Male", bundle: AppLanguage.bundle)
             }
         }
     }

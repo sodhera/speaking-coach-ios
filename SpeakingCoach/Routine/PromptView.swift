@@ -9,7 +9,6 @@ struct PromptView: View {
 
     let routine: RoutineStore
     let source: Source
-    let language: String
     let onClose: () -> Void
 
     private enum Stage: Equatable {
@@ -28,12 +27,11 @@ struct PromptView: View {
     private static let skipMinutes = 5
     private static let maxAnswer: TimeInterval = 30
 
-    init(routine: RoutineStore, source: Source, language: String, onClose: @escaping () -> Void) {
+    init(routine: RoutineStore, source: Source, onClose: @escaping () -> Void) {
         self.routine = routine
         self.source = source
-        self.language = language
         self.onClose = onClose
-        _prompt = State(initialValue: DailyPrompt.today(language: language))
+        _prompt = State(initialValue: DailyPrompt.today())
     }
 
     private var unlocks: Bool { routine.settings.unlockEnabled && routine.isSupported }
@@ -44,7 +42,7 @@ struct PromptView: View {
             MorningStage(depth: 0.8)
             VStack(spacing: 0) {
                 HStack {
-                    GlassIconButton(systemImage: "xmark", size: 44, iconSize: 15, color: Palette.dim, accessibilityLabel: "Close") {
+                    GlassIconButton(systemImage: "xmark", size: 44, iconSize: 15, color: Palette.dim, accessibilityLabel: String(localized: "Close", bundle: AppLanguage.bundle)) {
                         if recorder.isRecording { recorder.stop() }
                         onClose()
                     }
@@ -54,7 +52,7 @@ struct PromptView: View {
 
                 Spacer()
 
-                BloomMark(size: 150, color: isPassed ? Palette.sage : Palette.coral, level: recorder.level)
+                VoiceRods(size: 150, color: isPassed ? Palette.sage : Palette.coral, level: recorder.level, live: stage == .listening)
                     .animation(.easeInOut(duration: 0.4), value: isPassed)
 
                 VStack(spacing: Space.lg) {
@@ -91,8 +89,8 @@ struct PromptView: View {
 
     private var kicker: String {
         switch stage {
-        case .listening: "Listening · \(RehearsalView.clock(recorder.elapsed))"
-        default: source == .unlock || (unlocks && routine.isShieldUp) ? "Speak to unlock" : "Today's prompt"
+        case .listening: String(localized: "Listening · \(RehearsalView.clock(recorder.elapsed))", bundle: AppLanguage.bundle)
+        default: source == .unlock || (unlocks && routine.isShieldUp) ? String(localized: "Speak to unlock", bundle: AppLanguage.bundle) : String(localized: "Today's prompt", bundle: AppLanguage.bundle)
         }
     }
 
@@ -113,16 +111,16 @@ struct PromptView: View {
         VStack(spacing: Space.sm) {
             switch stage {
             case .ready, .missed:
-                PrimaryButton(title: stage == .ready ? "Start speaking" : "Try again", systemImage: "mic.fill") {
+                PrimaryButton(title: stage == .ready ? String(localized: "Start speaking", bundle: AppLanguage.bundle) : String(localized: "Try again", bundle: AppLanguage.bundle), systemImage: "mic.fill") {
                     Task { await listen() }
                 }
                 skip
             case .listening:
-                PrimaryButton(title: "Done", systemImage: "checkmark") { Task { await check() } }
+                PrimaryButton(title: String(localized: "Done", bundle: AppLanguage.bundle), systemImage: "checkmark") { Task { await check() } }
             case .checking:
-                PrimaryButton(title: "Checking", isLoading: true) {}
+                PrimaryButton(title: String(localized: "Checking", bundle: AppLanguage.bundle), isLoading: true) {}
             case .passed:
-                PrimaryButton(title: "Done", action: onClose)
+                PrimaryButton(title: String(localized: "Done", bundle: AppLanguage.bundle), action: onClose)
             }
         }
     }
@@ -137,10 +135,10 @@ struct PromptView: View {
                 TimelineView(.periodic(from: .now, by: 1)) { context in
                     let left = Int(ceil(Self.skipWait - context.date.timeIntervalSince(requested)))
                     if left > 0 {
-                        QuietButton(title: "You can skip in \(left)s", color: Palette.muted) {}
+                        QuietButton(title: String(localized: "You can skip in \(left)s", bundle: AppLanguage.bundle), color: Palette.muted) {}
                             .disabled(true)
                     } else {
-                        QuietButton(title: "Skip and open my apps for \(Self.skipMinutes) minutes") {
+                        QuietButton(title: String(localized: "Skip and open my apps for \(Self.skipMinutes) minutes", bundle: AppLanguage.bundle, comment: "Pluralized.")) {
                             routine.grant(minutes: Self.skipMinutes)
                             Analytics.action("daily_prompt_skip")
                             onClose()
@@ -148,16 +146,16 @@ struct PromptView: View {
                     }
                 }
             } else {
-                QuietButton(title: "Skip") { skipRequestedAt = .now }
+                QuietButton(title: String(localized: "Skip", bundle: AppLanguage.bundle)) { skipRequestedAt = .now }
             }
         } else if source != .practice {
-            QuietButton(title: "Not now", action: onClose)
+            QuietButton(title: String(localized: "Not now", bundle: AppLanguage.bundle), action: onClose)
         }
     }
 
     private func listen() async {
         guard await AVAudioApplication.requestRecordPermission() else {
-            stage = .missed("Turn on the microphone for Speaking Coach in Settings.")
+            stage = .missed(String(localized: "Turn on the microphone for Speaking Coach in Settings.", bundle: AppLanguage.bundle))
             return
         }
         do {
@@ -165,7 +163,7 @@ struct PromptView: View {
             Haptics.heavy()
             stage = .listening
         } catch {
-            stage = .missed((error as? LocalizedError)?.errorDescription ?? "The microphone couldn't start.")
+            stage = .missed((error as? LocalizedError)?.errorDescription ?? String(localized: "The microphone couldn't start.", bundle: AppLanguage.bundle))
         }
     }
 
@@ -175,15 +173,15 @@ struct PromptView: View {
         stage = .checking
         defer { try? FileManager.default.removeItem(at: answerURL) }
         do {
-            let spokenLanguage = prompt.kind == .answer ? language : "en"
-            let transcript = try await PresentationAPI.transcribe(answerURL, language: spokenLanguage)
+            let transcript = try await PresentationAPI.transcribe(answerURL, language: AppLanguage.code)
             let result = prompt.evaluate(transcript)
+            Analytics.capture("daily_prompt_result", ["passed": result.passed, "kind": prompt.kind.rawValue, "source": source.rawValue])
             if result.passed {
                 Haptics.success()
                 Analytics.action("daily_prompt_\(source.rawValue)")
                 if unlocks, routine.isShieldUp || source == .unlock {
                     routine.grant()
-                    stage = .passed("\(result.note) Your apps are open for \(routine.settings.unlockMinutes) minutes.")
+                    stage = .passed("\(result.note) \(String(localized: "Your apps are open for \(routine.settings.unlockMinutes) minutes.", bundle: AppLanguage.bundle, comment: "Pluralized."))")
                 } else {
                     stage = .passed(result.note)
                 }
@@ -192,7 +190,7 @@ struct PromptView: View {
                 stage = .missed(result.note)
             }
         } catch {
-            stage = .missed("That couldn't be checked right now. Try again in a moment.")
+            stage = .missed(String(localized: "That couldn't be checked right now. Try again in a moment.", bundle: AppLanguage.bundle))
         }
     }
 }

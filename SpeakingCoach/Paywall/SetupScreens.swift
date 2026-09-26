@@ -46,7 +46,7 @@ struct AttributionView: View {
         VStack(spacing: 0) {
             GeometryReader { viewport in
                 ScrollView {
-                    QuestionLayout(title: "How did you hear about us?", subtitle: "It helps us find people like you.") {
+                    QuestionLayout(title: String(localized: "How did you hear about us?", bundle: AppLanguage.bundle), subtitle: String(localized: "It helps us find people like you.", bundle: AppLanguage.bundle)) {
                         GlassGroup(spacing: Space.md) {
                             VStack(spacing: Space.md) {
                                 ForEach(AcquisitionSource.allCases) { source in
@@ -62,7 +62,7 @@ struct AttributionView: View {
                 .scrollBounceBehavior(.basedOnSize)
                 .scrollIndicators(.hidden)
             }
-            PrimaryButton(title: "Continue") {
+            PrimaryButton(title: String(localized: "Continue", bundle: AppLanguage.bundle)) {
                 guard let choice else { return }
                 Analytics.action("attribution")
                 onDone(choice)
@@ -83,12 +83,12 @@ struct MicrophonePrimerView: View {
 
     var body: some View {
         PrimerLayout(
-            title: "Your partner needs to hear you",
-            line: "Speaking Coach only listens while you practice. Nothing is recorded outside a session."
+            title: String(localized: "Your partner needs to hear you", bundle: AppLanguage.bundle),
+            line: String(localized: "Speaking Coach only listens while you practice. Nothing is recorded outside a session.", bundle: AppLanguage.bundle)
         ) {
             MockPermissionDialog(
                 glyph: "mic.fill",
-                titleText: "\u{201C}Speaking Coach\u{201D} Would Like to Access the Microphone",
+                titleText: String(localized: "\u{201C}Speaking Coach\u{201D} Would Like to Access the Microphone", bundle: AppLanguage.bundle),
                 isRequesting: requesting,
                 onAllow: {
                     requesting = true
@@ -117,12 +117,12 @@ struct RemindersPrimerView: View {
 
     var body: some View {
         PrimerLayout(
-            title: "Keep your sessions going",
-            line: "One quiet nudge at \(Reminders.timeLabel). You can turn it off anytime in Settings."
+            title: String(localized: "Keep your sessions going", bundle: AppLanguage.bundle),
+            line: String(localized: "One quiet nudge at \(Reminders.timeLabel). You can turn it off anytime in Settings.", bundle: AppLanguage.bundle)
         ) {
             MockPermissionDialog(
                 glyph: "bell.badge",
-                titleText: "\u{201C}Speaking Coach\u{201D} Would Like to Send You Notifications",
+                titleText: String(localized: "\u{201C}Speaking Coach\u{201D} Would Like to Send You Notifications", bundle: AppLanguage.bundle),
                 isRequesting: requesting,
                 onAllow: {
                     requesting = true
@@ -207,7 +207,7 @@ struct SetupCompleteView: View {
         VStack(spacing: 0) {
             Spacer()
             VStack(alignment: .leading, spacing: Space.sm) {
-                Text(model.profile?.firstName.isEmpty == false ? "You're all set, \(model.profile!.firstName)." : "You're all set.")
+                Text(model.profile?.firstName.isEmpty == false ? String(localized: "You're all set, \(model.profile!.firstName).", bundle: AppLanguage.bundle) : String(localized: "You're all set.", bundle: AppLanguage.bundle))
                     .font(Typeface.title(28))
                     .foregroundStyle(Palette.ink)
                     .fixedSize(horizontal: false, vertical: true)
@@ -228,11 +228,11 @@ struct SetupCompleteView: View {
             Spacer(minLength: Space.xxl)
 
             VStack(spacing: Space.xs) {
-                PrimaryButton(title: "Start my first session", systemImage: "mic.fill") {
+                PrimaryButton(title: String(localized: "Start my first session", bundle: AppLanguage.bundle), systemImage: "mic.fill") {
                     Analytics.action("setup_complete")
                     finish(startFirst: plan.practice)
                 }
-                QuietButton(title: "I'll look around first") {
+                QuietButton(title: String(localized: "I'll look around first", bundle: AppLanguage.bundle)) {
                     finish(startFirst: nil)
                 }
             }
@@ -265,18 +265,7 @@ struct SetupCompleteView: View {
             Spacer(minLength: Space.xxl)
 
             GlassRowGroup {
-                GlassRow(icon: "mic", title: firstPractice?.title ?? "First session", value: firstPractice.map { "\($0.durationMinutes) min" })
-                GlassRowDivider()
-                Menu {
-                    Picker("Practice language", selection: Binding(
-                        get: { model.profile?.language ?? "en" },
-                        set: { model.updateLanguage($0) }
-                    )) {
-                        ForEach(PracticeLanguage.all) { Text($0.name).tag($0.id) }
-                    }
-                } label: {
-                    GlassRow(icon: "globe", title: "Practice language", value: PracticeLanguage.named(model.profile?.language ?? "en"), showsChevron: true)
-                }
+                GlassRow(icon: "mic", title: firstPractice?.title ?? String(localized: "First session", bundle: AppLanguage.bundle), value: firstPractice.map { String(localized: "\($0.durationMinutes) min", bundle: AppLanguage.bundle) })
                 GlassRowDivider()
                 HStack(spacing: Space.md) {
                     GlassRowIcon(icon: "bell")
@@ -304,7 +293,7 @@ struct SetupCompleteView: View {
 
             Spacer(minLength: Space.xxl)
 
-            PrimaryButton(title: "Perfect!") { finish(startFirst: nil) }
+            PrimaryButton(title: String(localized: "Perfect!", bundle: AppLanguage.bundle)) { finish(startFirst: nil) }
         }
         .padding(.horizontal, Space.xxl)
         .padding(.bottom, Space.xxl)

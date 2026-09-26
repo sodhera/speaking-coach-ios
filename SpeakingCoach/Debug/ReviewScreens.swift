@@ -22,7 +22,7 @@ struct ZaraDemoFlow: View {
                     MorningStage(depth: 0)
                     VStack(spacing: Space.lg) {
                         Spacer()
-                        BloomMark(size: 128)
+                        BrandMark(size: 128)
                         Text("Zara's demo account")
                             .font(Typeface.hero(30))
                             .foregroundStyle(Palette.ink)
@@ -107,17 +107,15 @@ struct ReviewScreens: View {
                     }
                 }
             case "custom":
-                CustomSituationView(language: "en", onBack: {}, onStart: { _, _ in })
+                CustomSituationView(onBack: {}, onStart: { _, _ in })
             case "room", "connecting", "debrief", "assessing", "recovery", "retry", "customdebrief":
                 PracticeSessionView(session: reviewSession, onClose: {})
-            case "library":
-                LibraryView(presentations: model.presentations, model: model) { _ in }
             case "routine":
                 NavigationStack {
-                    RoutineView(routine: model.routine, language: "en", onBack: {})
+                    RoutineView(routine: model.routine, onBack: {})
                 }
             case "prompt":
-                PromptView(routine: model.routine, source: .reminder, language: "en", onClose: {})
+                PromptView(routine: model.routine, source: .reminder, onClose: {})
             case "planprogress":
                 NavigationStack {
                     PreparationPlanView(model: model, onBack: {}, onPractice: { _ in })
@@ -137,25 +135,25 @@ struct ReviewScreens: View {
                 FeedbackView(userID: nil)
             case "presentations":
                 NavigationStack {
-                    PresentationsView(store: model.presentations, language: "en", onBack: {})
+                    PresentationsView(store: model.presentations, onBack: {})
                 }
                 .onAppear { _ = model.presentations.loadReviewFixture() }
             case "deck":
                 let (deck, _) = model.presentations.loadReviewFixture()
                 NavigationStack {
-                    DeckView(store: model.presentations, deck: deck, language: "en", onBack: {})
+                    DeckView(store: model.presentations, deck: deck, onBack: {})
                 }
             case "presentationreview":
                 let (deck, rehearsal) = model.presentations.loadReviewFixture()
                 NavigationStack {
-                    RehearsalReviewView(store: model.presentations, deck: deck, rehearsalID: rehearsal.id, language: "en", isFresh: true, onBack: {})
+                    RehearsalReviewView(store: model.presentations, deck: deck, rehearsalID: rehearsal.id, isFresh: true, onBack: {})
                 }
             case "rehearsalready":
                 let (deck, _) = model.presentations.loadReviewFixture()
-                RehearsalView(store: model.presentations, deck: deck, language: "en", onClose: {})
+                RehearsalView(store: model.presentations, deck: deck, onClose: {})
             case "presentationrecording":
                 let (deck, _) = model.presentations.loadReviewFixture()
-                RehearsalView(store: model.presentations, deck: deck, language: "en", onClose: {}, demoRecording: true)
+                RehearsalView(store: model.presentations, deck: deck, onClose: {}, demoRecording: true)
             case "progress", "profile":
                 ProfileView(model: model)
             case "welcome":
@@ -180,8 +178,8 @@ extension ReviewScreens {
         // The debrief mirrors a real report on the example question.
         let practice = PracticeCatalog.definition(name == "debrief" ? "interview_evidence" : "interview_tell_me_about_yourself")!
         let setup = PracticeSetup(practice: practice, pressure: .realistic, persona: .female)
-        let session = PracticeSession(setup: setup, language: "en", userID: UUID(), onFinished: {})
-        let context = PracticeContext.new(for: setup, language: "en")
+        let session = PracticeSession(setup: setup, userID: UUID(), onFinished: {})
+        let context = PracticeContext.new(for: setup, language: AppLanguage.code)
         let transcript = [
             TranscriptLine(id: "coach-1", role: .coach, text: "Tell me a little about yourself."),
             TranscriptLine(id: "user-1", role: .user, text: "I'm a product designer. Most recently I led the redesign of our onboarding, which cut drop-off by a third."),
@@ -263,9 +261,7 @@ extension ReviewScreens {
 
 extension AppModel {
     func loadReviewFixture() {
-        var answers = OnboardingAnswers.reviewFixture(before: .account)
-        answers.language = "en"
-        var profile = answers.profile()
+        var profile = OnboardingAnswers.reviewFixture(before: .account).profile()
         let step = LaunchFlags.value("-review-plan-step")
         if step == "done" {
             profile.planReadiness = 7
@@ -282,14 +278,10 @@ extension AppModel {
     /// reviewed step needs.
     private static func reviewRecords(for step: String?, moment: SpeakingMoment?) -> [PracticeRecord] {
         guard let step, step != "rehearse" else { return [] }
-        // A built-in scene saves like a custom one: no catalog id, its own
-        // title, and a second run in place of a focused retry.
-        let builtIn = moment?.builtInSituation
-        let practiceID = builtIn == nil ? moment?.firstPractice?.id : nil
-        let title = builtIn?.title ?? "First"
-        let first = PracticeRecord(id: UUID(), activityID: practiceID, title: title, date: .now.addingTimeInterval(-3600), score: nil, parentID: nil)
+        let practiceID = moment?.firstPractice?.id
+        let first = PracticeRecord(id: UUID(), activityID: practiceID, title: "First", date: .now.addingTimeInterval(-3600), score: nil, parentID: nil)
         guard step != "retry" else { return [first] }
-        let retry = PracticeRecord(id: UUID(), activityID: practiceID, title: builtIn?.title ?? "Retry", date: .now, score: nil, parentID: builtIn == nil ? first.id : nil)
+        let retry = PracticeRecord(id: UUID(), activityID: practiceID, title: "Retry", date: .now, score: nil, parentID: first.id)
         return [retry, first]
     }
 
@@ -325,7 +317,7 @@ extension AppModel {
             evidence,
             rehearsal("clear_work_update", at(1, 18, 10), [2, 2, 1]),
             rehearsal("interview_tell_me_about_yourself", at(2, 8, 30), [2, 1, 1]),
-            custom(CustomSituation.ieltsSpeaking.title, at(6, 19, 0)),
+            custom(CustomSituation.streetHello.title, at(6, 19, 0)),
             rehearsal("set_a_boundary", at(7, 12, 15), [1, 1, 0]),
             retry(of: intro, at(8, 9, 20), criterion: 1, level: 2),
             intro,
@@ -333,7 +325,7 @@ extension AppModel {
             rehearsal("salary_raise", at(15, 17, 45), [1, 0, 1]),
             rehearsal("disagree_in_meeting", at(16, 13, 0), [2, 1, 1]),
             rehearsal("ask_for_clarity", at(17, 10, 30), [2, 2, 2]),
-            custom("Talking to my landlord", at(24, 18, 20)),
+            custom("My landlord", at(24, 18, 20)),
         ]
     }
 }
@@ -343,10 +335,8 @@ extension Subscriptions {
     /// from the App Store through RevenueCat.
     func useReviewPlans() {
         setReviewPlans([
-            Plan(id: "annual", isAnnual: true, name: "Yearly", priceString: "$59.99", periodWord: "year",
-                 perMonthString: "$5.00", trialDays: 7, priceValue: 59.99),
-            Plan(id: "monthly", isAnnual: false, name: "Monthly", priceString: "$9.99", periodWord: "month",
-                 perMonthString: nil, trialDays: 0, priceValue: 9.99),
+            Plan(id: "annual", isAnnual: true, name: String(localized: "Yearly", bundle: AppLanguage.bundle), priceString: "$59.99", trialDays: 7, priceValue: 59.99),
+            Plan(id: "monthly", isAnnual: false, name: String(localized: "Monthly", bundle: AppLanguage.bundle), priceString: "$9.99", trialDays: 0, priceValue: 9.99),
         ])
     }
 }

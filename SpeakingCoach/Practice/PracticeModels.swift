@@ -172,13 +172,12 @@ struct CustomSituation: Codable, Equatable {
     var description: String
     /// Who the partner plays — "my landlord", "a new manager".
     var partner: String
-    /// A short title for history, e.g. "Talking to my landlord".
+    /// A short title for history: who it was with, e.g. "My landlord".
     var title: String
 
     /// A rehearsal definition the room and prompt can run, built from the
     /// user's own words rather than the catalog.
     var definition: PracticeDefinition {
-        if self == .ieltsSpeaking { return Self.ieltsDefinition }
         if self == .streetHello { return Self.streetHelloDefinition }
         return PracticeDefinition(
             id: "custom", version: 1, rubricVersion: "custom-v1", scenarioId: "custom",
@@ -189,8 +188,8 @@ struct CustomSituation: Codable, Equatable {
                 "React to what they actually say; push back once if it's realistic.",
                 "Close naturally in one sentence.",
             ],
-            scaffold: "Start with what you want: “I'd like to talk about…”",
-            transfer: "Say your first line out loud once more before the real conversation.",
+            scaffold: String(localized: "Start with what you want: “I'd like to talk about…”", bundle: AppLanguage.bundle),
+            transfer: String(localized: "Say your first line out loud once more before the real conversation.", bundle: AppLanguage.bundle),
             maxUserTurns: 4,
             recovery: ["If they get stuck, ask a simpler version of your last question."],
             variants: []
@@ -201,74 +200,50 @@ struct CustomSituation: Codable, Equatable {
 // MARK: - Built-in scenes
 
 extension CustomSituation {
-    /// IELTS Speaking Part 1, played by an examiner. Built into the app until
-    /// the server's catalog has IELTS rehearsals of its own: it runs on the
-    /// custom-situation endpoints, so the debrief is the general one, not a
-    /// band score.
-    static let ieltsSpeaking = CustomSituation(
-        description: "I'm preparing for the IELTS Speaking test. Play the examiner for Part 1: ask short questions about familiar topics (my home, my work or studies, my free time), one at a time, the way the real test does.",
-        partner: "An IELTS Speaking examiner",
-        title: "IELTS Speaking · Part 1"
-    )
-
     /// Impromptu: someone friendly stops you on the street and starts
     /// talking. No warning and no script; the skill is answering before you
-    /// freeze, warmly, and handing the conversation back. Built in like
-    /// IELTS, so it runs on the custom-situation endpoints.
-    static let streetHello = CustomSituation(
-        description: "A friendly stranger stops me on the street and starts a conversation out of nowhere. I want to answer quickly and warmly instead of freezing, and keep it going for a minute.",
-        partner: "Someone on the street",
-        title: "A stranger says hi"
-    )
+    /// freeze, warmly, and handing the conversation back. The catalog has no
+    /// scene like it, so it runs on the custom-situation endpoints.
+    static var streetHello: CustomSituation {
+        CustomSituation(
+            description: CatalogText.text("A friendly stranger stops me on the street and starts a conversation out of nowhere. I want to answer quickly and warmly instead of freezing, and keep it going for a minute."),
+            partner: CatalogText.text("Someone on the street"),
+            title: CatalogText.text("A stranger says hi")
+        )
+    }
 
-    static let builtInScenes: [CustomSituation] = [.ieltsSpeaking, .streetHello]
+    /// Marks a definition as a built-in scene, since every custom definition
+    /// shares the id "custom" and titles change with the language.
+    private static let streetHelloScenario = "street_hello"
 
     /// The built-in scene a definition was made from, if any. Built-in
     /// scenes start through the custom path, never `/api/practice/start`.
     static func builtIn(for definition: PracticeDefinition) -> CustomSituation? {
-        guard definition.id == "custom" else { return nil }
-        return builtInScenes.first { $0.title == definition.title }
+        definition.id == "custom" && definition.scenarioId == streetHelloScenario ? .streetHello : nil
     }
 
-    fileprivate static let streetHelloDefinition = PracticeDefinition(
-        id: "custom", version: 1, rubricVersion: "custom-v1", scenarioId: "custom",
-        title: streetHello.title, category: "custom", format: "rehearsal", durationMinutes: 2,
-        partner: streetHello.partner,
-        objective: "Answer before you freeze, keep it warm, and hand the conversation back with a question.",
-        opening: "Hey, sorry, random question. Is that café over there any good? You look like you'd know.",
-        criteria: [],
-        beats: [
-            "Open cold and friendly, as a stranger who just stopped them, with one light question.",
-            "React to what they say, then share one small thing about yourself.",
-            "If they go quiet for more than a few seconds, nudge kindly: “Sorry, did I catch you at a bad time?”",
-            "Wrap up naturally after a minute: “Anyway, I'll let you go. Nice chatting!”",
-        ],
-        scaffold: "Answer, then hand it back: “It's great, actually. Are you new around here?”",
-        transfer: "Next time a stranger says hi, answer first and think second. A short warm reply beats a perfect one.",
-        maxUserTurns: 4,
-        recovery: ["If they stall, ask something even simpler about the street or the weather."],
-        variants: []
-    )
-
-    fileprivate static let ieltsDefinition = PracticeDefinition(
-        id: "custom", version: 1, rubricVersion: "custom-v1", scenarioId: "custom",
-        title: ieltsSpeaking.title, category: "custom", format: "rehearsal", durationMinutes: 5,
-        partner: ieltsSpeaking.partner,
-        objective: "Answer the examiner's Part 1 questions in full: answer, then extend with a reason or an example.",
-        opening: "Good morning. My name is Alex, and I'll be your examiner today. Can you tell me your full name, please?",
-        criteria: [],
-        beats: [
-            "Ask for their full name, then where they're from.",
-            "Ask several short questions on familiar topics such as work or studies, home, and free time, one at a time.",
-            "React naturally to each answer and continue across another familiar topic. Keep the exchange going until the app says time is nearly up.",
-            "Only then close as the examiner does: “Thank you. That's the end of Part 1.”",
-        ],
-        scaffold: "Answer, then add why: “Yes, I really enjoy it, because…”",
-        transfer: "In the test, give every answer a reason or an example, never just yes or no.",
-        maxUserTurns: 24,
-        recovery: ["If they stall, repeat the question once, slowly, exactly as an examiner would. Never help with the answer."],
-        variants: []
-    )
+    fileprivate static var streetHelloDefinition: PracticeDefinition {
+        PracticeDefinition(
+            id: "custom", version: 1, rubricVersion: "custom-v1", scenarioId: streetHelloScenario,
+            title: streetHello.title, category: "custom", format: "rehearsal", durationMinutes: 2,
+            partner: streetHello.partner,
+            objective: CatalogText.text("Answer before you freeze, keep it warm, and hand the conversation back with a question."),
+            opening: CatalogText.text("Hey, sorry, random question. Is that café over there any good? You look like you'd know."),
+            criteria: [],
+            beats: [
+                "Open cold and friendly, as a stranger who just stopped them, with one light question.",
+                "React to what they say, then share one small thing about yourself.",
+                "If they go quiet for more than a few seconds, nudge kindly: “Sorry, did I catch you at a bad time?”",
+                "Wrap up naturally after a minute: “Anyway, I'll let you go. Nice chatting!”",
+            ],
+            scaffold: CatalogText.text("Answer, then hand it back: “It's great, actually. Are you new around here?”"),
+            transfer: CatalogText.text("Next time a stranger says hi, answer first and think second. A short warm reply beats a perfect one."),
+            maxUserTurns: 4,
+            recovery: ["If they stall, ask something even simpler about the street or the weather."],
+            variants: [],
+            openingLanguage: CatalogText.isTranslated("Hey, sorry, random question. Is that café over there any good? You look like you'd know.") ? AppLanguage.code : "en"
+        )
+    }
 }
 
 /// What survives a crash, a dropped call or a killed app: enough to ask for

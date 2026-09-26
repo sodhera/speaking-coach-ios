@@ -80,7 +80,7 @@ enum ProfileService {
             guard let row = rows.first, row.onboarded_at != nil else { return nil }
             return CoachProfile(
                 name: row.name ?? "",
-                language: row.language ?? PracticeLanguage.deviceDefault,
+                language: row.language ?? AppLanguage.code,
                 statements: [:],
                 costs: [],
                 outcomes: [],

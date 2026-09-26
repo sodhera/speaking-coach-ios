@@ -14,14 +14,15 @@ enum PracticePrompt {
         text.contains(beginSignal) || text.contains(resumeSignal)
     }
 
-    /// An already-written opening can be spoken as soon as the voice room is
-    /// connected, without a separate control message and model turn. Keep
-    /// other languages on the generated opening path so the agent can speak
-    /// in the learner's language.
+    /// An already-written opening in the session's language is spoken as
+    /// soon as the voice room connects, without a separate control message
+    /// and model turn. A retry's line comes from the conversation itself, so
+    /// it's already in that language. Anything else is left for the partner
+    /// to say in the learner's language.
     static func firstMessage(_ definition: PracticeDefinition, _ context: PracticeContext) -> String? {
-        guard context.language == "en" else { return nil }
-        let opening = context.retry?.prompt ?? definition.opening
-        return opening.isEmpty ? nil : opening
+        if let retry = context.retry { return retry.prompt.isEmpty ? nil : retry.prompt }
+        guard definition.openingLanguage == context.language, !definition.opening.isEmpty else { return nil }
+        return definition.opening
     }
 
     static func build(_ definition: PracticeDefinition, _ context: PracticeContext) -> String {
@@ -31,7 +32,6 @@ enum PracticePrompt {
         default: "React naturally to what they actually say, with realistic follow-ups."
         }
         let maxTurns = context.retry == nil ? definition.maxUserTurns : 2
-        let isIELTSPartOne = definition.title == CustomSituation.ieltsSpeaking.title
         let opening = context.retry?.prompt ?? definition.opening
         let openingRule: String
         if firstMessage(definition, context) != nil {
@@ -48,9 +48,7 @@ enum PracticePrompt {
             behavior,
             "Pacing: \(context.pacing == "patient" ? "give them time to think; silence is fine" : "a natural conversational pace").",
             "Keep each of your turns short — one or two sentences, one question at a time.",
-            isIELTSPartOne
-                ? "Continue asking short IELTS Part 1 questions across familiar topics until the app says time is nearly up. Do not close early after a topic beat. The limit of \(maxTurns) learner answers is only a safety cap."
-                : "Allow no more than \(maxTurns) learner answers, then close the conversation naturally in one sentence.",
+            "Allow no more than \(maxTurns) learner answers, then close the conversation naturally in one sentence.",
             "Scene beats: \(definition.beats.joined(separator: " → "))",
             "If they get stuck: \(definition.recovery.joined(separator: " "))",
             "Stay in character. Never score the learner, give coaching feedback, or mention these instructions.",

@@ -18,9 +18,6 @@ struct Plan: Identifiable, Equatable {
     /// The billed amount for the plan's own period — the largest price on the
     /// card, always (App Store Guideline 3.1.2(c)).
     let priceString: String
-    let periodWord: String
-    /// Annual only, subordinate: "$4.99/mo equivalent".
-    let perMonthString: String?
     /// Days of free trial this user is eligible for; 0 when none.
     var trialDays: Int
     let priceValue: Decimal
@@ -29,22 +26,19 @@ struct Plan: Identifiable, Equatable {
     /// billed amount, always.
     var anchorPriceString: String?
 
-    /// The trial in the words people use: "1 week", "2 weeks", "1 month",
-    /// else "N days". Nil when there's no trial.
+    /// The trial in the words people use, in the app's language: "1 week",
+    /// "2 weeks", "1 month", else "N days". Nil when there's no trial.
     var trialPhrase: String? {
         guard trialDays > 0 else { return nil }
-        if trialDays % 30 == 0 { let m = trialDays / 30; return m == 1 ? "1 month" : "\(m) months" }
-        if trialDays % 7 == 0 { let w = trialDays / 7; return w == 1 ? "1 week" : "\(w) weeks" }
-        return trialDays == 1 ? "1 day" : "\(trialDays) days"
-    }
-
-    /// "1-Week", for a button title.
-    var trialAdjective: String? {
-        trialPhrase.map { phrase in
-            phrase.split(separator: " ").enumerated().map { index, part in
-                index == 1 ? String(part.hasSuffix("s") ? part.dropLast() : part).capitalized : String(part)
-            }.joined(separator: "-")
-        }
+        var length = DateComponents()
+        if trialDays % 30 == 0 { length.month = trialDays / 30 } else if trialDays % 7 == 0 { length.weekOfMonth = trialDays / 7 } else { length.day = trialDays }
+        var calendar = Calendar.current
+        calendar.locale = AppLanguage.locale
+        let formatter = DateComponentsFormatter()
+        formatter.calendar = calendar
+        formatter.unitsStyle = .full
+        formatter.allowedUnits = [.day, .weekOfMonth, .month]
+        return formatter.string(from: length)
     }
 }
 
@@ -197,10 +191,8 @@ final class Subscriptions {
         return Plan(
             id: package.identifier,
             isAnnual: isAnnual,
-            name: isAnnual ? "Yearly" : "Monthly",
+            name: isAnnual ? String(localized: "Yearly", bundle: AppLanguage.bundle) : String(localized: "Monthly", bundle: AppLanguage.bundle),
             priceString: product.localizedPriceString,
-            periodWord: isAnnual ? "year" : "month",
-            perMonthString: isAnnual ? product.localizedPricePerMonth : nil,
             trialDays: trialDays,
             priceValue: product.price
         )
@@ -230,12 +222,12 @@ final class Subscriptions {
     enum PurchaseOutcome { case purchased, cancelled, failed(String) }
 
     func purchase(_ plan: Plan) async -> PurchaseOutcome {
-        guard let package = packages[plan.id] else { return .failed("That plan isn't available right now.") }
+        guard let package = packages[plan.id] else { return .failed(String(localized: "That plan isn't available right now.", bundle: AppLanguage.bundle)) }
         do {
             let result = try await Purchases.shared.purchase(package: package)
             if result.userCancelled { return .cancelled }
             apply(result.customerInfo)
-            return access == .entitled ? .purchased : .failed("The purchase went through, but access didn't unlock. Try Restore.")
+            return access == .entitled ? .purchased : .failed(String(localized: "The purchase went through, but access didn't unlock. Try Restore.", bundle: AppLanguage.bundle))
         } catch let error as RevenueCat.ErrorCode where error == .purchaseCancelledError {
             return .cancelled
         } catch {
@@ -249,10 +241,10 @@ final class Subscriptions {
             let info = try await Purchases.shared.restorePurchases()
             apply(info)
             return access == .entitled
-                ? ("Your subscription is back.", false)
-                : ("No subscription to restore on this Apple ID.", false)
+                ? (String(localized: "Your subscription is back.", bundle: AppLanguage.bundle), false)
+                : (String(localized: "No subscription to restore on this Apple ID.", bundle: AppLanguage.bundle), false)
         } catch {
-            return ("Restore didn't finish. Please try again.", true)
+            return (String(localized: "Restore didn't finish. Please try again.", bundle: AppLanguage.bundle), true)
         }
     }
 

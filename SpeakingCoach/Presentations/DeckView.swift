@@ -6,7 +6,6 @@ import SwiftUI
 struct DeckView: View {
     let store: PresentationStore
     let deck: PresentationDeck
-    let language: String
     let onBack: () -> Void
 
     @State private var title: String
@@ -18,10 +17,9 @@ struct DeckView: View {
 
     private enum Field { case title, audience, purpose, instructions }
 
-    init(store: PresentationStore, deck: PresentationDeck, language: String, onBack: @escaping () -> Void) {
+    init(store: PresentationStore, deck: PresentationDeck, onBack: @escaping () -> Void) {
         self.store = store
         self.deck = deck
-        self.language = language
         self.onBack = onBack
         _title = State(initialValue: deck.title)
         _brief = State(initialValue: deck.brief)
@@ -64,28 +62,28 @@ struct DeckView: View {
                         slides
                             .padding(.top, Space.lg)
 
-                        SectionTitle(text: "Your audience")
+                        SectionTitle(text: String(localized: "Your audience", bundle: AppLanguage.bundle))
                             .padding(.top, Space.xxl)
                         GlassRowGroup {
-                            field("Who's listening?", text: $brief.audience, prompt: "e.g. the leadership team", focus: .audience)
+                            field(String(localized: "Who's listening?", bundle: AppLanguage.bundle), text: $brief.audience, prompt: "e.g. the leadership team", focus: .audience)
                             GlassRowDivider()
-                            field("What should they do after?", text: $brief.purpose, prompt: "e.g. approve the budget for Q3", focus: .purpose)
+                            field(String(localized: "What should they do after?", bundle: AppLanguage.bundle), text: $brief.purpose, prompt: "e.g. approve the budget for Q3", focus: .purpose)
                             GlassRowDivider()
-                            field("Anything they'd push on?", text: $brief.instructions, prompt: "Optional · e.g. they worry about timelines", focus: .instructions, multiline: true)
+                            field(String(localized: "Anything they'd push on?", bundle: AppLanguage.bundle), text: $brief.instructions, prompt: "Optional · e.g. they worry about timelines", focus: .instructions, multiline: true)
                         }
                         .padding(.top, Space.md)
 
-                        Segmented(title: "How hard should they push?", options: PresentationBrief.QuestionStyle.allCases, selection: $brief.questionStyle) {
+                        Segmented(title: String(localized: "How hard should they push?", bundle: AppLanguage.bundle), options: PresentationBrief.QuestionStyle.allCases, selection: $brief.questionStyle) {
                             switch $0 {
-                            case .supportive: "Gently"
-                            case .curious: "Curious"
-                            case .challenging: "Tough"
+                            case .supportive: String(localized: "Gently", bundle: AppLanguage.bundle)
+                            case .curious: String(localized: "Curious", bundle: AppLanguage.bundle)
+                            case .challenging: String(localized: "Tough", bundle: AppLanguage.bundle)
                             }
                         }
                         .padding(.top, Space.xl)
 
                         if !rehearsals.isEmpty {
-                            SectionTitle(text: "Sessions")
+                            SectionTitle(text: String(localized: "Sessions", bundle: AppLanguage.bundle))
                                 .padding(.top, Space.xxl)
                             GlassRowGroup {
                                 ForEach(Array(rehearsals.enumerated()), id: \.element.id) { index, rehearsal in
@@ -115,7 +113,7 @@ struct DeckView: View {
                 .scrollDismissesKeyboard(.interactively)
                 .bottomEdgeFade()
 
-                PrimaryButton(title: rehearsals.isEmpty ? "Practice it" : "Practice again", systemImage: "mic.fill") {
+                PrimaryButton(title: rehearsals.isEmpty ? String(localized: "Practice it", bundle: AppLanguage.bundle) : String(localized: "Practice again", bundle: AppLanguage.bundle), systemImage: "mic.fill") {
                     focus = nil
                     save()
                     rehearsing = true
@@ -132,13 +130,12 @@ struct DeckView: View {
             RehearsalView(
                 store: store,
                 deck: current,
-                language: language,
                 onClose: { rehearsing = false },
                 demoRecording: LaunchFlags.has("-zara-demo")
             )
         }
         .navigationDestination(item: $reviewing) { rehearsal in
-            RehearsalReviewView(store: store, deck: current, rehearsalID: rehearsal.id, language: language, onBack: { reviewing = nil })
+            RehearsalReviewView(store: store, deck: current, rehearsalID: rehearsal.id, onBack: { reviewing = nil })
         }
         .confirmationDialog("Delete this presentation?", isPresented: $confirmingDelete, titleVisibility: .visible) {
             Button("Delete", role: .destructive) {
@@ -169,13 +166,7 @@ struct DeckView: View {
 
     /// "12 slides · Practiced twice", quietly above the title.
     private var summary: String {
-        let slides = deck.slideCount == 1 ? "1 slide" : "\(deck.slideCount) slides"
-        switch rehearsals.count {
-        case 0: return "\(slides) · Not practiced yet"
-        case 1: return "\(slides) · Practiced once"
-        case 2: return "\(slides) · Practiced twice"
-        default: return "\(slides) · Practiced \(rehearsals.count) times"
-        }
+        PresentationDeck.summary(slides: deck.slideCount, practiced: rehearsals.count)
     }
 
     private var slides: some View {
@@ -221,7 +212,7 @@ struct DeckView: View {
 
     static func duration(_ ms: Int) -> String {
         let seconds = ms / 1000
-        return String(format: "%d:%02d", seconds / 60, seconds % 60)
+        return Duration.seconds(seconds).formatted(.time(pattern: .minuteSecond))
     }
 }
 

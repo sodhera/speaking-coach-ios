@@ -41,6 +41,7 @@ enum PresentationAPI {
             let transcript: String
             let slides: [Slide]
             let slideEvents: [SlideEvent]
+            let language = AppLanguage.code
         }
         struct Result: Decodable { let questions: [AudienceQuestion] }
         let body = Body(
@@ -61,6 +62,7 @@ enum PresentationAPI {
             let question: AudienceQuestion
             let answer: String
             let presentationTranscript: String
+            let language = AppLanguage.code
         }
         return try await postJSON("api/presentations/answer-feedback", Body(
             project: Project(title: deck.title, brief: deck.brief, slideTexts: deck.slideTexts),
@@ -88,7 +90,7 @@ enum PresentationAPI {
         let (data, response) = try await URLSession.shared.data(for: request)
         let status = (response as? HTTPURLResponse)?.statusCode ?? 0
         guard status == 200, (response as? HTTPURLResponse)?.value(forHTTPHeaderField: "Content-Type")?.contains("pdf") == true else {
-            throw PracticeAPIError.server(status: status, message: "This PowerPoint couldn't be converted here. Export it as a PDF (File → Export in PowerPoint or Keynote) and add that instead.")
+            throw PracticeAPIError.server(status: status, message: String(localized: "This PowerPoint couldn't be converted here. Export it as a PDF (File → Export in PowerPoint or Keynote) and add that instead.", bundle: AppLanguage.bundle))
         }
         return data
     }
@@ -124,7 +126,7 @@ enum PresentationAPI {
         let status = (response as? HTTPURLResponse)?.statusCode ?? 0
         guard (200..<300).contains(status) else {
             let message = (try? JSONDecoder().decode([String: String].self, from: data))?["error"]
-            throw PracticeAPIError.server(status: status, message: message ?? "That didn't work. Please try again.")
+            throw PracticeAPIError.server(status: status, message: message ?? String(localized: "That didn't work. Please try again.", bundle: AppLanguage.bundle))
         }
         return try JSONDecoder().decode(Response.self, from: data)
     }

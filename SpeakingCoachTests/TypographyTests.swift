@@ -2,6 +2,11 @@ import XCTest
 @testable import SpeakingCoach
 
 final class TypographyTests: XCTestCase {
+    override func setUp() {
+        super.setUp()
+        AppLanguage.choose("en")
+    }
+
     func testDMSansIsBundledAndRegistered() {
         XCTAssertTrue(Typeface.isAvailable, "DM Sans must load, or every screen silently falls back to San Francisco.")
     }

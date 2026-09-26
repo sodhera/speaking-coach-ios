@@ -30,8 +30,8 @@ struct CommitmentHoldButton: View {
     private let printSize: CGFloat = 96
 
     private var caption: String {
-        if done { return "Committed" }
-        return isPressing ? "Keep holding…" : "Hold to commit"
+        if done { return String(localized: "Committed", bundle: AppLanguage.bundle) }
+        return isPressing ? String(localized: "Keep holding…", bundle: AppLanguage.bundle) : String(localized: "Hold to commit", bundle: AppLanguage.bundle)
     }
 
     var body: some View {

@@ -2,6 +2,11 @@ import XCTest
 @testable import SpeakingCoach
 
 final class PresentationTests: XCTestCase {
+    override func setUp() {
+        super.setUp()
+        AppLanguage.choose("en")
+    }
+
     private func rehearsal(transcript: String = "", durationMs: Int = 60_000) -> PresentationRehearsal {
         PresentationRehearsal(
             id: UUID(), deckID: UUID(), startedAt: .now, durationMs: durationMs, audioFile: "a.m4a",

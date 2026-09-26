@@ -10,8 +10,8 @@ struct FirstPlan: Equatable {
 
         var title: String {
             switch self {
-            case .rehearse: "Practice it out loud"
-            case .retry: "Retry the moment that trips you up"
+            case .rehearse: String(localized: "Practice it out loud", bundle: AppLanguage.bundle)
+            case .retry: String(localized: "Retry the moment that trips you up", bundle: AppLanguage.bundle)
             case .finish: "" // In the user's own outcome — see `FirstPlan.title(of:)`.
             }
         }
@@ -42,19 +42,9 @@ struct FirstPlan: Equatable {
         baseline = profile.readiness
 
         let retried = Set(records.compactMap(\.parentID))
-        let rehearsals: [PracticeRecord]
-        let didRetry: Bool
-        if let situation = moment.builtInSituation {
-            // A built-in scene saves as a custom report: no catalog id, and
-            // no focused retry — the second run of the scene is the retry.
-            rehearsals = records.filter { $0.activityID == nil && $0.title == situation.title }
-            didRetry = rehearsals.count > 1
-            retryFrom = nil
-        } else {
-            rehearsals = records.filter { $0.activityID == practice.id && $0.parentID == nil }
-            didRetry = rehearsals.contains { retried.contains($0.id) }
-            retryFrom = rehearsals.first { !retried.contains($0.id) && !startedRetries.contains($0.id) }
-        }
+        let rehearsals = records.filter { $0.activityID == practice.id && $0.parentID == nil }
+        let didRetry = rehearsals.contains { retried.contains($0.id) }
+        retryFrom = rehearsals.first { !retried.contains($0.id) && !startedRetries.contains($0.id) }
 
         if profile.planCompletedAt != nil {
             current = nil
@@ -90,8 +80,8 @@ struct PlanCard: View {
     var compact = false
 
     private var kicker: String {
-        guard let current = plan.current else { return "Your plan · done" }
-        return "Your plan · step \(current.rawValue + 1) of 3"
+        guard let current = plan.current else { return String(localized: "Your plan · done", bundle: AppLanguage.bundle) }
+        return String(localized: "Your plan · step \(current.rawValue + 1) of 3", bundle: AppLanguage.bundle)
     }
 
     var body: some View {
@@ -102,7 +92,7 @@ struct PlanCard: View {
                     .font(Typeface.hero(compact ? 22 : 24))
                     .foregroundStyle(Palette.ink)
                     .fixedSize(horizontal: false, vertical: true)
-                Text(compact ? "\(plan.practice.durationMinutes) min · \(plan.practice.partner)" : "With \(plan.practice.partner.lowercasedFirst) · \(plan.practice.durationMinutes) min")
+                Text(plan.practice.meta)
                     .font(Typeface.body(compact ? 14 : 15))
                     .foregroundStyle(Palette.dim)
                     .lineLimit(1)
@@ -159,7 +149,15 @@ private struct PlanStepRow: View {
                 .fixedSize(horizontal: false, vertical: true)
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Step \(number), \(text), \(state == .done ? "done" : state == .current ? "up next" : "not started")")
+        .accessibilityLabel(accessibilityText)
+    }
+
+    private var accessibilityText: String {
+        switch state {
+        case .done: String(localized: "Step \(number), \(text), done", bundle: AppLanguage.bundle)
+        case .current: String(localized: "Step \(number), \(text), up next", bundle: AppLanguage.bundle)
+        case .upcoming: String(localized: "Step \(number), \(text), not started", bundle: AppLanguage.bundle)
+        }
     }
 }
 
@@ -189,7 +187,7 @@ struct PlanCheckInView: View {
             VStack(spacing: 0) {
                 HStack {
                     Spacer()
-                    GlassIconButton(systemImage: "xmark", size: 40, iconSize: 14, color: Palette.dim, accessibilityLabel: "Close") { dismiss() }
+                    GlassIconButton(systemImage: "xmark", size: 40, iconSize: 14, color: Palette.dim, accessibilityLabel: String(localized: "Close", bundle: AppLanguage.bundle)) { dismiss() }
                 }
                 .padding(.top, Space.lg)
 
@@ -210,20 +208,20 @@ struct PlanCheckInView: View {
         VStack(spacing: 0) {
             QuestionLayout(
                 title: plan.moment.readinessQuestion,
-                readout: plan.baseline.map { "You started at \($0)." }
+                readout: plan.baseline.map { String(localized: "You started at \($0).", bundle: AppLanguage.bundle) }
             ) {
                 CoachSlider(
                     value: $value,
                     touched: $touched,
                     range: 0...10,
-                    lowLabel: "Not at all",
-                    highLabel: "Completely",
-                    accessibilityName: "Readiness"
+                    lowLabel: String(localized: "Not at all", bundle: AppLanguage.bundle),
+                    highLabel: String(localized: "Completely", bundle: AppLanguage.bundle),
+                    accessibilityName: String(localized: "Readiness", bundle: AppLanguage.bundle)
                 )
             }
             .padding(.top, Space.xl)
 
-            PrimaryButton(title: "Finish my plan") {
+            PrimaryButton(title: String(localized: "Finish my plan", bundle: AppLanguage.bundle)) {
                 Analytics.action("plan_checkin")
                 onSave(value)
                 Haptics.success()
@@ -237,8 +235,8 @@ struct PlanCheckInView: View {
         VStack(spacing: 0) {
             Spacer()
             VStack(spacing: Space.lg) {
-                BloomMark(size: 96)
-                Kicker(text: "Plan complete", color: Palette.coralDeep)
+                BrandMark(size: 96)
+                Kicker(text: String(localized: "Plan complete", bundle: AppLanguage.bundle), color: Palette.coralDeep)
                 HStack(spacing: Space.md) {
                     if let baseline = plan.baseline {
                         Text("\(baseline)").foregroundStyle(Palette.muted)
@@ -256,17 +254,17 @@ struct PlanCheckInView: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
             Spacer()
-            PrimaryButton(title: "Done") { dismiss() }
+            PrimaryButton(title: String(localized: "Done", bundle: AppLanguage.bundle)) { dismiss() }
         }
     }
 
     /// Only what the two numbers say — no promise about the day itself.
     private var resultLine: String {
-        guard let baseline = plan.baseline else { return "That's where you are today, by your own rating." }
-        if value > baseline { return "Up from \(baseline) when you started." }
-        if value == baseline { return "The same as when you started. Every session is still there when you want another go." }
+        guard let baseline = plan.baseline else { return String(localized: "That's where you are today, by your own rating.", bundle: AppLanguage.bundle) }
+        if value > baseline { return String(localized: "Up from \(baseline) when you started.", bundle: AppLanguage.bundle) }
+        if value == baseline { return String(localized: "The same as when you started. Every session is still there when you want another go.", bundle: AppLanguage.bundle) }
         return plan.moment.isGeneral || plan.moment == .meetingPeople
-            ? "Lower than when you started. That's worth another session."
-            : "Lower than when you started. That's worth another session before the day."
+            ? String(localized: "Lower than when you started. That's worth another session.", bundle: AppLanguage.bundle)
+            : String(localized: "Lower than when you started. That's worth another session before the day.", bundle: AppLanguage.bundle)
     }
 }

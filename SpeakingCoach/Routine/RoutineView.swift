@@ -6,7 +6,6 @@ import SwiftUI
 /// until you've said one thing out loud.
 struct RoutineView: View {
     let routine: RoutineStore
-    let language: String
     let onBack: () -> Void
 
     @State private var draft = RoutineStore.Settings()
@@ -22,8 +21,8 @@ struct RoutineView: View {
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: Space.xxl) {
                     SubpageHeader(
-                        title: "Practice routine",
-                        subtitle: "Thirty seconds of speaking a day, and your distracting apps held until you've spoken.",
+                        title: String(localized: "Practice routine", bundle: AppLanguage.bundle),
+                        subtitle: String(localized: "Thirty seconds of speaking a day, and your distracting apps held until you've spoken.", bundle: AppLanguage.bundle),
                         onBack: onBack
                     )
                     unlockSection
@@ -34,7 +33,7 @@ struct RoutineView: View {
                             .foregroundStyle(Palette.coralDeep)
                             .fixedSize(horizontal: false, vertical: true)
                     }
-                    SecondaryButton(title: "Try today's prompt", systemImage: "mic.fill") { trying = true }
+                    SecondaryButton(title: String(localized: "Try today's prompt", bundle: AppLanguage.bundle), systemImage: "mic.fill") { trying = true }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, Space.xxl)
@@ -59,7 +58,7 @@ struct RoutineView: View {
             applyUnlockIfOn()
         }
         .fullScreenCover(isPresented: $trying) {
-            PromptView(routine: routine, source: .practice, language: language) { trying = false }
+            PromptView(routine: routine, source: .practice) { trying = false }
         }
     }
 
@@ -67,9 +66,9 @@ struct RoutineView: View {
 
     private var unlockSection: some View {
         VStack(alignment: .leading, spacing: Space.md) {
-            SectionTitle(text: "Speak to unlock")
+            SectionTitle(text: String(localized: "Speak to unlock", bundle: AppLanguage.bundle))
             if !routine.isSupported {
-                note("Speak to unlock uses Screen Time, so it's set up on your iPhone.")
+                note(String(localized: "Speak to unlock uses Screen Time, so it's set up on your iPhone.", bundle: AppLanguage.bundle))
             } else if routine.authorization != .approved {
                 VStack(alignment: .leading, spacing: Space.md) {
                     Text("Choose apps that pull you away. During your window they stay shut until you say one thing out loud.")
@@ -80,13 +79,13 @@ struct RoutineView: View {
                         .font(Typeface.body(13))
                         .foregroundStyle(Palette.muted)
                         .fixedSize(horizontal: false, vertical: true)
-                    PrimaryButton(title: "Allow Screen Time", systemImage: "hourglass") {
+                    PrimaryButton(title: String(localized: "Allow Screen Time", bundle: AppLanguage.bundle), systemImage: "hourglass") {
                         Task {
                             do {
                                 try await routine.requestAuthorization()
                                 if routine.authorization == .approved { picking = true }
                             } catch {
-                                notice = "Screen Time access wasn't allowed. You can try again any time."
+                                notice = String(localized: "Screen Time access wasn't allowed. You can try again any time.", bundle: AppLanguage.bundle)
                             }
                         }
                     }
@@ -96,7 +95,7 @@ struct RoutineView: View {
             } else {
                 GlassRowGroup {
                     Toggle(isOn: Binding(get: { routine.settings.unlockEnabled }, set: setUnlock)) {
-                        rowLabel("Speak to unlock", icon: "lock.open.fill")
+                        rowLabel(String(localized: "Speak to unlock", bundle: AppLanguage.bundle), icon: "lock.open.fill")
                     }
                     .tint(Palette.coral)
                     .frame(minHeight: 56)
@@ -105,23 +104,23 @@ struct RoutineView: View {
                         Haptics.heavy()
                         picking = true
                     } label: {
-                        GlassRow(icon: "square.grid.2x2", title: "Apps", value: routine.selectionCount == 0 ? "Choose" : "\(routine.selectionCount) chosen", showsChevron: true)
+                        GlassRow(icon: "square.grid.2x2", title: String(localized: "Apps", bundle: AppLanguage.bundle), value: routine.selectionCount == 0 ? String(localized: "Choose", bundle: AppLanguage.bundle) : String(localized: "\(routine.selectionCount) chosen", bundle: AppLanguage.bundle, comment: "How many apps are chosen. Pluralized."), showsChevron: true)
                     }
                     .buttonStyle(.plain)
                     GlassRowDivider()
-                    timeRow("From", minutes: $draft.startMinutes)
+                    timeRow(String(localized: "From", bundle: AppLanguage.bundle), minutes: $draft.startMinutes)
                     GlassRowDivider()
-                    timeRow("Until", minutes: $draft.endMinutes)
+                    timeRow(String(localized: "Until", bundle: AppLanguage.bundle), minutes: $draft.endMinutes)
                     GlassRowDivider()
                     DayPicker(days: $draft.unlockDays)
                         .padding(.vertical, Space.md)
                 }
-                Segmented(title: "Each unlock lasts", options: [5, 15, 30], selection: $draft.unlockMinutes) { "\($0) min" }
+                Segmented(title: String(localized: "Each unlock lasts", bundle: AppLanguage.bundle), options: [5, 15, 30], selection: $draft.unlockMinutes) { String(localized: "\($0) min", bundle: AppLanguage.bundle) }
                     .padding(.top, Space.sm)
                 if let until = routine.grantExpiresAt {
-                    note("Unlocked until \(until.formatted(date: .omitted, time: .shortened)).")
+                    note(String(localized: "Unlocked until \(until.formatted(Date.FormatStyle(date: .omitted, time: .shortened, locale: AppLanguage.locale))).", bundle: AppLanguage.bundle))
                 } else if routine.isShieldUp {
-                    note("Your apps are shielded now. Speak to open them.")
+                    note(String(localized: "Your apps are shielded now. Speak to open them.", bundle: AppLanguage.bundle))
                 }
             }
         }
@@ -157,15 +156,15 @@ struct RoutineView: View {
 
     private var promptSection: some View {
         VStack(alignment: .leading, spacing: Space.md) {
-            SectionTitle(text: "Daily prompt")
+            SectionTitle(text: String(localized: "Daily prompt", bundle: AppLanguage.bundle))
             GlassRowGroup {
                 Toggle(isOn: Binding(get: { routine.settings.promptEnabled }, set: { on in savePrompt(enabled: on) })) {
-                    rowLabel("Remind me", icon: "bell")
+                    rowLabel(String(localized: "Remind me", bundle: AppLanguage.bundle), icon: "bell")
                 }
                 .tint(Palette.coral)
                 .frame(minHeight: 56)
                 GlassRowDivider()
-                timeRow("At", minutes: $draft.promptMinutes)
+                timeRow(String(localized: "At", bundle: AppLanguage.bundle), minutes: $draft.promptMinutes)
                 GlassRowDivider()
                 DayPicker(days: $draft.promptDays)
                     .padding(.vertical, Space.md)
@@ -178,7 +177,7 @@ struct RoutineView: View {
     private func savePrompt(enabled: Bool) {
         Task {
             let ok = await routine.setPrompt(enabled: enabled && !draft.promptDays.isEmpty, minutes: draft.promptMinutes, days: draft.promptDays)
-            notice = ok ? nil : "Notifications are off for Speaking Coach. Turn them on in Settings for the daily prompt."
+            notice = ok ? nil : String(localized: "Notifications are off for Speaking Coach. Turn them on in Settings for the daily prompt.", bundle: AppLanguage.bundle)
         }
     }
 
@@ -217,7 +216,11 @@ struct RoutineView: View {
 struct DayPicker: View {
     @Binding var days: [Int]
 
-    private static let symbols = Calendar.current.veryShortWeekdaySymbols
+    private var calendar: Calendar {
+        var calendar = Calendar.current
+        calendar.locale = AppLanguage.locale
+        return calendar
+    }
 
     var body: some View {
         HStack(spacing: Space.xs) {
@@ -227,7 +230,7 @@ struct DayPicker: View {
                     Haptics.selection()
                     if isOn { days.removeAll { $0 == day } } else { days = (days + [day]).sorted() }
                 } label: {
-                    Text(Self.symbols[day - 1])
+                    Text(calendar.veryShortWeekdaySymbols[day - 1])
                         .font(Typeface.label(14))
                         .foregroundStyle(isOn ? .white : Palette.ink)
                         .frame(maxWidth: .infinity, minHeight: 40)
@@ -235,7 +238,7 @@ struct DayPicker: View {
                         .contentShape(Circle())
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel(Calendar.current.weekdaySymbols[day - 1])
+                .accessibilityLabel(calendar.weekdaySymbols[day - 1])
                 .accessibilityAddTraits(isOn ? .isSelected : [])
             }
         }

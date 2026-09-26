@@ -84,10 +84,10 @@ final class RoutineStore {
         case unsupported, notAuthorized, noSelection, noDays
         var errorDescription: String? {
             switch self {
-            case .unsupported: "Speak to unlock needs Screen Time on a real iPhone."
-            case .notAuthorized: "Allow Screen Time access first. Speaking Coach never sees which apps you choose."
-            case .noSelection: "Choose at least one app to shield."
-            case .noDays: "Choose at least one day."
+            case .unsupported: String(localized: "Speak to unlock needs Screen Time on a real iPhone.", bundle: AppLanguage.bundle)
+            case .notAuthorized: String(localized: "Allow Screen Time access first. Speaking Coach never sees which apps you choose.", bundle: AppLanguage.bundle)
+            case .noSelection: String(localized: "Choose at least one app to shield.", bundle: AppLanguage.bundle)
+            case .noDays: String(localized: "Choose at least one day.", bundle: AppLanguage.bundle)
             }
         }
     }
@@ -202,8 +202,8 @@ final class RoutineStore {
         }
         for day in settings.promptDays {
             let content = UNMutableNotificationContent()
-            content.title = "Today's prompt"
-            content.body = "One sentence, out loud. Thirty seconds."
+            content.title = String(localized: "Today's prompt", bundle: AppLanguage.bundle)
+            content.body = String(localized: "One sentence, out loud. Thirty seconds.", bundle: AppLanguage.bundle)
             content.sound = .default
             content.userInfo = ["url": Self.promptLink.absoluteString]
             let trigger = UNCalendarNotificationTrigger(dateMatching: DateComponents(hour: minutes / 60, minute: minutes % 60, weekday: day), repeats: true)
@@ -219,6 +219,6 @@ final class RoutineStore {
 
     static func clock(_ minutes: Int) -> String {
         let date = Calendar.current.date(from: DateComponents(hour: minutes / 60, minute: minutes % 60)) ?? .now
-        return date.formatted(date: .omitted, time: .shortened)
+        return date.formatted(Date.FormatStyle(date: .omitted, time: .shortened, locale: AppLanguage.locale))
     }
 }

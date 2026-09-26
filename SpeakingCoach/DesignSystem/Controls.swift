@@ -153,7 +153,7 @@ struct GlassBackButton: View {
     let action: () -> Void
 
     var body: some View {
-        GlassIconButton(systemImage: "chevron.left", size: 44, iconSize: 16, color: Palette.ink, accessibilityLabel: "Back", action: action)
+        GlassIconButton(systemImage: "chevron.left", size: 44, iconSize: 16, color: Palette.ink, accessibilityLabel: String(localized: "Back", bundle: AppLanguage.bundle), action: action)
     }
 }
 

@@ -2,7 +2,7 @@ import SwiftUI
 
 /// The sign-up flow. Its arc is the argument:
 ///
-/// **language** → name → **category** (the door they came in through) →
+/// name → **category** (the door they came in through) →
 /// situation → **pain** (the deck) → **support** → **cost**
 /// → **reframe** (a practice problem, not a talent problem) → **outcome** →
 /// **promise** → **demo** (a tap-through example) → **plan** →
@@ -19,12 +19,11 @@ struct OnboardingFlow: View {
     var onProgress: ((Double) -> Void)?
 
     enum Step: String, Codable, CaseIterable {
-        case language, name, category, moment, timing, readiness, deck, mirror, cost, reframe, outcome, promise, demo, plan, commit, account
+        case name, category, moment, timing, readiness, deck, mirror, cost, reframe, outcome, promise, demo, plan, commit, account
     }
 
     @State private var answers = OnboardingAnswers()
-    @State private var step: Step = .language
-    @State private var showsAllLanguages = false
+    @State private var step: Step = .name
     @State private var deckIndex = 0
     @State private var contentVisible = true
     @State private var stepSettled = false
@@ -41,7 +40,7 @@ struct OnboardingFlow: View {
         Step.allCases.filter { step in
             switch step {
             case .account: return includesAccount
-            // A door with one situation (Presentations, IELTS) has already
+            // A door with one situation (Presentations) has already
             // answered the second question.
             case .moment: return (answers.category?.moments.count ?? 2) > 1
             // Speaking better in general has no date to ask about.
@@ -57,6 +56,7 @@ struct OnboardingFlow: View {
     private var progress: Double { Double(currentIndex + 1) / Double(steps.count) }
     private var moment: SpeakingMoment { answers.moment ?? .interview }
     private var trimmedName: String { answers.name.trimmingCharacters(in: .whitespacesAndNewlines) }
+    private var firstName: String { trimmedName.split(separator: " ").first.map(String.init) ?? trimmedName }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -137,7 +137,7 @@ struct OnboardingFlow: View {
             GlassBackButton {}
                 .hidden()
                 .accessibilityHidden(true)
-                .overlay { BloomMark(size: 30, glow: false) }
+                .overlay { BrandMark(size: 30) }
         }
         .animation(.easeInOut(duration: 0.28), value: canGoBack)
     }
@@ -149,42 +149,21 @@ struct OnboardingFlow: View {
     @ViewBuilder
     private var currentStep: some View {
         switch step {
-        case .language:
-            // Asked first: the partner, the scenes and whether IELTS is on
-            // offer all follow from it. The device's language leads and is
-            // already chosen, so most people just press Continue.
-            QuestionLayout(title: "Which language do you want to practice?", subtitle: "Your partner will speak it with you.") {
-                VStack(spacing: Space.md) {
-                    GlassGroup(spacing: Space.md) {
-                        VStack(spacing: Space.md) {
-                            ForEach(showsAllLanguages ? PracticeLanguage.all : PracticeLanguage.shortList(selected: answers.language)) { language in
-                                OptionRow(icon: nil, title: language.autonym, isSelected: answers.language == language.id) {
-                                    chooseLanguage(language.id)
-                                }
-                            }
-                        }
-                    }
-                    if !showsAllLanguages {
-                        QuietButton(title: "More languages", color: Palette.coralDeep) {
-                            withAnimation(.easeInOut(duration: 0.3)) { showsAllLanguages = true }
-                        }
-                    }
-                }
-            }
-
         case .name:
-            QuestionLayout(title: "What should we call you?") {
+            QuestionLayout(title: String(localized: "What should we call you?", bundle: AppLanguage.bundle)) {
                 NameField(name: $answers.name, onSubmit: advance)
             }
 
         case .category:
             QuestionLayout(
-                title: trimmedName.isEmpty ? "What are you practicing for?" : "\(trimmedName), what are you practicing for?",
-                subtitle: "Pick the one that matters most."
+                title: trimmedName.isEmpty
+                    ? String(localized: "What are you practicing for?", bundle: AppLanguage.bundle)
+                    : String(localized: "\(firstName), what are you practicing for?", bundle: AppLanguage.bundle, comment: "Slot: the user's first name."),
+                subtitle: String(localized: "Pick the one that matters most.", bundle: AppLanguage.bundle)
             ) {
                 GlassGroup(spacing: Space.md) {
                     VStack(spacing: Space.md) {
-                        ForEach(SpeakingCategory.available(forPracticeLanguage: answers.language)) { category in
+                        ForEach(SpeakingCategory.allCases) { category in
                             OptionRow(icon: category.icon, title: category.title, isSelected: answers.category == category) {
                                 chooseCategory(category)
                             }
@@ -195,8 +174,8 @@ struct OnboardingFlow: View {
 
         case .moment:
             QuestionLayout(
-                title: answers.category == .everyday ? "What would help most?" : "What's coming up?",
-                subtitle: "Pick the one that matters most."
+                title: answers.category == .everyday ? String(localized: "What would help most?", bundle: AppLanguage.bundle) : String(localized: "What's coming up?", bundle: AppLanguage.bundle),
+                subtitle: String(localized: "Pick the one that matters most.", bundle: AppLanguage.bundle)
             ) {
                 options(answers.category?.moments ?? [], icon: \.icon, title: \.title, isSelected: { answers.moment == $0 }) {
                     chooseMoment($0)
@@ -220,16 +199,16 @@ struct OnboardingFlow: View {
                     value: $answers.readiness,
                     touched: $answers.readinessTouched,
                     range: 0...10,
-                    lowLabel: "Not at all",
-                    highLabel: "Completely",
-                    caption: "Be honest.",
-                    unit: "out of 10",
-                    accessibilityName: "Readiness"
+                    lowLabel: String(localized: "Not at all", bundle: AppLanguage.bundle),
+                    highLabel: String(localized: "Completely", bundle: AppLanguage.bundle),
+                    caption: String(localized: "Be honest.", bundle: AppLanguage.bundle),
+                    unit: String(localized: "out of 10", bundle: AppLanguage.bundle),
+                    accessibilityName: String(localized: "Readiness", bundle: AppLanguage.bundle)
                 )
             }
 
         case .deck:
-            QuestionLayout(title: "Does this sound like you?", readout: "\(deckIndex + 1) of \(PainStatement.allCases.count)") {
+            QuestionLayout(title: String(localized: "Does this sound like you?", bundle: AppLanguage.bundle), readout: String(localized: "\(deckIndex + 1) of \(PainStatement.allCases.count)", bundle: AppLanguage.bundle, comment: "Progress through the statements, e.g. 2 of 6.")) {
                 DeckInstrument(
                     index: deckIndex,
                     selected: answers.statements[PainStatement.allCases[deckIndex]],
@@ -238,12 +217,14 @@ struct OnboardingFlow: View {
             }
 
         case .mirror:
-            QuestionLayout(title: trimmedName.isEmpty ? "We'll work through this together." : "\(trimmedName), we'll work through this together.") {
+            QuestionLayout(title: trimmedName.isEmpty
+                ? String(localized: "We'll work through this together.", bundle: AppLanguage.bundle)
+                : String(localized: "\(firstName), we'll work through this together.", bundle: AppLanguage.bundle, comment: "Slot: the user's first name.")) {
                 MirrorInstrument(pattern: answers.pattern, ready: $revealReady)
             }
 
         case .cost:
-            QuestionLayout(title: "What has it cost you so far?", subtitle: "Choose any that fit.") {
+            QuestionLayout(title: String(localized: "What has it cost you so far?", bundle: AppLanguage.bundle), subtitle: String(localized: "Choose any that fit.", bundle: AppLanguage.bundle)) {
                 options(SpeakingCost.allCases, icon: \.icon, title: \.title, isSelected: { answers.costs.contains($0) }) { choice in
                     let previous = answers.costs
                     if choice == .nothingYet {
@@ -262,13 +243,13 @@ struct OnboardingFlow: View {
             // The punchline lands last: the typewriter retires every earlier
             // line, so whatever is typed last is what stays in front.
             NarrativePage(lines: [
-                "Most people never say it out loud until the moment it counts.",
-                "So it isn't a talent problem.",
-                "It's a practice problem.",
+                String(localized: "Most people never say it out loud until the moment it counts.", bundle: AppLanguage.bundle),
+                String(localized: "So it isn't a talent problem.", bundle: AppLanguage.bundle),
+                String(localized: "It's a practice problem.", bundle: AppLanguage.bundle),
             ], ready: $revealReady)
 
         case .outcome:
-            QuestionLayout(title: moment.outcomeQuestion, subtitle: "Choose any that fit.") {
+            QuestionLayout(title: moment.outcomeQuestion, subtitle: String(localized: "Choose any that fit.", bundle: AppLanguage.bundle)) {
                 options(moment.outcomeOptions, icon: \.icon, title: \.title, isSelected: { answers.outcomes.contains($0) }) {
                     let wasSelected = answers.outcomes.contains($0)
                     answers.outcomes.formSymmetricDifference([$0])
@@ -280,13 +261,15 @@ struct OnboardingFlow: View {
             // Their moment and their outcomes, handed back as a promise. The
             // last line is the one that stays in front.
             NarrativePage(lines: [
-                trimmedName.isEmpty ? "Here's our promise." : "\(trimmedName), here's our promise.",
-                "Practice it with us first,",
+                trimmedName.isEmpty
+                    ? String(localized: "Here's our promise.", bundle: AppLanguage.bundle)
+                    : String(localized: "\(firstName), here's our promise.", bundle: AppLanguage.bundle, comment: "Slot: the user's first name."),
+                String(localized: "Practice it with us first,", bundle: AppLanguage.bundle, comment: "Second line of the promise; the third line continues it: 'and you'll walk into your interview calm.'"),
                 moment.promise(outcomes: answers.outcomes),
             ], ready: $revealReady)
 
         case .demo:
-            QuestionLayout(title: "See how practice works.") {
+            QuestionLayout(title: String(localized: "See how practice works.", bundle: AppLanguage.bundle)) {
                 DemoInstrument(script: DemoScript.for(moment), ready: $revealReady)
             }
 
@@ -329,22 +312,11 @@ struct OnboardingFlow: View {
     }
 
     private var planHeadline: String {
-        guard moment != .meetingPeople, !moment.isGeneral, let timing = answers.timing else { return "Your plan is ready." }
-        switch timing {
-        case .soon: return "\(moment.nounCapitalized) is almost here."
-        case .thisWeek: return "\(moment.nounCapitalized) is this week."
-        case .thisMonth: return "\(moment.nounCapitalized) is this month."
-        case .noDate: return "Your plan is ready."
-        }
+        moment.arrival(answers.timing ?? .noDate)
     }
 
     private var commitTitle: String {
-        let ask = moment.isGeneral
-            ? "ready to start speaking better, every day?"
-            : moment == .meetingPeople
-                ? "ready to meet new people with ease?"
-                : "ready to walk into \(moment.noun) prepared?"
-        return trimmedName.isEmpty ? ask.prefix(1).uppercased() + ask.dropFirst() : "\(trimmedName), \(ask)"
+        moment.commitQuestion(name: firstName)
     }
 
     // MARK: Actions
@@ -360,18 +332,14 @@ struct OnboardingFlow: View {
         case .commit, .deck:
             // The hold is the commit step's action; the deck's rows are its own.
             Color.clear.frame(height: 58)
-        case .mirror:
-            revealGatedButton("Continue")
-        case .reframe:
-            revealGatedButton("Continue")
+        case .mirror, .reframe, .demo:
+            revealGatedButton(String(localized: "Continue", bundle: AppLanguage.bundle))
         case .promise:
-            revealGatedButton("Show me how")
-        case .demo:
-            revealGatedButton("Continue")
+            revealGatedButton(String(localized: "Show me how", bundle: AppLanguage.bundle))
         case .plan:
-            revealGatedButton("Commit to it")
+            revealGatedButton(String(localized: "Commit to it", bundle: AppLanguage.bundle))
         default:
-            PrimaryButton(title: "Continue", action: advance)
+            PrimaryButton(title: String(localized: "Continue", bundle: AppLanguage.bundle), action: advance)
                 .disabled(!(isStepValid && stepSettled))
         }
     }
@@ -398,18 +366,6 @@ struct OnboardingFlow: View {
     }
 
     // MARK: Choosing
-
-    private func chooseLanguage(_ language: String) {
-        trackChoice("language", language, selected: true)
-        answers.language = language
-        // IELTS is English-only: switching away from English closes that door.
-        if answers.category == .ielts, !SpeakingCategory.available(forPracticeLanguage: language).contains(.ielts) {
-            trackChoice("category", SpeakingCategory.ielts.rawValue, selected: false)
-            trackChoice("moment", SpeakingMoment.ielts.rawValue, selected: false)
-            answers.category = nil
-            answers.moment = nil
-        }
-    }
 
     private func chooseCategory(_ category: SpeakingCategory) {
         if let old = answers.category, old != category {
@@ -509,8 +465,8 @@ struct OnboardingFlow: View {
         setStep(next, forward: true)
     }
 
-    /// Captures the final bounded response on each question page, including
-    /// the default practice language. The name and narrative pages are omitted.
+    /// Captures the final bounded response on each question page. The name
+    /// and narrative pages are omitted.
     private func recordCurrentAnswer() {
         func record(_ field: String, _ value: String, selected: Bool? = nil) {
             Analytics.onboardingChoice(
@@ -519,8 +475,6 @@ struct OnboardingFlow: View {
             )
         }
         switch step {
-        case .language:
-            record("language", answers.language)
         case .category:
             if let category = answers.category { record("category", category.rawValue, selected: true) }
             if let moment = answers.moment { record("moment", moment.rawValue, selected: true) }
@@ -635,7 +589,7 @@ struct OnboardingFlow: View {
         guard let data = UserDefaults.standard.data(forKey: Self.draftKey),
               let draft = try? JSONDecoder().decode(Draft.self, from: data) else { return }
         answers = draft.answers
-        var resume = steps.contains(draft.step) ? draft.step : .language
+        var resume = steps.contains(draft.step) ? draft.step : .name
         // Never resume onto a commitment already made or the account step —
         // land on the plan, so the user re-reads what they're committing to.
         if resume == .commit || resume == .account { resume = .plan }
@@ -667,7 +621,6 @@ extension OnboardingAnswers {
         if past(.name) { answers.name = "Sulav" }
         // `-review-moment=everyday` previews the flow for a different answer.
         let moment = LaunchFlags.value("-review-moment").flatMap(SpeakingMoment.init(rawValue:)) ?? .interview
-        answers.language = "en"
         if past(.category) { answers.category = moment.category }
         if past(.moment) || (past(.category) && moment.category.moments.count == 1) { answers.moment = moment }
         if past(.timing) { answers.timing = moment.isGeneral ? .noDate : .thisWeek }

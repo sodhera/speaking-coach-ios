@@ -3,7 +3,8 @@ import SwiftUI
 enum AuthIntent {
     case signUp, signIn
 
-    var prefix: String { self == .signUp ? "Sign up with" : "Sign in with" }
+    var apple: String { self == .signUp ? String(localized: "Sign up with Apple", bundle: AppLanguage.bundle) : String(localized: "Sign in with Apple", bundle: AppLanguage.bundle) }
+    var google: String { self == .signUp ? String(localized: "Sign up with Google", bundle: AppLanguage.bundle) : String(localized: "Sign in with Google", bundle: AppLanguage.bundle) }
 }
 
 // MARK: - Welcome
@@ -32,15 +33,15 @@ struct WelcomeView: View {
 
     var body: some View {
         WelcomeFrame(heroOffset: heroSettled ? 0 : BrandHeroGeometry.splashLift, detailsVisible: detailsShown) {
-            BloomMark(size: BrandHeroGeometry.markSize)
+            BrandMark(size: BrandHeroGeometry.markSize)
         } name: {
             Text(BrandHeroGeometry.wordmark)
                 .font(Typeface.hero(40))
                 .foregroundStyle(Palette.ink)
         } footer: {
             VStack(spacing: Space.md) {
-                PrimaryButton(title: "Get started", action: onGetStarted)
-                QuietButton(title: "I already have an account", action: onSignIn)
+                PrimaryButton(title: String(localized: "Get started", bundle: AppLanguage.bundle), action: onGetStarted)
+                QuietButton(title: String(localized: "I already have an account", bundle: AppLanguage.bundle), action: onSignIn)
             }
             .allowsHitTesting(detailsShown)
         }
@@ -88,6 +89,7 @@ struct WelcomeFrame<Mark: View, Name: View, Footer: View>: View {
                         .foregroundStyle(Palette.dim)
                         .multilineTextAlignment(.center)
                         .lineSpacing(4)
+                        .fixedSize(horizontal: false, vertical: true)
                         .frame(maxWidth: 300)
                         .opacity(detailsVisible ? 1 : 0)
                         .offset(y: detailsVisible ? 0 : 8)
@@ -163,11 +165,11 @@ struct AuthMethodsView: View {
 
     private enum Provider { case apple, google }
 
-    private var title: String { intent == .signIn ? "Welcome back" : "Save your plan" }
+    private var title: String { intent == .signIn ? String(localized: "Welcome back", bundle: AppLanguage.bundle) : String(localized: "Save your plan", bundle: AppLanguage.bundle) }
     private var subtitle: String {
         intent == .signIn
-            ? "Sign in to pick up where you left off."
-            : "Create a free account so your plan and progress follow you to any device."
+            ? String(localized: "Sign in to pick up where you left off.", bundle: AppLanguage.bundle)
+            : String(localized: "Create a free account so your plan and progress follow you to any device.", bundle: AppLanguage.bundle)
     }
 
     var body: some View {
@@ -176,7 +178,7 @@ struct AuthMethodsView: View {
 
             VStack(spacing: Space.lg) {
                 if showsBrandMark {
-                    BloomMark(size: BrandHeroGeometry.markSize)
+                    BrandMark(size: BrandHeroGeometry.markSize)
                 }
                 VStack(spacing: Space.md) {
                     Text(title)
@@ -219,12 +221,12 @@ struct AuthMethodsView: View {
     /// reserved for its own actions, never a third-party provider.
     private var providers: some View {
         VStack(spacing: Space.md) {
-            ProviderButton(title: "\(intent.prefix) Apple", isLoading: busy == .apple) {
+            ProviderButton(title: intent.apple, isLoading: busy == .apple) {
                 Image(systemName: "apple.logo").resizable().scaledToFit().foregroundStyle(Palette.ink)
             } action: {
                 run(.apple) { try await AuthService.signInWithApple() }
             }
-            ProviderButton(title: "\(intent.prefix) Google", isLoading: busy == .google) {
+            ProviderButton(title: intent.google, isLoading: busy == .google) {
                 Image("GoogleLogo").resizable().renderingMode(.original).scaledToFit()
             } action: {
                 run(.google) { try await AuthService.signInWithGoogle() }
@@ -238,17 +240,20 @@ struct AuthMethodsView: View {
         busy = provider
         message = nil
         Analytics.action(intent == .signUp ? "sign_up" : "sign_in")
+        let method = provider == .apple ? "apple" : "google"
         Task {
             do {
                 try await work()
                 Haptics.success()
+                Analytics.capture("auth_completed", ["method": method, "intent": intent == .signUp ? "sign_up" : "sign_in"])
             } catch let failure as AuthFailure {
                 if failure != .cancelled {
                     message = failure.errorDescription
                     Haptics.error()
+                    Analytics.capture("auth_failed", ["method": method])
                 }
             } catch {
-                message = "Something went wrong. Please try again."
+                message = String(localized: "Something went wrong. Please try again.", bundle: AppLanguage.bundle)
             }
             busy = nil
         }
@@ -307,7 +312,7 @@ struct ExistingAccountView: View {
     var body: some View {
         VStack(spacing: 0) {
             Spacer()
-            BloomMark(size: BrandHeroGeometry.markSize)
+            BrandMark(size: BrandHeroGeometry.markSize)
             Text("You already have an account")
                 .font(Typeface.hero(28))
                 .foregroundStyle(Palette.ink)
@@ -321,7 +326,7 @@ struct ExistingAccountView: View {
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.top, Space.md)
             Spacer()
-            PrimaryButton(title: "Continue to my account", action: onContinue)
+            PrimaryButton(title: String(localized: "Continue to my account", bundle: AppLanguage.bundle), action: onContinue)
                 .padding(.bottom, Space.huge)
         }
         .padding(.horizontal, Space.xxl)

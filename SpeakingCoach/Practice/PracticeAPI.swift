@@ -12,12 +12,12 @@ enum PracticeAPIError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .signedOut: "Please sign in again to practice."
-        case .sessionUnavailable: "We couldn't verify your sign-in. Check your connection and try again."
-        case .subscriptionRequired: "Your plan isn't active right now."
-        case .retryUsed: "Each session gets one focused retry, and this one has already been started. You can practice the whole scene again instead."
+        case .signedOut: String(localized: "Please sign in again to practice.", bundle: AppLanguage.bundle)
+        case .sessionUnavailable: String(localized: "We couldn't verify your sign-in. Check your connection and try again.", bundle: AppLanguage.bundle)
+        case .subscriptionRequired: String(localized: "Your plan isn't active right now.", bundle: AppLanguage.bundle)
+        case .retryUsed: String(localized: "Each session gets one focused retry, and this one has already been started. You can practice the whole scene again instead.", bundle: AppLanguage.bundle)
         case .server(_, let message): message
-        case .offline: "You're offline. Check your connection and try again."
+        case .offline: String(localized: "You're offline. Check your connection and try again.", bundle: AppLanguage.bundle)
         }
     }
 }
@@ -102,9 +102,9 @@ enum PracticeAPI {
             if status == 402 { throw PracticeAPIError.subscriptionRequired }
             if status == 409, path == "start", payload?["code"] == "retry_used" { throw PracticeAPIError.retryUsed }
             if status == 409, path == "start" {
-                throw PracticeAPIError.server(status: status, message: payload?["error"] ?? "This session's retry has already been used. Start a new session instead.")
+                throw PracticeAPIError.server(status: status, message: payload?["error"] ?? String(localized: "This session's retry has already been used. Start a new session instead.", bundle: AppLanguage.bundle))
             }
-            throw PracticeAPIError.server(status: status, message: payload?["error"] ?? "Practice is unavailable right now. Please try again.")
+            throw PracticeAPIError.server(status: status, message: payload?["error"] ?? String(localized: "Practice is unavailable right now. Please try again.", bundle: AppLanguage.bundle))
         }
         return try JSONDecoder().decode(Response.self, from: data)
     }
@@ -164,7 +164,7 @@ enum CustomSituationAPI {
         let (data, response) = try await URLSession.shared.data(from: components.url!)
         guard (response as? HTTPURLResponse)?.statusCode == 200,
               let token = (try? JSONDecoder().decode([String: String].self, from: data))?["token"] else {
-            throw PracticeAPIError.server(status: (response as? HTTPURLResponse)?.statusCode ?? 0, message: "Your partner couldn't connect. Try again in a moment.")
+            throw PracticeAPIError.server(status: (response as? HTTPURLResponse)?.statusCode ?? 0, message: String(localized: "Your partner couldn't connect. Try again in a moment.", bundle: AppLanguage.bundle))
         }
         return token
     }
@@ -202,7 +202,7 @@ enum CustomSituationAPI {
                 try await Task.sleep(for: .milliseconds(800))
             }
         }
-        throw PracticeAPIError.server(status: 0, message: "Feedback couldn't finish. Your words are saved; please try again.")
+        throw PracticeAPIError.server(status: 0, message: String(localized: "Feedback couldn't finish. Your words are saved; please try again.", bundle: AppLanguage.bundle))
     }
 
     private static func shouldRetryAnalysis(after error: Error) -> Bool {
@@ -220,7 +220,7 @@ enum CustomSituationAPI {
     /// Saves the finished custom rehearsal to history and returns it in the
     /// same shape as every other report.
     static func save(_ analysis: Analysis, transcript: [TranscriptLine], context: PracticeContext, userID: UUID) async throws -> PracticeReport {
-        guard let custom = context.custom else { throw PracticeAPIError.server(status: 0, message: "Missing situation.") }
+        guard let custom = context.custom else { throw PracticeAPIError.server(status: 0, message: String(localized: "Missing situation.", bundle: AppLanguage.bundle)) }
         let report = PracticeReport(
             id: context.attemptId,
             transcript: transcript,
@@ -259,7 +259,7 @@ enum CustomSituationAPI {
         let status = (response as? HTTPURLResponse)?.statusCode ?? 0
         guard (200..<300).contains(status) else {
             let message = (try? JSONDecoder().decode([String: String].self, from: data))?["error"]
-            throw PracticeAPIError.server(status: status, message: message ?? "That didn't work. Please try again.")
+            throw PracticeAPIError.server(status: status, message: message ?? String(localized: "That didn't work. Please try again.", bundle: AppLanguage.bundle))
         }
         return try JSONDecoder().decode(Response.self, from: data)
     }

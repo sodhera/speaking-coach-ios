@@ -3,6 +3,11 @@ import XCTest
 
 @MainActor
 final class PaywallLogicTests: XCTestCase {
+    override func setUp() {
+        super.setUp()
+        AppLanguage.choose("en")
+    }
+
     private func profile(_ moment: SpeakingMoment?, _ outcomes: [SpeakingOutcome]) -> CoachProfile {
         CoachProfile(name: "Sulav", language: "en", moment: moment, timing: .thisWeek, readiness: 4,
                      statements: [:], costs: [], outcomes: outcomes, onboardedAt: .now)
@@ -40,15 +45,15 @@ final class PaywallLogicTests: XCTestCase {
 
     func testTrialsReadTheWayPeopleSayThem() {
         func plan(_ days: Int) -> Plan {
-            Plan(id: "a", isAnnual: true, name: "Yearly", priceString: "$1", periodWord: "year", perMonthString: nil, trialDays: days, priceValue: 1)
+            Plan(id: "a", isAnnual: true, name: "Yearly", priceString: "$1", trialDays: days, priceValue: 1)
         }
         XCTAssertEqual(plan(7).trialPhrase, "1 week")
-        XCTAssertEqual(plan(7).trialAdjective, "1-Week")
-        XCTAssertEqual(plan(14).trialAdjective, "2-Week")
+        XCTAssertEqual(plan(14).trialPhrase, "2 weeks")
         XCTAssertEqual(plan(3).trialPhrase, "3 days")
-        XCTAssertEqual(plan(3).trialAdjective, "3-Day")
-        XCTAssertEqual(plan(30).trialAdjective, "1-Month")
+        XCTAssertEqual(plan(30).trialPhrase, "1 month")
         XCTAssertNil(plan(0).trialPhrase)
+        AppLanguage.choose("de")
+        XCTAssertEqual(plan(7).trialPhrase, "1 Woche")
     }
 
     func testGeneralImprovementNeverPromisesAnEvent() {

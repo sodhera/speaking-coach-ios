@@ -1,7 +1,7 @@
 import Foundation
 import SwiftUI
 
-/// The gate chain: onboarding → account → **paywall** → "how did you hear
+/// The gate chain: language → onboarding → account → **paywall** → "how did you hear
 /// about us?" → microphone → reminders → "You're all set!" → Home.
 ///
 /// Nothing past the paywall is reachable without access — the practice
@@ -23,6 +23,7 @@ struct RootView: View {
     /// The hand-off's "Start my first session": Home opens on its briefing.
     @State private var pendingBriefing: PracticeDefinition?
     @State private var links = DeepLinks.shared
+    @State private var language = LanguageState.shared
     @Environment(\.scenePhase) private var scenePhase
 
     /// A deliberately lagged copy of `screen`. The outgoing screen fades to
@@ -43,14 +44,14 @@ struct RootView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     fileprivate enum Screen: Equatable {
-        case splash, onboarding, existingAccount, paywall, attribution, microphone, reminders, setupComplete, main
+        case splash, language, onboarding, existingAccount, paywall, attribution, microphone, reminders, setupComplete, main
     }
 
     private var screen: Screen {
         guard splashHoldDone else { return .splash }
         switch model.phase {
         case .launching: return .splash
-        case .signedOut, .needsSetup: return .onboarding
+        case .signedOut, .needsSetup: return language.isChosen ? .onboarding : .language
         case .existingAccount: return .existingAccount
         case .ready:
             switch model.subscriptions.access {
@@ -116,6 +117,7 @@ struct RootView: View {
         .fullScreenCover(item: $launch) { launch in
             sessionView(for: launch)
                 .environment(\.stageStyle, .flat)
+                .inAppLanguage(language.code)
         }
         .modifier(AppUpdateNotice(availableUpdate: $availableUpdate, isReady: splashHoldDone && launch == nil))
         .onOpenURL { url in
@@ -171,6 +173,11 @@ struct RootView: View {
                         .scaleEffect(splashLeaving ? 1.06 : 1)
                         .blur(radius: splashLeaving ? 12 : 0)
                         .opacity(splashLeaving ? 0 : 1)
+                case .language:
+                    LanguagePickerView { code in
+                        Analytics.languageChosen(code, from: "first_run")
+                        language.choose(code)
+                    }
                 case .onboarding:
                     OnboardingGate(model: model, fromSplash: welcomeHandoff)
                         .id(model.phase == .needsSetup)
@@ -197,11 +204,14 @@ struct RootView: View {
                 }
             }
             .transition(.identity)
+            // A new language rebuilds every screen in it at once.
+            .id(language.code)
             .opacity(contentVisible ? 1 : 0)
             .scaleEffect(arriving ? 0.97 : 1)
             .offset(y: arriving ? 12 : 0)
         }
         .statusBarScrim()
+        .inAppLanguage(language.code)
         // This scrim sits over every screen, so it takes the app's flat
         // ground once the user is in; the gates keep the sunrise's paper.
         .environment(\.stageStyle, displayedScreen == .main ? .flat : .morning)
@@ -246,7 +256,7 @@ struct RootView: View {
             switch launch {
             case .new(let setup):
                 PracticeSessionView(
-                    session: PracticeSession(setup: setup, language: model.profile?.language ?? "en", userID: userID) { _ = finished() },
+                    session: PracticeSession(setup: setup, userID: userID) { _ = finished() },
                     canRetry: canRetry,
                     onClose: { self.launch = nil; _ = finished() }
                 )
@@ -264,11 +274,11 @@ struct RootView: View {
                 )
             case .custom(let situation, let setup):
                 PracticeSessionView(
-                    session: PracticeSession(custom: situation, setup: setup, language: model.profile?.language ?? "en", userID: userID) { _ = finished() },
+                    session: PracticeSession(custom: situation, setup: setup, userID: userID) { _ = finished() },
                     onClose: { self.launch = nil; _ = finished() }
                 )
             case .prompt(let source):
-                PromptView(routine: model.routine, source: source, language: model.profile?.language ?? "en") { self.launch = nil }
+                PromptView(routine: model.routine, source: source) { self.launch = nil }
             }
         }
     }
@@ -302,9 +312,8 @@ struct RootView: View {
         return !profile.isLegacy && profile.heardFrom == nil
     }
 
-    /// A built-in scene (IELTS) looks like any rehearsal on its briefing,
-    /// but runs on the custom-situation path — the catalog server doesn't
-    /// know it.
+    /// A built-in scene looks like any rehearsal on its briefing, but runs
+    /// on the custom-situation path — the catalog server doesn't know it.
     private static func launch(for setup: PracticeSetup) -> SessionLaunch {
         if let situation = CustomSituation.builtIn(for: setup.practice) { return .custom(situation, setup) }
         return .new(setup)
@@ -436,7 +445,7 @@ private struct SplashView: View {
 
     var body: some View {
         WelcomeFrame(heroOffset: BrandHeroGeometry.splashLift, detailsVisible: false) {
-            BloomMark(size: BrandHeroGeometry.markSize, openness: openness)
+            BrandMark(size: BrandHeroGeometry.markSize, openness: openness)
         } name: {
             InkedLine(
                 text: BrandHeroGeometry.wordmark,
@@ -499,5 +508,14 @@ enum LaunchFlags {
         ProcessInfo.processInfo.arguments
             .first { $0.hasPrefix(prefix + "=") }
             .map { String($0.dropFirst(prefix.count + 1)) }
+    }
+}
+
+extension View {
+    /// Dates, numbers and the reading direction follow the app's language,
+    /// not the phone's, from the moment it's chosen.
+    func inAppLanguage(_ code: String) -> some View {
+        environment(\.locale, Locale(identifier: AppLanguage.localization(for: code)))
+            .environment(\.layoutDirection, code == "ar" ? .rightToLeft : .leftToRight)
     }
 }

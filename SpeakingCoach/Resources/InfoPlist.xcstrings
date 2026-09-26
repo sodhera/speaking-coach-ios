@@ -1,0 +1,136 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "CFBundleDisplayName": {
+      "shouldTranslate": false
+    },
+    "CFBundleName": {
+      "shouldTranslate": false
+    },
+    "NSMicrophoneUsageDescription": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speaking Coach uses your microphone only while you practice, so your partner can hear you and give feedback on your words."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speaking Coach usa tu micrófono solo mientras practicas, para que tu compañero te oiga y pueda comentar tus palabras."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speaking Coach utilise ton micro uniquement pendant que tu t'entraînes, pour que ton partenaire t'entende et te fasse un retour sur tes mots."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speaking Coach nutzt dein Mikrofon nur, während du übst, damit dein Gegenüber dich hören und dir Feedback zu deinen Worten geben kann."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speaking Coach usa il microfono solo mentre ti alleni, così il tuo partner può sentirti e darti un feedback sulle tue parole."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O Speaking Coach usa seu microfone só enquanto você pratica, para que seu parceiro possa te ouvir e comentar suas palavras."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speaking Coach gebruikt je microfoon alleen terwijl je oefent, zodat je partner je kan horen en feedback kan geven op je woorden."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speaking Coach używa mikrofonu tylko podczas ćwiczeń, aby partner mógł cię usłyszeć i ocenić twoje słowa."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speaking Coach använder mikrofonen bara medan du övar, så att din partner kan höra dig och ge återkoppling på dina ord."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speaking Coach mikrofonunu yalnızca pratik yaparken kullanır; böylece partnerin seni duyar ve sözlerine geri bildirim verebilir."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speaking Coach использует микрофон только во время практики, чтобы партнёр мог вас слышать и дать разбор ваших слов."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speaking Coach використовує мікрофон лише під час практики, щоб партнер міг вас чути й дати розбір ваших слів."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speaking Coach आपका माइक्रोफ़ोन सिर्फ़ अभ्यास के दौरान इस्तेमाल करता है, ताकि आपका पार्टनर आपको सुन सके और आपके शब्दों पर फ़ीडबैक दे सके।"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يستخدم Speaking Coach الميكروفون فقط أثناء تدرّبك، ليتمكن شريكك من سماعك وتقديم ملاحظات على كلماتك."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speaking Coachがマイクを使うのは練習中だけです。パートナーがあなたの声を聞き、言葉についてフィードバックできるようにするためです。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speaking Coach는 연습하는 동안에만 마이크를 사용해요. 파트너가 당신의 말을 듣고 피드백을 줄 수 있도록요."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speaking Coach 只在你练习时使用麦克风，这样你的搭档才能听到你，并就你说的话给出反馈。"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speaking Coach hanya memakai mikrofonmu saat kamu berlatih, agar partnermu bisa mendengarmu dan memberi masukan tentang kata-katamu."
+          }
+        },
+        "fil": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ginagamit lang ng Speaking Coach ang mikropono mo habang nagpa-practice ka, para marinig ka ng partner mo at makapagbigay ng feedback sa mga salita mo."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speaking Coach chỉ dùng micrô khi bạn luyện tập, để bạn tập có thể nghe bạn và nhận xét về lời bạn nói."
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

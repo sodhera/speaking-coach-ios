@@ -9,7 +9,6 @@ struct RehearsalReviewView: View {
     let store: PresentationStore
     let deck: PresentationDeck
     let rehearsalID: UUID
-    let language: String
     /// Just recorded: the header says so and closing leaves the rehearsal.
     var isFresh = false
     let onBack: () -> Void
@@ -69,12 +68,12 @@ struct RehearsalReviewView: View {
     private func header(_ rehearsal: PresentationRehearsal) -> some View {
         VStack(alignment: .leading, spacing: Space.lg) {
             if isFresh {
-                GlassIconButton(systemImage: "xmark", size: 44, iconSize: 15, color: Palette.dim, accessibilityLabel: "Close", action: leave)
+                GlassIconButton(systemImage: "xmark", size: 44, iconSize: 15, color: Palette.dim, accessibilityLabel: String(localized: "Close", bundle: AppLanguage.bundle), action: leave)
             } else {
                 GlassBackButton(action: leave)
             }
             VStack(alignment: .leading, spacing: Space.sm) {
-                Kicker(text: isFresh ? "Session done" : rehearsal.startedAt.formatted(.dateTime.month(.wide).day().hour().minute()))
+                Kicker(text: isFresh ? String(localized: "Session done", bundle: AppLanguage.bundle) : rehearsal.startedAt.formatted(.dateTime.month(.wide).day().hour().minute()))
                 Text(deck.title)
                     .font(Typeface.hero(28))
                     .foregroundStyle(Palette.ink)
@@ -87,7 +86,7 @@ struct RehearsalReviewView: View {
 
     /// Conversational pace sits around 130–160; nerves push it up.
     static func wordsPerMinute(_ rehearsal: PresentationRehearsal) -> Int {
-        let words = rehearsal.transcript.split(whereSeparator: \.isWhitespace).count
+        let words = DailyPrompt.words(rehearsal.transcript).count
         let minutes = max(Double(rehearsal.durationMs) / 60_000, 0.1)
         return Int((Double(words) / minutes).rounded())
     }
@@ -97,13 +96,13 @@ struct RehearsalReviewView: View {
     @ViewBuilder
     private func questions(_ rehearsal: PresentationRehearsal) -> some View {
         VStack(alignment: .leading, spacing: Space.md) {
-            Kicker(text: "Your audience asks")
+            Kicker(text: String(localized: "Your audience asks", bundle: AppLanguage.bundle))
             if rehearsal.questions.isEmpty {
                 VStack(alignment: .leading, spacing: Space.md) {
                     Text("The questions didn't come through.")
                         .font(Typeface.body(15))
                         .foregroundStyle(Palette.dim)
-                    SecondaryButton(title: loadingQuestions ? "Asking…" : "Get audience questions", systemImage: "person.2.wave.2") {
+                    SecondaryButton(title: loadingQuestions ? String(localized: "Asking…", bundle: AppLanguage.bundle) : String(localized: "Get audience questions", bundle: AppLanguage.bundle), systemImage: "person.2.wave.2") {
                         Task { await loadQuestions(rehearsal) }
                     }
                     .disabled(loadingQuestions)
@@ -170,14 +169,14 @@ struct RehearsalReviewView: View {
 
             if isAnswering {
                 HStack(spacing: Space.md) {
-                    BloomMark(size: 30, level: recorder.level, breathes: false, glow: false)
+                    VoiceRods(size: 30, level: recorder.level, live: true)
                     Text("Listening · \(RehearsalView.clock(recorder.elapsed))")
                         .font(Typeface.label(15))
                         .foregroundStyle(Palette.ink)
                         .monospacedDigit()
                     Spacer()
                 }
-                PrimaryButton(title: "Done answering", systemImage: "checkmark") {
+                PrimaryButton(title: String(localized: "Done answering", bundle: AppLanguage.bundle), systemImage: "checkmark") {
                     Task { await finishAnswer(question, rehearsal: rehearsal) }
                 }
             } else if isWorking {
@@ -189,7 +188,7 @@ struct RehearsalReviewView: View {
                 }
                 .frame(minHeight: 44)
             } else {
-                SecondaryButton(title: answer == nil ? "Answer out loud" : "Answer again", systemImage: "mic.fill") {
+                SecondaryButton(title: answer == nil ? String(localized: "Answer out loud", bundle: AppLanguage.bundle) : String(localized: "Answer again", bundle: AppLanguage.bundle), systemImage: "mic.fill") {
                     Task { await startAnswer(question) }
                 }
                 .disabled(answering != nil || working != nil)
@@ -210,7 +209,7 @@ struct RehearsalReviewView: View {
         problem = nil
         player.pause()
         guard await AVAudioApplication.requestRecordPermission() else {
-            problem = "Speaking Coach needs the microphone to hear your answer. Turn it on in Settings."
+            problem = String(localized: "Speaking Coach needs the microphone to hear your answer. Turn it on in Settings.", bundle: AppLanguage.bundle)
             return
         }
         do {
@@ -226,15 +225,15 @@ struct RehearsalReviewView: View {
         answering = nil
         defer { try? FileManager.default.removeItem(at: answerURL) }
         guard seconds >= 2 else {
-            problem = "That answer was too short to hear. Try again."
+            problem = String(localized: "That answer was too short to hear. Try again.", bundle: AppLanguage.bundle)
             return
         }
         working = question.id
         defer { working = nil }
         do {
-            let transcript = try await PresentationAPI.transcribe(answerURL, language: language)
+            let transcript = try await PresentationAPI.transcribe(answerURL, language: AppLanguage.code)
             guard !transcript.isEmpty else {
-                problem = "We couldn't hear an answer. Try again a little closer to the phone."
+                problem = String(localized: "We couldn't hear an answer. Try again a little closer to the phone.", bundle: AppLanguage.bundle)
                 return
             }
             let result = try await PresentationAPI.feedback(deck: deck, question: question, answer: transcript, talk: rehearsal.transcript)
@@ -245,7 +244,7 @@ struct RehearsalReviewView: View {
             Haptics.success()
             Analytics.action("presentation_answer")
         } catch {
-            problem = (error as? LocalizedError)?.errorDescription ?? "That didn't work. Please try again."
+            problem = (error as? LocalizedError)?.errorDescription ?? String(localized: "That didn't work. Please try again.", bundle: AppLanguage.bundle)
             Haptics.error()
         }
     }
@@ -259,7 +258,7 @@ struct RehearsalReviewView: View {
             updated.questions = try await PresentationAPI.questions(deck: deck, transcript: rehearsal.transcript, events: rehearsal.slideEvents)
             store.save(updated)
         } catch {
-            problem = (error as? LocalizedError)?.errorDescription ?? "That didn't work. Please try again."
+            problem = (error as? LocalizedError)?.errorDescription ?? String(localized: "That didn't work. Please try again.", bundle: AppLanguage.bundle)
         }
     }
 
@@ -267,7 +266,7 @@ struct RehearsalReviewView: View {
 
     private func replay(_ rehearsal: PresentationRehearsal) -> some View {
         VStack(alignment: .leading, spacing: Space.md) {
-            Kicker(text: "Hear your talk")
+            Kicker(text: String(localized: "Hear your talk", bundle: AppLanguage.bundle))
             VStack(spacing: Space.lg) {
                 GeometryReader { proxy in
                     SlideImage(store: store, deck: deck.id, slide: rehearsal.slide(atMs: Int(player.time * 1000)), width: proxy.size.width, cornerRadius: 10)
@@ -286,7 +285,7 @@ struct RehearsalReviewView: View {
                             .background(Circle().fill(Palette.coral))
                     }
                     .buttonStyle(.plain)
-                    .accessibilityLabel(player.isPlaying ? "Pause" : "Play")
+                    .accessibilityLabel(player.isPlaying ? String(localized: "Pause", bundle: AppLanguage.bundle) : String(localized: "Play", bundle: AppLanguage.bundle))
                     .disabled(!player.isReady || answering != nil)
 
                     VStack(spacing: 2) {
@@ -332,7 +331,7 @@ struct RehearsalReviewView: View {
                 withAnimation(.easeInOut(duration: 0.25)) { showsTranscript.toggle() }
             } label: {
                 HStack {
-                    Kicker(text: "What you said")
+                    Kicker(text: String(localized: "What you said", bundle: AppLanguage.bundle))
                     Spacer()
                     Image(systemName: "chevron.down")
                         .font(.system(size: 12, weight: .semibold))

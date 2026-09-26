@@ -15,13 +15,13 @@ struct PreparationProgram: Identifiable, Equatable {
     var practices: [PracticeDefinition] { practiceIDs.compactMap(PracticeCatalog.definition) }
 
     static let all: [PreparationProgram] = [
-        PreparationProgram(id: "interview", title: "Get ready for an interview", detail: "Your opening, your experience, and the follow-ups.", icon: "briefcase.fill",
+        PreparationProgram(id: "interview", title: String(localized: "Get ready for an interview", bundle: AppLanguage.bundle), detail: String(localized: "Your opening, your experience, and the follow-ups.", bundle: AppLanguage.bundle), icon: "briefcase.fill",
                            practiceIDs: ["interview_tell_me_about_yourself", "interview_evidence", "interview_pressure", "ask_for_clarity", "pitch_big_idea"]),
-        PreparationProgram(id: "work", title: "Be clearer at work", detail: "Updates, questions, and speaking up in meetings.", icon: "person.3.fill",
+        PreparationProgram(id: "work", title: String(localized: "Be clearer at work", bundle: AppLanguage.bundle), detail: String(localized: "Updates, questions, and speaking up in meetings.", bundle: AppLanguage.bundle), icon: "person.3.fill",
                            practiceIDs: ["clear_work_update", "ask_for_clarity", "explain_a_mistake", "disagree_in_meeting", "presentation_opening"]),
-        PreparationProgram(id: "boundaries", title: "Hold your ground", detail: "Ask for what you want and stay steady under pushback.", icon: "hand.raised.fill",
+        PreparationProgram(id: "boundaries", title: String(localized: "Hold your ground", bundle: AppLanguage.bundle), detail: String(localized: "Ask for what you want and stay steady under pushback.", bundle: AppLanguage.bundle), icon: "hand.raised.fill",
                            practiceIDs: ["salary_raise", "set_a_boundary", "disagree_in_meeting", "ask_for_clarity", "interview_pressure"]),
-        PreparationProgram(id: "everyday", title: "Feel easier in conversation", detail: "Introductions, small talk, and saying what you mean.", icon: "bubble.left.and.bubble.right.fill",
+        PreparationProgram(id: "everyday", title: String(localized: "Feel easier in conversation", bundle: AppLanguage.bundle), detail: String(localized: "Introductions, small talk, and saying what you mean.", bundle: AppLanguage.bundle), icon: "bubble.left.and.bubble.right.fill",
                            practiceIDs: ["first_gentle_introduction", "meet_someone_new", "ask_for_clarity", "set_a_boundary", "presentation_opening"]),
     ]
 
@@ -33,7 +33,7 @@ struct PreparationProgram: Identifiable, Equatable {
         case .interview: "interview"
         case .raise, .hardConversation: "boundaries"
         case .speakingUp, .presentation: "work"
-        case .meetingPeople, .everyday, .ielts, nil: "everyday"
+        case .meetingPeople, .everyday, nil: "everyday"
         }
         return find(id) ?? all[0]
     }
@@ -45,9 +45,9 @@ struct PreparationPlan: Codable, Equatable {
 
         var label: String {
             switch self {
-            case .used: "I used something I practiced"
-            case .notYet: "I haven't used it yet"
-            case .didNotHappen: "It didn't happen"
+            case .used: String(localized: "I used something I practiced", bundle: AppLanguage.bundle)
+            case .notYet: String(localized: "I haven't used it yet", bundle: AppLanguage.bundle)
+            case .didNotHappen: String(localized: "It didn't happen", bundle: AppLanguage.bundle)
             }
         }
     }
@@ -138,7 +138,7 @@ final class PreparationStore {
         do {
             _ = try await Backend.supabase.auth.update(user: UserAttributes(data: [Self.metadataKey: json]))
         } catch {
-            throw PracticeAPIError.server(status: 0, message: "Your plan wasn't saved. Check your connection and try again.")
+            throw PracticeAPIError.server(status: 0, message: String(localized: "Your plan wasn't saved. Check your connection and try again.", bundle: AppLanguage.bundle))
         }
         self.plan = plan
         self.userID = userID
@@ -171,15 +171,15 @@ final class PreparationStore {
         center.removePendingNotificationRequests(withIdentifiers: [Self.reminderID])
         guard let plan, plan.reminderEnabled, let event = plan.eventDate else { return .saved }
         guard let date = PreparationPlan.reminderDate(for: event) else {
-            return .savedWithoutReminder("Your plan is saved. The event is too close for a 9 am reminder.")
+            return .savedWithoutReminder(String(localized: "Your plan is saved. The event is too close for a 9 am reminder.", bundle: AppLanguage.bundle))
         }
         let granted = (try? await center.requestAuthorization(options: [.alert, .sound])) ?? false
         guard granted else {
-            return .savedWithoutReminder("Your plan is saved, but notifications are off. Turn them on in Settings for the reminder.")
+            return .savedWithoutReminder(String(localized: "Your plan is saved, but notifications are off. Turn them on in Settings for the reminder.", bundle: AppLanguage.bundle))
         }
         let content = UNMutableNotificationContent()
-        content.title = "Your moment is close"
-        content.body = "One session now makes it easier to walk in ready."
+        content.title = String(localized: "Your moment is close", bundle: AppLanguage.bundle)
+        content.body = String(localized: "One session now makes it easier to walk in ready.", bundle: AppLanguage.bundle)
         content.sound = .default
         let components = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: date)
         try? await center.add(UNNotificationRequest(identifier: Self.reminderID, content: content, trigger: UNCalendarNotificationTrigger(dateMatching: components, repeats: false)))

@@ -13,8 +13,9 @@ import SwiftUI
 enum BrandHeroGeometry {
     static let wordmark = "Speaking Coach"
     static let markSize: CGFloat = 120
-    /// Fits welcome's hero and sign-in's title + subtitle alike.
-    static let textBandHeight: CGFloat = 92
+    /// Fits welcome's hero and sign-in's title + subtitle alike, with room
+    /// for a second line in languages that run longer than English.
+    static let textBandHeight: CGFloat = 116
     /// Two 58pt provider buttons (Apple, Google) with one `md` gap.
     static let bottomBandHeight: CGFloat = 58 * 2 + Space.md
     /// How far below its welcome place the splash holds the hero block: half
@@ -142,8 +143,8 @@ struct SubpageHeader: View {
 struct MockPermissionDialog: View {
     let glyph: String
     let titleText: String
-    var allowTitle = "Allow"
-    var denyTitle = "Don't Allow"
+    var allowTitle = String(localized: "Allow", bundle: AppLanguage.bundle)
+    var denyTitle = String(localized: "Don't Allow", bundle: AppLanguage.bundle)
     let isRequesting: Bool
     let onAllow: () -> Void
     let onDeny: () -> Void

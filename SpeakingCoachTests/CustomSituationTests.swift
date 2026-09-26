@@ -2,6 +2,11 @@ import XCTest
 @testable import SpeakingCoach
 
 final class CustomSituationTests: XCTestCase {
+    override func setUp() {
+        super.setUp()
+        AppLanguage.choose("en")
+    }
+
     private let situation = CustomSituation(description: "Ask my landlord to return my deposit by Friday.", partner: "My landlord", title: "Talking to my landlord")
 
     func testDefinitionCarriesTheUsersOwnWords() {
@@ -33,7 +38,7 @@ final class CustomSituationTests: XCTestCase {
     }
 
     func testTitleReadsNaturally() {
-        XCTAssertEqual(CustomSituationView.title(for: "My landlord"), "Talking to my landlord")
+        XCTAssertEqual(CustomSituationView.title(for: "my landlord"), "My landlord")
     }
 
     func testBandsAreWordsNotNumbers() {

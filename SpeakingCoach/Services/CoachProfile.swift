@@ -5,6 +5,8 @@ import Foundation
 /// restores it, and cached on device for instant launches.
 struct CoachProfile: Codable, Equatable {
     var name: String
+    /// The app's language when this was saved: the language everything,
+    /// including the partner and the feedback, speaks.
     var language: String
     var moment: SpeakingMoment?
     var timing: MomentTiming?
@@ -36,7 +38,6 @@ struct CoachProfile: Codable, Equatable {
 /// on the same step.
 struct OnboardingAnswers: Codable, Equatable {
     var name = ""
-    var language = PracticeLanguage.deviceDefault
     var category: SpeakingCategory?
     var moment: SpeakingMoment?
     var timing: MomentTiming?
@@ -55,7 +56,7 @@ struct OnboardingAnswers: Codable, Equatable {
     func profile(at date: Date = .now) -> CoachProfile {
         CoachProfile(
             name: name.trimmingCharacters(in: .whitespacesAndNewlines),
-            language: language,
+            language: AppLanguage.code,
             moment: moment,
             timing: timing,
             readiness: readinessTouched ? readiness : nil,

@@ -74,7 +74,7 @@ struct PracticeSessionView: View {
 
     private var connecting: some View {
         VStack(spacing: Space.xxl) {
-            BloomMark(size: 150)
+            VoiceRods(size: 150)
             VStack(spacing: Space.sm) {
                 Text("Getting your partner")
                     .font(Typeface.label(14))
@@ -92,7 +92,7 @@ struct PracticeSessionView: View {
 
     private var assessing: some View {
         VStack(spacing: Space.xxl) {
-            BloomMark(size: 150, level: 0.15)
+            VoiceRods(size: 150)
             VStack(spacing: Space.sm) {
                 Text("Finding one useful change")
                     .font(Typeface.title(24))
@@ -112,10 +112,10 @@ struct PracticeSessionView: View {
 
     private func recovery(_ draft: PracticeDraft) -> some View {
         StatusScreen(
-            title: "Your last session was cut short",
-            message: "What you said is saved. Get feedback on it, or let it go.",
-            primary: StatusScreen.Action(title: "Get my feedback") { Task { await session.assess(draft) } },
-            secondary: StatusScreen.Action(title: "Let it go") {
+            title: String(localized: "Your last session was cut short", bundle: AppLanguage.bundle),
+            message: String(localized: "What you said is saved. Get feedback on it, or let it go.", bundle: AppLanguage.bundle),
+            primary: StatusScreen.Action(title: String(localized: "Get my feedback", bundle: AppLanguage.bundle)) { Task { await session.assess(draft) } },
+            secondary: StatusScreen.Action(title: String(localized: "Let it go", bundle: AppLanguage.bundle)) {
                 session.discardDraft()
                 onClose()
             }
@@ -127,24 +127,24 @@ struct PracticeSessionView: View {
             title: failure.title,
             message: failure.message,
             primary: primaryAction(for: failure),
-            secondary: StatusScreen.Action(title: "Close", run: onClose)
+            secondary: StatusScreen.Action(title: String(localized: "Close", bundle: AppLanguage.bundle), run: onClose)
         )
     }
 
     private func primaryAction(for failure: PracticeSession.Failure) -> StatusScreen.Action? {
         if failure.micDenied {
-            return StatusScreen.Action(title: "Open Settings") {
+            return StatusScreen.Action(title: String(localized: "Open Settings", bundle: AppLanguage.bundle)) {
                 if let url = URL(string: UIApplication.openSettingsURLString) { UIApplication.shared.open(url) }
             }
         }
         if failure.offersFresh {
-            return StatusScreen.Action(title: "Practice the whole scene") { Task { await session.startFresh() } }
+            return StatusScreen.Action(title: String(localized: "Practice the whole scene", bundle: AppLanguage.bundle)) { Task { await session.startFresh() } }
         }
         if failure.canAssess {
-            return StatusScreen.Action(title: "Try feedback again") { Task { await session.retryAssessment() } }
+            return StatusScreen.Action(title: String(localized: "Try feedback again", bundle: AppLanguage.bundle)) { Task { await session.retryAssessment() } }
         }
         if failure.canRetry {
-            return StatusScreen.Action(title: "Try again") { Task { await session.start() } }
+            return StatusScreen.Action(title: String(localized: "Try again", bundle: AppLanguage.bundle)) { Task { await session.start() } }
         }
         return nil
     }
@@ -169,9 +169,9 @@ private struct PracticeRoom: View {
     /// Who has the floor, in the plainest words: the partner by name while
     /// they talk, "Your turn" once it's the user's.
     private var status: String {
-        if voice.isPaused { return showsHelp ? "Take your time" : "Paused" }
+        if voice.isPaused { return showsHelp ? String(localized: "Take your time", bundle: AppLanguage.bundle) : String(localized: "Paused", bundle: AppLanguage.bundle) }
         if voice.partnerSpeaking { return session.definition.partner }
-        return voice.userTurns == 0 && voice.lastPartnerLine == nil ? "About to begin" : "Your turn"
+        return voice.userTurns == 0 && voice.lastPartnerLine == nil ? String(localized: "About to begin", bundle: AppLanguage.bundle) : String(localized: "Your turn", bundle: AppLanguage.bundle)
     }
 
     var body: some View {
@@ -183,7 +183,7 @@ private struct PracticeRoom: View {
             Spacer(minLength: Space.xl)
 
             VStack(spacing: Space.xxl) {
-                BloomMark(size: 120, color: voice.isPaused ? Palette.muted : Palette.coral, level: level)
+                VoiceRods(size: 140, color: voice.isPaused ? Palette.muted : Palette.coral, level: level, live: !voice.isPaused)
                     .animation(.easeInOut(duration: 0.4), value: voice.isPaused)
                 VStack(spacing: Space.md) {
                     Text(status)
@@ -206,7 +206,7 @@ private struct PracticeRoom: View {
 
     private var header: some View {
         HStack(alignment: .center) {
-            GlassIconButton(systemImage: "xmark", size: 44, iconSize: 15, color: Palette.dim, accessibilityLabel: "Leave session") {
+            GlassIconButton(systemImage: "xmark", size: 44, iconSize: 15, color: Palette.dim, accessibilityLabel: String(localized: "Leave session", bundle: AppLanguage.bundle)) {
                 // Nothing said yet: leaving costs nothing. Otherwise it's a
                 // consequential exit, so it asks — honestly — first.
                 if voice.userTurns == 0 { onLeave() } else { confirmingLeave = true }
@@ -221,7 +221,7 @@ private struct PracticeRoom: View {
             // Just the time: the question is on screen, and the session was
             // chosen a moment ago. The last half-minute turns coral, so the
             // end never arrives as a surprise.
-            Text(session.isRetry ? "Retry · \(timeLabel)" : timeLabel)
+            Text(session.isRetry ? String(localized: "Retry · \(timeLabel)", bundle: AppLanguage.bundle) : timeLabel)
                 .font(Typeface.label(15))
                 .foregroundStyle(isEnding ? Palette.coralDeep : Palette.dim)
                 .monospacedDigit()
@@ -237,7 +237,8 @@ private struct PracticeRoom: View {
 
     private var timeLabel: String {
         let seconds = max(voice.remaining, 0)
-        return seconds == 0 ? "Wrapping up" : String(format: "%d:%02d left", seconds / 60, seconds % 60)
+        let clock = String(format: "%d:%02d", seconds / 60, seconds % 60)
+        return seconds == 0 ? String(localized: "Wrapping up", bundle: AppLanguage.bundle) : String(localized: "\(clock) left", bundle: AppLanguage.bundle, comment: "Time left in the session, e.g. '2:30 left'.")
     }
 
     /// The instrument: the partner's current line, or the scaffold while the
@@ -278,18 +279,18 @@ private struct PracticeRoom: View {
     private var controls: some View {
         VStack(spacing: Space.md) {
             if voice.isPaused {
-                PrimaryButton(title: "I'm ready", systemImage: "play.fill") {
+                PrimaryButton(title: String(localized: "I'm ready", bundle: AppLanguage.bundle), systemImage: "play.fill") {
                     showsHelp = false
                     voice.resume()
                 }
             } else {
                 GlassGroup(spacing: Space.md) {
                     HStack(spacing: Space.md) {
-                        SmallCapsuleButton(title: "I need a moment", systemImage: "pause.fill") {
+                        SmallCapsuleButton(title: String(localized: "I need a moment", bundle: AppLanguage.bundle), systemImage: "pause.fill") {
                             showsHelp = false
                             voice.pause()
                         }
-                        SmallCapsuleButton(title: "Help me", systemImage: "lightbulb.fill") {
+                        SmallCapsuleButton(title: String(localized: "Help me", bundle: AppLanguage.bundle), systemImage: "lightbulb.fill") {
                             showsHelp = true
                             voice.pause()
                         }
@@ -387,7 +388,7 @@ struct StatusScreen: View {
     var body: some View {
         VStack(spacing: 0) {
             Spacer()
-            BloomMark(size: 96, glow: false)
+            BrandMark(size: 96)
             Text(title)
                 .font(Typeface.hero(26))
                 .foregroundStyle(Palette.ink)

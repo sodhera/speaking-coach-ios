@@ -4,6 +4,11 @@ import XCTest
 /// The practice endpoints are shared with the server, so these pin the wire
 /// shapes and the partner prompt's non-negotiables.
 final class PracticeContractTests: XCTestCase {
+    override func setUp() {
+        super.setUp()
+        AppLanguage.choose("en")
+    }
+
     private var definition: PracticeDefinition { PracticeCatalog.definition("interview_tell_me_about_yourself")! }
 
     func testReportDecodesTheServersShape() throws {
@@ -55,7 +60,8 @@ final class PracticeContractTests: XCTestCase {
             criterionId: "c1", previous: CriterionResult(id: "c1", level: 1, note: "", evidence: [])
         )
         XCTAssertEqual(PracticePrompt.duration(definition, context), 90)
-        XCTAssertTrue(PracticePrompt.build(definition, context).contains("open with exactly: Why this role?"))
+        XCTAssertEqual(PracticePrompt.firstMessage(definition, context), "Why this role?")
+        XCTAssertTrue(PracticePrompt.build(definition, context).contains("Your first line is supplied when the conversation connects: Why this role?"))
     }
 
     func testNewContextMatchesTheSetup() {
@@ -78,8 +84,15 @@ final class PracticeContractTests: XCTestCase {
     }
 
     func testEveryAppLanguageIsSpokenByThePartner() {
-        for language in PracticeLanguage.all {
-            XCTAssertNotNil(ElevenLabsLanguageCheck.supports(language.id), "\(language.name) (\(language.id)) isn't a partner language")
+        for code in AppLanguage.supported {
+            XCTAssertNotNil(ElevenLabsLanguageCheck.supports(code), "\(code) isn't a partner language")
+        }
+    }
+
+    func testEveryAppLanguageShipsItsStrings() {
+        for code in AppLanguage.supported {
+            XCTAssertNotNil(Bundle.main.path(forResource: AppLanguage.localization(for: code), ofType: "lproj"), code)
+            XCTAssertNotEqual(AppLanguage.string("Choose your language", in: code), code == "en" ? "" : "Choose your language", code)
         }
     }
 }

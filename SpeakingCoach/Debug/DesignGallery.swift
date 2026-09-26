@@ -32,7 +32,7 @@ struct DesignGallery: View {
 
                     HStack {
                         Spacer()
-                        BloomMark(size: 120, level: level)
+                        VoiceRods(size: 120, level: level, live: level > 0)
                         Spacer()
                     }
                     .frame(height: 170)

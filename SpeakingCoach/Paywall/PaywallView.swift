@@ -68,7 +68,7 @@ struct PaywallView: View {
         }
         .overlay(alignment: .topTrailing) {
             if let onClose {
-                GlassIconButton(systemImage: "xmark", size: 40, iconSize: 14, color: Palette.dim, accessibilityLabel: "Close", action: onClose)
+                GlassIconButton(systemImage: "xmark", size: 40, iconSize: 14, color: Palette.dim, accessibilityLabel: String(localized: "Close", bundle: AppLanguage.bundle), action: onClose)
                     .padding(.trailing, Space.xl)
             }
         }
@@ -77,6 +77,11 @@ struct PaywallView: View {
         .task {
             Analytics.enter("paywall")
             if subscriptions.plansState != .loaded { await subscriptions.loadPlans() }
+            Analytics.capture("paywall_viewed", [
+                "plans_loaded": subscriptions.plansState == .loaded,
+                "trial_offered": subscriptions.plans.contains { $0.trialDays > 0 },
+                "hard": onClose == nil,
+            ])
         }
     }
 
@@ -96,14 +101,9 @@ struct PaywallView: View {
     /// for accounts that never answered (the old app's users).
     static func headline(for profile: CoachProfile?) -> String {
         guard let profile, let moment = profile.moment, !profile.outcomes.isEmpty else {
-            return "Practice the conversations that matter."
+            return String(localized: "Practice the conversations that matter.", bundle: AppLanguage.bundle)
         }
-        if moment.isGeneral {
-            let how = profile.outcomes.prefix(2).map(\.adverb).joined(separator: " and ")
-            return "Speak \(how), every day."
-        }
-        let how = profile.outcomes.prefix(2).map(\.headlinePhrase).joined(separator: " and ")
-        return moment == .meetingPeople ? "Walk into any room \(how)." : "Walk into \(moment.noun) \(how)."
+        return moment.headline(outcomes: profile.outcomes)
     }
 
     // MARK: Benefits
@@ -111,22 +111,13 @@ struct PaywallView: View {
     /// Three, each a reason rather than a feature: a crown, a bold lead and
     /// one line — JournalBlock's grammar.
     private var benefits: some View {
-        let pattern = profile?.pattern ?? .steady
-        let rehearse: String = switch profile?.moment {
-        case .interview: "Your interview, out loud, with a partner who plays the other side."
-        case .raise: "The raise conversation, out loud, with a manager who pushes back."
-        case .hardConversation: "That conversation, out loud, before it happens for real."
-        case .presentation: "Your opening, out loud, until it lands."
-        case .speakingUp: "Your point, out loud, in a meeting that keeps moving."
-        case .meetingPeople: "First conversations, out loud, with someone new."
-        case .everyday: "Everyday conversations, out loud, with a partner who plays the other side."
-        case .ielts: "Your speaking test, out loud, with an examiner who asks the real questions."
-        case nil: "Real conversations, out loud, with a partner who plays the other side."
-        }
-        return VStack(alignment: .leading, spacing: 18) {
-            BenefitRow(lead: "Practice it", detail: rehearse)
-            BenefitRow(lead: "Hear it back", detail: "Feedback that quotes your own words.")
-            BenefitRow(lead: "Retry the moment", detail: pattern.fix)
+        VStack(alignment: .leading, spacing: 18) {
+            BenefitRow(
+                lead: String(localized: "Practice it", bundle: AppLanguage.bundle),
+                detail: profile?.moment?.practiceBenefit ?? String(localized: "Real conversations, out loud, with a partner who plays the other side.", bundle: AppLanguage.bundle)
+            )
+            BenefitRow(lead: String(localized: "Hear it back", bundle: AppLanguage.bundle), detail: String(localized: "Feedback that quotes your own words.", bundle: AppLanguage.bundle))
+            BenefitRow(lead: String(localized: "Retry the moment", bundle: AppLanguage.bundle), detail: (profile?.pattern ?? .steady).fix)
         }
     }
 
@@ -166,7 +157,7 @@ struct PaywallView: View {
                     Label("Plans couldn't load. Check your connection.", systemImage: "wifi.slash")
                         .font(Typeface.body(15))
                         .foregroundStyle(Palette.dim)
-                    SecondaryButton(title: "Try again", systemImage: "arrow.clockwise") {
+                    SecondaryButton(title: String(localized: "Try again", bundle: AppLanguage.bundle), systemImage: "arrow.clockwise") {
                         Task { await subscriptions.loadPlans() }
                     }
                 }
@@ -193,17 +184,17 @@ struct PaywallView: View {
 
     private var footer: some View {
         VStack(spacing: Space.md) {
-            PrimaryButton(title: purchasing ? "Just a moment…" : callToAction, systemImage: purchasing ? nil : "arrow.right", trailingIcon: true, action: buy)
+            PrimaryButton(title: purchasing ? String(localized: "Just a moment…", bundle: AppLanguage.bundle) : callToAction, systemImage: purchasing ? nil : "arrow.right", trailingIcon: true, action: buy)
                 .disabled(selected == nil || purchasing)
                 .animation(.easeInOut(duration: 0.2), value: callToAction)
 
             HStack(spacing: Space.lg) {
-                footerLink("Restore") { Task { await restore() } }
-                footerLink("Terms") { UIApplication.shared.open(AppConfig.termsURL) }
-                footerLink("Privacy") { UIApplication.shared.open(AppConfig.privacyURL) }
+                footerLink(String(localized: "Restore", bundle: AppLanguage.bundle)) { Task { await restore() } }
+                footerLink(String(localized: "Terms", bundle: AppLanguage.bundle)) { UIApplication.shared.open(AppConfig.termsURL) }
+                footerLink(String(localized: "Privacy", bundle: AppLanguage.bundle)) { UIApplication.shared.open(AppConfig.privacyURL) }
                 if onClose == nil {
                     // The only way off a hard paywall for the wrong account.
-                    footerLink("Sign out") {
+                    footerLink(String(localized: "Sign out", bundle: AppLanguage.bundle)) {
                         Task {
                             do {
                                 try await model.signOut()
@@ -223,9 +214,9 @@ struct PaywallView: View {
     /// Names what the tap does for the plan that's selected — the trial
     /// length when there is one, otherwise the plan itself.
     private var callToAction: String {
-        guard let selected else { return "Continue" }
-        if let trial = selected.trialAdjective { return "Start \(trial) Free Trial" }
-        return selected.isAnnual ? "Continue with Yearly" : "Continue with Monthly"
+        guard let selected else { return String(localized: "Continue", bundle: AppLanguage.bundle) }
+        if let trial = selected.trialPhrase { return String(localized: "Try it free for \(trial)", bundle: AppLanguage.bundle, comment: "Slot: the trial's length, e.g. '1 week'.") }
+        return selected.isAnnual ? String(localized: "Continue with Yearly", bundle: AppLanguage.bundle) : String(localized: "Continue with Monthly", bundle: AppLanguage.bundle)
     }
 
     private func footerLink(_ title: String, action: @escaping () -> Void) -> some View {
@@ -248,15 +239,19 @@ struct PaywallView: View {
         purchasing = true
         notice = nil
         Analytics.action("paywall")
+        let properties: [String: Any] = ["plan": plan.isAnnual ? "annual" : "monthly", "trial": plan.trialDays > 0]
+        Analytics.capture("purchase_started", properties)
         Task {
             switch await subscriptions.purchase(plan) {
             case .purchased:
                 Haptics.success()
+                Analytics.capture("purchase_completed", properties)
             case .cancelled:
-                break
+                Analytics.capture("purchase_cancelled", properties)
             case .failed(let message):
                 notice = (message, true)
                 Haptics.error()
+                Analytics.capture("purchase_failed", properties)
             }
             purchasing = false
         }
@@ -266,6 +261,7 @@ struct PaywallView: View {
         notice = nil
         let result = await subscriptions.restore()
         notice = (result.message, result.isError)
+        Analytics.capture("purchase_restored", ["entitled": subscriptions.access == .entitled, "error": result.isError])
     }
 }
 
@@ -283,7 +279,7 @@ private struct BenefitRow: View {
                 .frame(width: 24, alignment: .leading)
                 .padding(.top, 1)
                 .accessibilityHidden(true)
-            (Text("\(lead): ").font(Typeface.label(16)).foregroundColor(Palette.ink)
+            (Text(String(localized: "\(lead): ", bundle: AppLanguage.bundle, comment: "A benefit's bold lead, before its line. Keep the colon and space as your language writes them.")).font(Typeface.label(16)).foregroundColor(Palette.ink)
                 + Text(detail).font(Typeface.body(16)).foregroundColor(Palette.dim))
                 .lineSpacing(2)
                 .fixedSize(horizontal: false, vertical: true)
@@ -370,13 +366,17 @@ private struct PricingCard: View {
     }
 
     private var sticker: String? {
-        if let trial = plan.trialPhrase { return "\(trial.uppercased()) FREE" }
-        return savings.map { "SAVE \($0)%" }
+        if let trial = plan.trialPhrase { return String(localized: "\(trial) free", bundle: AppLanguage.bundle, comment: "Sticker on the plan. Slot: the trial's length, e.g. '1 week'.").uppercased(with: AppLanguage.locale) }
+        return savings.map { String(localized: "Save \($0)%", bundle: AppLanguage.bundle, comment: "Sticker on the yearly plan.").uppercased(with: AppLanguage.locale) }
     }
 
     private var footnote: String {
-        let cadence = plan.isAnnual ? "yearly" : "monthly"
-        return plan.trialDays > 0 ? "Billed \(cadence) after the free trial." : "Billed \(cadence)."
+        switch (plan.isAnnual, plan.trialDays > 0) {
+        case (true, true): String(localized: "Billed yearly after the free trial.", bundle: AppLanguage.bundle)
+        case (true, false): String(localized: "Billed yearly.", bundle: AppLanguage.bundle)
+        case (false, true): String(localized: "Billed monthly after the free trial.", bundle: AppLanguage.bundle)
+        case (false, false): String(localized: "Billed monthly.", bundle: AppLanguage.bundle)
+        }
     }
 }
 

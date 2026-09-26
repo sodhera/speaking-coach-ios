@@ -2,6 +2,11 @@ import XCTest
 @testable import SpeakingCoach
 
 final class PreparationTests: XCTestCase {
+    override func setUp() {
+        super.setUp()
+        AppLanguage.choose("en")
+    }
+
     private let start = Date(timeIntervalSince1970: 1_800_000_000)
 
     private func plan(program: String = "interview", event: Date? = nil) -> PreparationPlan {

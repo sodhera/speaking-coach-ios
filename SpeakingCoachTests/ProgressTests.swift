@@ -2,6 +2,11 @@ import XCTest
 @testable import SpeakingCoach
 
 final class ProgressTests: XCTestCase {
+    override func setUp() {
+        super.setUp()
+        AppLanguage.choose("en")
+    }
+
     private let evidence = PracticeCatalog.definition("interview_evidence")!
     private let update = PracticeCatalog.definition("clear_work_update")!
 
@@ -57,8 +62,8 @@ final class ProgressTests: XCTestCase {
         XCTAssertEqual(weeks.rows.count, 5)
         XCTAssertEqual(weeks.rows.last?.first?.number, 21) // Monday 21st
         XCTAssertEqual(weeks.rows.first?.first?.number, 24) // Monday 24 August
-        XCTAssertEqual(weeks.thisWeek, 2)
-        XCTAssertEqual(weeks.daysPracticed, 3)
+        XCTAssertEqual(weeks.rows.last?.first(where: \.isToday)?.count, 1)
+        XCTAssertEqual(weeks.rows.joined().reduce(0) { $0 + $1.count }, 3)
         XCTAssertEqual(weeks.rows.last?.filter(\.isToday).map(\.number), [24])
         XCTAssertEqual(weeks.rows.last?.filter(\.isFuture).count, 3) // Friday to Sunday
     }
@@ -69,7 +74,5 @@ final class ProgressTests: XCTestCase {
         let now = try XCTUnwrap(calendar.date(from: DateComponents(year: 2026, month: 9, day: 24, hour: 12)))
         XCTAssertTrue(SessionText.when(now, now: now, calendar: calendar).hasPrefix("Today, "))
         XCTAssertTrue(SessionText.when(now.addingTimeInterval(-86_400), now: now, calendar: calendar).hasPrefix("Yesterday, "))
-        XCTAssertEqual(SessionText.day(now, now: now, calendar: calendar), "today")
-        XCTAssertEqual(SessionText.day(now.addingTimeInterval(-86_400), now: now, calendar: calendar), "yesterday")
     }
 }

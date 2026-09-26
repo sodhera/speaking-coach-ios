@@ -16,9 +16,13 @@ Speaking Coach is the daytime sibling of SleepBlock. SleepBlock is a quiet night
 
 `MorningStage(depth:)` is a five-stop paper-to-apricot sky (deliberately low-chroma, so coral fills keep their edge) with a sunrise glowing up from below the bottom edge and a fine paper grain. `depth` (0 → 1) raises and warms the sun as the user moves through onboarding. Ripple rings used to drift off the sun; they were removed as noise behind the words.
 
-## The bloom
+Every page sits on a faint dot grid (`DotGrid`: 1.5pt ink dots at 14% opacity, 22pt apart). It lives inside the three grounds (the sunrise, `MorningPaper` and `AppGround`), so no screen adds its own.
 
-`BloomMark` is the icon's six petals drawn live, with geometry measured off the 1024pt icon. At rest, large blooms breathe in a gentle wave that travels around the flower. Small ones (under 60pt, like the one in the onboarding header) breathe as one: every petal together, a 9% swell over 4.2s. A travelling wave deep enough to see at 30pt looked like wobbling, not breathing. In the voice room, `level` opens the petals with the audio, each petal by its own flickering amount, so the brand mark and the "this is live" signal are one object.
+## The logo and the voice
+
+The icon is a speaker and their speech bubble, white on the Continue button's coral (`Palette.coral`), as an Icon Composer bundle (`Resources/AppIcon.icon`); Xcode derives the flat icons from it. `BrandMark` shows it where the brand introduces itself: the splash, sign-in, the language picker, the onboarding header, the support step and the plan. The tab and the Screen Time shield use the same drawing.
+
+It isn't a voice signal, so it never animates with sound. Wherever the app listens or waits (the rehearsal room, the daily prompt, presentation recording and review, "getting your partner", "finding one change"), `VoiceRods` shows seven coral Liquid Glass rods in a symmetric waveform that swell with the level on beats travelling outward from the middle. They grey while paused and turn sage on a pass.
 
 ## Liquid Glass
 
@@ -32,17 +36,22 @@ This lives in `Glass.swift`. On iOS 26+ it is native `glassEffect`. On iOS 17–
 
 The goal is conversion. It makes the user aware of real pain, then shows how practice fixes it:
 
-welcome → **practice language** → name → **category** → the situation → when → readiness baseline → "does this sound like you?" deck → **support** (care and a useful next step) → the cost → **the reframe** ("a practice problem, not a talent problem") → the outcome → **the promise** → **the demo** (a tap-through example) → your plan → hold to commit → account → paywall (personalized, hard)
+**language** → welcome → name → **category** → the situation → when → readiness baseline → "does this sound like you?" deck → **support** (care and a useful next step) → the cost → **the reframe** ("a practice problem, not a talent problem") → the outcome → **the promise** → **the demo** (a tap-through example) → your plan → hold to commit → account → paywall (personalized, hard)
 
 ### Categories
 
-The four categories are how the app is marketed, and they're the first real question: **Work** (interviews, meetings, raises, hard conversations), **Presentations** (talks, pitches, speeches), **IELTS Speaking**, and **Everyday conversations** (meeting people, speaking with ease). The boundary between the two work categories: Presentations is speaking to a room, Work is one-to-one or a meeting. A category with one situation (Presentations, IELTS) skips the situation question. IELTS appears only when the practice language is English.
-
-**IELTS is a built-in scene.** The server's catalog has no IELTS rehearsals yet, so `CustomSituation.ieltsSpeaking` (a Part 1 examiner) runs on the custom-situation endpoints. Its debrief is the general one, not a band score. Its briefing looks like any rehearsal's, and `RootView` routes it down the custom path. In the first plan, a second run of the scene counts as the retry. When IELTS content lands in the server catalog, point `SpeakingMoment.ielts` at it and delete the built-in scene.
+The three categories are how the app is marketed, and they're the first real question: **Work** (interviews, meetings, raises, hard conversations), **Presentations** (talks, pitches, speeches) and **Everyday conversations** (meeting people, speaking with ease). The boundary between the two work categories: Presentations is speaking to a room, Work is one-to-one or a meeting. A category with one situation (Presentations) skips the situation question. IELTS was removed; stored answers that say `ielts` decode as Everyday.
 
 ### Language
 
-The practice language is asked first, because the partner, the scenes and IELTS all depend on it. The device's language leads a short list and is already selected, and each option is written in its own language ("Deutsch", "Español"). The app's own language is never asked: iOS already shows the app in the phone's language, and the user can change it per app in Settings. No location is asked for either; nothing uses it.
+The language is the first screen, before welcome, and nothing is preselected: the app never assumes English. The phone's language leads the list, every option is written in itself ("Deutsch", "日本語"), and the title and button switch to each language as it's tapped. The one choice drives everything: every screen, the voice partner (ElevenLabs `AgentOverrides(language:)`), the partner's opening lines, the server's feedback, presentation questions, notifications and the Screen Time shield. It can be changed in Settings, which redraws the app at once. No location is asked for; nothing uses it.
+
+How it works (`Shared/AppLanguage.swift`):
+- The choice is stored in the App Group, so the three Screen Time extensions read it too, and in `AppleLanguages`, so system sheets follow on the next launch. Until a choice exists, `code` is the phone's language (or English if unsupported), and the router shows the picker.
+- `String(localized:)` resolves its language once per process, so **every call passes `bundle: AppLanguage.bundle`**. SwiftUI `Text("…")` follows `.environment(\.locale)`, which `RootView` sets (with right-to-left for Arabic) and keys on the language so everything redraws. `Bundle.main` is also swapped for a subclass that routes lookups to the chosen `.lproj`.
+- Catalogs: `Localizable` (UI), `Content` (the server practice catalog's titles, openings, scaffolds and criteria, keyed by their English, looked up through `CatalogText`), `InfoPlist` (the mic permission) and `Shared/Shield`. Plurals use CLDR categories. Practice codes map to folders: `zh` → `zh-Hans`, `tl` → `fil`, `pt` → `pt-BR`.
+- Whole sentences, never assembled fragments: each moment has its own full sentence, so languages with case and gender can translate it. The only slots are names, numbers and the outcome phrases, which are written to fit their slot. Lists use `ListFormatter` in the app's locale; word splitting uses `NLTokenizer` (Japanese and Chinese have no spaces).
+- The translations were written by machine and validated for placeholders and plural forms. Have native speakers review them before a wide launch.
 
 ### The promise and the demo
 
@@ -53,7 +62,7 @@ The practice language is asked first, because the partner, the scenes and IELTS 
 
 - **SleepBlock's questionnaire, component for component.** Onboarding mirrors it:
   - `QuestionLayout`: a centred title, with the control centred between the title and the button.
-  - The header: a 44pt glass chevron, a 3pt gradient progress bar, and the chevron's hidden twin carrying a small bloom.
+  - The header: a 44pt glass chevron, a 3pt gradient progress bar, and the chevron's hidden twin carrying a small logo.
   - Capsule `OptionRow`s whose selection is painted as an overlay, so tapping doesn't lag.
   - `CoachSlider`: a rolling number and a tick on each step.
   - An underline name field.
@@ -65,10 +74,11 @@ The practice language is asked first, because the partner, the scenes and IELTS 
 - **Buttons.** Question steps keep their button on screen but dimmed through the 900ms settle, which only applies going forward. Reveal steps keep theirs absent until the reveal lands.
 - **Support without a label.** The response is tailored privately from the deck (`SpeakingPattern.from`) and gives care plus a concrete way practice can help. It does not name a type of person or repeat the answers back to them.
 - **No pain, no cost question.** If every statement in the deck gets "Not me", the cost step is skipped and "Nothing yet" is recorded. If they go back and report pain, it's cleared so they answer it themselves.
-- **Outcomes fit the situation.** IELTS and everyday conversations offer "I keep going, without freezing". Work and presentations offer "I get what I asked for".
+- **Outcomes fit the situation.** Meeting people and everyday conversations offer "I keep going, without freezing". Work and presentations offer "I get what I asked for".
 - **The sun peaks on the commitment.** Stage depth is the step position divided by the commit step's position.
 - **Drafts resume.** Answers and the current step persist on every change. A relaunch lands on the same step, except that commit and account resume on the plan, so the user re-reads what they're committing to. The draft is cleared only once the answers are saved to an account.
 - **Analytics:** each step is page `ob_<step>` in `product_page_events`, with its index, enter/leave/action and duration. PostHog also receives allowlisted language, category, moment, timing, readiness (0–10), challenge ratings, costs, and outcomes. Names, free text, and spoken content are never sent.
+- **Analytics beyond onboarding** (`Analytics.swift`, PostHog): app lifecycle events, `app_language` as a super-property, and the signed-in user identified by id with only allowlisted profile traits (language, moment, readiness baseline, how they heard of us, legacy account), then reset on sign-out. Events: `language_chosen` (from first run or Settings), `auth_completed`/`auth_failed`, `paywall_viewed`, `purchase_started`/`_completed`/`_cancelled`/`_failed`/`_restored`, `practice_started`, `practice_connected` (with startup ms), `practice_failed` (reason), `practice_ended`, `practice_left`, `feedback_shown` (criteria counts, score, retry change), `feedback_failed`, `daily_prompt_result`, `presentation_added` and `presentation_rehearsed`. Review and screenshot runs send nothing.
 
 ## Accounts
 
@@ -84,7 +94,7 @@ onboarding → account → (existing account?) → **paywall** → "How did you 
 
 - **Attribution after the paywall.** "How did you hear about us?" is asked once per account, after they've paid, and saved to the profile (`heardFrom`). Old-app accounts are never asked.
 
-- **Fade chain.** `RootView` renders a lagged `displayedScreen`. The outgoing screen fades out fully before the next one mounts, so no two screens ever overlap. The splash holds for 1.5s so the bloom is actually seen breathing.
+- **Fade chain.** `RootView` renders a lagged `displayedScreen`. The outgoing screen fades out fully before the next one mounts, so no two screens ever overlap. The splash holds for 1.5s so the logo is actually seen.
 - **Existing accounts.** "Get started" can land on an Apple or Google identity that already has an account, because those sign-ins find the existing account or create a new one. When that happens, the account's plan is kept rather than overwritten, and `ExistingAccountView` says so.
 - **Primers.** Each shows a `MockPermissionDialog`, a stand-in for the real system sheet, with an arrow pointing at Allow.
 
@@ -95,7 +105,7 @@ onboarding → account → (existing account?) → **paywall** → "How did you 
 
 ## Paywall
 
-Built on JournalBlock's paywall. The headline repeats the user's own outcome ("Walk into your interview calm and clear."), left-aligned under a small bloom and a tracked wordmark. Three benefits each have a bold lead and one line: *Practice it* (their moment), *Hear it back*, and *Retry the moment* (their pattern's fix). Under "Select a plan that fits you", the two plans sit side by side, so the yearly price is read against the monthly one. "Change plans or cancel anytime." sits under the cards.
+Built on JournalBlock's paywall. The headline repeats the user's own outcome ("Walk into your interview calm and clear."), left-aligned under a small logo and a tracked wordmark. Three benefits each have a bold lead and one line: *Practice it* (their moment), *Hear it back*, and *Retry the moment* (their pattern's fix). Under "Select a plan that fits you", the two plans sit side by side, so the yearly price is read against the monthly one. "Change plans or cancel anytime." sits under the cards.
 
 - **The billed amount leads (3.1.2(c)).** Each card's large number is the real charge for its own period. The struck-through anchor (twelve months of the monthly plan, formatted by the product's own price formatter) and the "Billed yearly." note are smaller and below it. The sticker overhanging the yearly card reads "3 DAYS FREE" when there's a trial, otherwise "SAVE 33%", computed from the fetched prices.
 - **The CTA names the tap.** It reads "Start 3-Day Free Trial →" when the selected plan has a trial, otherwise "Continue with Yearly →" or "Continue with Monthly →".
@@ -116,8 +126,9 @@ Inside a `GlassEffectContainer` on iOS 26, overlays on child glass shapes get ab
 Pass these as launch arguments (Debug builds only):
 
 - `-review-gallery`: every component on one screen
-- `-review-voice-level=0.8`: the gallery's bloom at a fixed voice level
-- `-review-onboarding-step=<step>`: lands on any step (`language`, `name`, `category`, … `account`) with every earlier step answered and the reviewed step left unanswered
+- `-review-voice-level=0.8`: the gallery's voice rods at a fixed level
+- `-language=<code>` (debug): starts in that language, as if it had been chosen
+- `-review-onboarding-step=<step>`: lands on any step (`name`, `category`, … `account`) with every earlier step answered and the reviewed step left unanswered
 - `-fresh-start`: clears the onboarding draft (UI tests use it)
 - `-review-screen=<welcome|signin|existing|paywall|attribution|microphone|reminders|setup|home|profile|library|briefing|settings|checkin>`: post-sign-in screens against a fixture profile. Add `-review-plans` for placeholder plans (layout only; real prices always come from the App Store).
 
@@ -154,10 +165,10 @@ Two tabs: Practice and Profile. Progress and Profile were separate tabs, each to
 - **Practice: keep the habit, then pick something.** Three reads, nothing behind a control:
   1. **Greeting and streak card.** "Good morning, Sulav", then one card: a big flame and the streak number, a "Done today" / "Practice today" pill, and the week as a disc per day (a coral tick when practiced, today ringed). The streak card is the gamified top, the way Duolingo and Speak lead with it.
   2. **For you.** A carousel whose next card peeks in from the right, with dots under it. It holds what's up next (the first plan's step, an event plan's next session, or the next unpracticed session), a **Recommended** scene sold by its moment ("A stranger stops you to chat. Don't freeze."), and, with no event plan, "Something coming up?" to build one. Only the up-next card wears the full coral cover; the others get a soft tint. Recommendations rotate daily among scenes not yet done. Hooks stay about 45 characters so they read whole.
-  3. **Situations.** Five cards open five pages (`HomeSection`): Presentations (pitch, opening, practice with my slides), Work & interviews (interviews, work, and difficult conversations), Friends & family, Custom & impromptu ("A stranger says hi", Custom situation, the 30-second prompt), and IELTS across the bottom. A page lists its sessions with a sage tick on the ones done.
+  3. **Situations.** Five cards open five pages (`HomeSection`): Presentations (pitch, opening, practice with my slides), Work & interviews (interviews, work, and difficult conversations), Friends & family, and Custom & impromptu ("A stranger says hi", Custom situation, the 30-second prompt), in a two-by-two grid. A page lists its sessions with a sage tick on the ones done.
 
   A situation dropdown came before this, and a friend testing the app didn't find it. Cards make every choice visible. "Recently practiced" left Home, because History on Profile holds it.
-- **"A stranger says hi"** is a built-in scene like IELTS (`CustomSituation.streetHello`), running on the custom endpoints. The partner opens cold ("Hey, sorry, random question…"), nudges if the user goes quiet, and wraps up after a minute. There is no on-screen countdown: the pressure is in how the partner plays it.
+- **"A stranger says hi"** is a built-in scene (`CustomSituation.streetHello`), running on the custom endpoints. The partner opens cold ("Hey, sorry, random question…"), nudges if the user goes quiet, and wraps up after a minute. There is no on-screen countdown: the pressure is in how the partner plays it.
 - **Profile: you, and what you've done.** The user's name is the title, with the gear beside it, then **History**: every session, newest first. Each row has a situation icon, the title and a relative date, and reopens that session's feedback. Retries sit under the session they went back to, and eight rows show before "Show more". The week and streak live on Practice, where they ask for today.
 
   Removed on purpose: a Skills card and a "How ready you feel" track, which were accurate but hard to read at a glance; an identity card (the email lives in Settings); and "A good next step", which repeated Up next.
@@ -176,11 +187,11 @@ The screens after a tap on Practice use its language, so the flow reads as one a
 
 ## The rehearsal room
 
-Built like SleepBlock's sleep mode. **The bloom is the state**: it opens with whoever is speaking, driven by the real audio levels of the mic and the partner's track (fast attack, slow release), and greys out while paused. **The partner's line is the instrument**, shown as a caption. The user's own words are never captioned back to them, because they just said them.
+Built like SleepBlock's sleep mode. **The rods are the state**: they move with whoever is speaking, driven by the real audio levels of the mic and the partner's track (fast attack, slow release), and grey out while paused. **The partner's line is the instrument**, shown as a caption. The user's own words are never captioned back to them, because they just said them.
 
 - **Waits show motion.** "Getting your partner" and "Finding one useful change" end in `WaitingDots`: three dots that fill in one at a time. The dots keep their space, so the words never shift, and Reduce Motion shows a still ellipsis.
 - **What's on screen.** The header is only the ✕ and the time left, because the question is already in the middle and the session was chosen a moment ago. The time turns coral for the last 30 seconds. Above the partner's line, one label says who has the floor: the partner by name ("A hiring manager") while they talk, "Your turn" once they stop.
-- **Control grammar.** Consequential exits take a deliberate confirmation, and harmless ones are taps. "I need a moment" and "Help me" are taps. Help pauses the scene and shows the session's sentence scaffold. "Finish and get feedback" asks first, and appears only after the user has spoken. Before that it would have nothing to give feedback on, so its room is kept empty (the bloom never jumps). The ✕ leaves at once if nothing has been said yet. Otherwise it asks, and offers feedback on what was said.
+- **Control grammar.** Consequential exits take a deliberate confirmation, and harmless ones are taps. "I need a moment" and "Help me" are taps. Help pauses the scene and shows the session's sentence scaffold. "Finish and get feedback" asks first, and appears only after the user has spoken. Before that it would have nothing to give feedback on, so its room is kept empty (the rods never jump). The ✕ leaves at once if nothing has been said yet. Otherwise it asks, and offers feedback on what was said.
 - **Pause is real.** The mic is muted, the partner's audio drops to zero, and activity pings keep the partner from filling the silence. Resuming asks the partner to repeat its last question.
 - **The partner waits for a signal.** The prompt override tells it to stay silent until `[[PRACTICE_BEGIN]]`, then open with the rehearsal's exact first line. Control signals are filtered out of every transcript. (ElevenLabs' `firstMessage` override would be cleaner, but it needs that override allowed in the agent's security settings. The signal approach works with the agents as they are configured today.)
 - **Natural close.** After the last allowed answer, or when time is up (the partner is asked to wrap up), the scene ends once both sides have been quiet for 3s. It never ends mid-sentence.
@@ -239,7 +250,7 @@ Library opens with a **Your own** group: Custom situation, Preparation plan, Pra
 Your slides, rehearsed out loud, then the audience's questions.
 
 - **Decks stay on the phone** (Application Support, complete file protection). Only the transcript, slide text and a spoken answer leave it, for coaching. PDF is the path. A `.pptx` goes through the server's converter, and when that can't run, the message says to export a PDF instead.
-- **Rehearsing** is full screen. The slide is the instrument: you swipe it like a clicker, and each change is logged with its time. A small bloom by the timer shows the mic is hearing you. Finishing is a hold. The recording is AAC mono at 32 kbps and capped at 40 minutes, which keeps it inside the transcription limit. A talk is saved before the questions are fetched, so a network failure never loses it.
+- **Rehearsing** is full screen. The slide is the instrument: you swipe it like a clicker, and each change is logged with its time. Small voice rods by the timer show it is hearing you. Finishing is a hold. The recording is AAC mono at 32 kbps and capped at 40 minutes, which keeps it inside the transcription limit. A talk is saved before the questions are fetched, so a network failure never loses it.
 - **Afterwards, questions come first.** Q&A is the part people dread and never practice. You answer each question out loud, and each answer gets one specific note. Then comes the replay, with slides following the recording, then the transcript. Pace is shown as words a minute.
 
 Review routes: `presentations`, `deck`, `presentationreview`, `rehearsalready`.
@@ -253,7 +264,7 @@ Review routes: `plan`, `planprogress`.
 ### Practice routine
 
 - **Daily prompt:** a thirty-second speaking prompt on chosen days, as a notification that opens it. Prompts rotate daily and come in three kinds: say a line, answer a question, describe a scene. The check is kind. It asks only that you really spoke, and never judges accent or grammar. Non-English users get the open questions.
-- **Speak to unlock:** chosen apps are shielded during a window until you speak (15 minutes by default). This is SleepBlock's Screen Time architecture with three extensions: a monitor puts the shield up and down, the shield itself carries the bloom on cream, and "Open Speaking Coach" on the shield posts a notification that opens the prompt. `Shared/RoutineShared.swift` is the single rule all four processes read.
+- **Speak to unlock:** chosen apps are shielded during a window until you speak (15 minutes by default). This is SleepBlock's Screen Time architecture with three extensions: a monitor puts the shield up and down, the shield itself carries the app icon, and "Open Speaking Coach" on the shield posts a notification that opens the prompt. `Shared/RoutineShared.swift` is the single rule all four processes read.
 - **Nobody can be locked out:**
   - Turning it off clears the shield.
   - Signing out turns it off.

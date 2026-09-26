@@ -7,7 +7,6 @@ import SwiftUI
 struct RehearsalView: View {
     let store: PresentationStore
     let deck: PresentationDeck
-    let language: String
     let onClose: () -> Void
     /// Drives a silent, deterministic recording preview in the DEBUG review gallery.
     var demoRecording = false
@@ -47,7 +46,7 @@ struct RehearsalView: View {
                 case .failed(let message, let canRetry): failed(message, canRetry: canRetry)
                 case .done(let id):
                     NavigationStack {
-                        RehearsalReviewView(store: store, deck: deck, rehearsalID: id, language: language, isFresh: true, onBack: onClose)
+                        RehearsalReviewView(store: store, deck: deck, rehearsalID: id, isFresh: true, onBack: onClose)
                     }
                 }
             }
@@ -79,7 +78,7 @@ struct RehearsalView: View {
     private var ready: some View {
         VStack(spacing: 0) {
             HStack {
-                GlassIconButton(systemImage: "xmark", size: 44, iconSize: 15, color: Palette.dim, accessibilityLabel: "Close", action: onClose)
+                GlassIconButton(systemImage: "xmark", size: 44, iconSize: 15, color: Palette.dim, accessibilityLabel: String(localized: "Close", bundle: AppLanguage.bundle), action: onClose)
                 Spacer()
             }
             .padding(.top, Space.md)
@@ -98,7 +97,7 @@ struct RehearsalView: View {
             .multilineTextAlignment(.center)
             .padding(.top, Space.xxxl)
             Spacer()
-            PrimaryButton(title: "Start talking", systemImage: "mic.fill") { Task { await begin() } }
+            PrimaryButton(title: String(localized: "Start talking", bundle: AppLanguage.bundle), systemImage: "mic.fill") { Task { await begin() } }
                 .padding(.bottom, Space.lg)
         }
         .padding(.horizontal, Space.xxl)
@@ -107,7 +106,7 @@ struct RehearsalView: View {
     private func begin() async {
         let granted = await AVAudioApplication.requestRecordPermission()
         guard granted else {
-            stage = .failed("Speaking Coach needs the microphone to hear your talk. Turn it on in Settings.", canRetry: false)
+            stage = .failed(String(localized: "Speaking Coach needs the microphone to hear your talk. Turn it on in Settings.", bundle: AppLanguage.bundle), canRetry: false)
             return
         }
         rehearsalID = UUID()
@@ -120,7 +119,7 @@ struct RehearsalView: View {
             stage = .recording
             Analytics.enter("presentation_rehearsal")
         } catch {
-            stage = .failed((error as? LocalizedError)?.errorDescription ?? "The microphone couldn't start.", canRetry: true)
+            stage = .failed((error as? LocalizedError)?.errorDescription ?? String(localized: "The microphone couldn't start.", bundle: AppLanguage.bundle), canRetry: true)
         }
     }
 
@@ -129,7 +128,7 @@ struct RehearsalView: View {
     private var recording: some View {
         VStack(spacing: 0) {
             HStack {
-                GlassIconButton(systemImage: "xmark", size: 44, iconSize: 15, color: Palette.dim, accessibilityLabel: "Leave session") {
+                GlassIconButton(systemImage: "xmark", size: 44, iconSize: 15, color: Palette.dim, accessibilityLabel: String(localized: "Leave session", bundle: AppLanguage.bundle)) {
                     confirmingLeave = true
                 }
                 .confirmationDialog("Leave this session?", isPresented: $confirmingLeave, titleVisibility: .visible) {
@@ -145,7 +144,7 @@ struct RehearsalView: View {
                     let elapsed = demoRecording ? max(0, timeline.date.timeIntervalSince(startedAt)) : recorder.elapsed
                     let level = demoRecording ? 0.2 + 0.72 * (0.5 + 0.5 * sin(timeline.date.timeIntervalSinceReferenceDate * 6.5)) : recorder.level
                     HStack(spacing: Space.sm) {
-                        BloomMark(size: 26, level: level, breathes: false, glow: false)
+                        VoiceRods(size: 26, level: level, live: true)
                         Text(Self.clock(elapsed))
                             .font(Typeface.label(15))
                             .foregroundStyle(Palette.ink)
@@ -182,7 +181,7 @@ struct RehearsalView: View {
             }
 
             HStack(spacing: Space.xl) {
-                GlassIconButton(systemImage: "chevron.left", size: 52, iconSize: 17, accessibilityLabel: "Previous slide") {
+                GlassIconButton(systemImage: "chevron.left", size: 52, iconSize: 17, accessibilityLabel: String(localized: "Previous slide", bundle: AppLanguage.bundle)) {
                     withAnimation { slide = max(slide - 1, 0) }
                 }
                 .disabled(slide == 0)
@@ -192,7 +191,7 @@ struct RehearsalView: View {
                     .foregroundStyle(Palette.dim)
                     .monospacedDigit()
                     .frame(minWidth: 70)
-                GlassIconButton(systemImage: "chevron.right", size: 52, iconSize: 17, accessibilityLabel: "Next slide") {
+                GlassIconButton(systemImage: "chevron.right", size: 52, iconSize: 17, accessibilityLabel: String(localized: "Next slide", bundle: AppLanguage.bundle)) {
                     withAnimation { slide = min(slide + 1, deck.slideCount - 1) }
                 }
                 .disabled(slide == deck.slideCount - 1)
@@ -237,23 +236,23 @@ struct RehearsalView: View {
         Analytics.action("presentation_rehearsal")
         guard seconds >= 10 else {
             try? FileManager.default.removeItem(at: audioURL)
-            stage = .failed("That was too short to coach. Give at least part of the talk out loud.", canRetry: true)
+            stage = .failed(String(localized: "That was too short to coach. Give at least part of the talk out loud.", bundle: AppLanguage.bundle), canRetry: true)
             return
         }
         Task { await process() }
     }
 
     private func process() async {
-        stage = .processing("Listening back to your talk…")
+        stage = .processing(String(localized: "Listening back to your talk…", bundle: AppLanguage.bundle))
         let transcript: String
         do {
-            transcript = try await PresentationAPI.transcribe(audioURL, language: language)
+            transcript = try await PresentationAPI.transcribe(audioURL, language: AppLanguage.code)
         } catch {
-            stage = .failed((error as? LocalizedError)?.errorDescription ?? "Your talk couldn't be transcribed.", canRetry: false)
+            stage = .failed((error as? LocalizedError)?.errorDescription ?? String(localized: "Your talk couldn't be transcribed.", bundle: AppLanguage.bundle), canRetry: false)
             return
         }
         guard !transcript.isEmpty else {
-            stage = .failed("We couldn't hear any speech in that recording. Check the microphone isn't covered and try again.", canRetry: true)
+            stage = .failed(String(localized: "We couldn't hear any speech in that recording. Check the microphone isn't covered and try again.", bundle: AppLanguage.bundle), canRetry: true)
             return
         }
         var rehearsal = PresentationRehearsal(
@@ -263,18 +262,23 @@ struct RehearsalView: View {
         )
         // Saved before the questions, so a network failure never loses the talk.
         store.save(rehearsal)
-        stage = .processing("Your audience is thinking of questions…")
+        stage = .processing(String(localized: "Your audience is thinking of questions…", bundle: AppLanguage.bundle))
         if let questions = try? await PresentationAPI.questions(deck: deck, transcript: transcript, events: events) {
             rehearsal.questions = questions
             store.save(rehearsal)
         }
         Haptics.success()
+        Analytics.capture("presentation_rehearsed", [
+            "duration_s": durationMs / 1000,
+            "slides": deck.slideCount,
+            "questions": rehearsal.questions.count,
+        ])
         stage = .done(rehearsal.id)
     }
 
     private func processing(_ step: String) -> some View {
         VStack(spacing: Space.xxl) {
-            BloomMark(size: 150, level: 0.15)
+            VoiceRods(size: 150)
             Text(step)
                 .font(Typeface.title(22))
                 .foregroundStyle(Palette.ink)
@@ -286,23 +290,23 @@ struct RehearsalView: View {
 
     private func failed(_ message: String, canRetry: Bool) -> some View {
         StatusScreen(
-            title: "That didn't work",
+            title: String(localized: "That didn't work", bundle: AppLanguage.bundle),
             message: message,
             primary: failurePrimary(canRetry: canRetry),
-            secondary: StatusScreen.Action(title: "Close", run: onClose)
+            secondary: StatusScreen.Action(title: String(localized: "Close", bundle: AppLanguage.bundle), run: onClose)
         )
     }
 
     private func failurePrimary(canRetry: Bool) -> StatusScreen.Action? {
         if AVAudioApplication.shared.recordPermission == .denied {
-            return StatusScreen.Action(title: "Open Settings") {
+            return StatusScreen.Action(title: String(localized: "Open Settings", bundle: AppLanguage.bundle)) {
                 if let url = URL(string: UIApplication.openSettingsURLString) { UIApplication.shared.open(url) }
             }
         }
-        if canRetry { return StatusScreen.Action(title: "Try again") { stage = .ready } }
+        if canRetry { return StatusScreen.Action(title: String(localized: "Try again", bundle: AppLanguage.bundle)) { stage = .ready } }
         // The recording is still on disk: try the upload again.
         if FileManager.default.fileExists(atPath: audioURL.path) {
-            return StatusScreen.Action(title: "Try again") { Task { await process() } }
+            return StatusScreen.Action(title: String(localized: "Try again", bundle: AppLanguage.bundle)) { Task { await process() } }
         }
         return nil
     }

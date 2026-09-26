@@ -10,7 +10,7 @@ struct ProfileView: View {
     @State private var showsSettings = false
 
     private var title: String {
-        guard let name = model.profile?.name, !name.isEmpty else { return "Profile" }
+        guard let name = model.profile?.name, !name.isEmpty else { return String(localized: "Profile", bundle: AppLanguage.bundle) }
         return name
     }
 
@@ -24,7 +24,7 @@ struct ProfileView: View {
                     .minimumScaleFactor(0.7)
                     .accessibilityAddTraits(.isHeader)
                 Spacer(minLength: 0)
-                GlassIconButton(systemImage: "gearshape", size: 44, iconSize: 18, color: Palette.dim, accessibilityLabel: "Settings") {
+                GlassIconButton(systemImage: "gearshape", size: 44, iconSize: 18, color: Palette.dim, accessibilityLabel: String(localized: "Settings", bundle: AppLanguage.bundle)) {
                     showsSettings = true
                 }
             }

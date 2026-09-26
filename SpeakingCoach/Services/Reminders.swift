@@ -14,7 +14,7 @@ enum Reminders {
 
     static var timeLabel: String {
         let date = Calendar.current.date(from: DateComponents(hour: hour, minute: minute)) ?? .now
-        return date.formatted(date: .omitted, time: .shortened)
+        return date.formatted(Date.FormatStyle(date: .omitted, time: .shortened, locale: AppLanguage.locale))
     }
 
     static var authorizationStatus: UNAuthorizationStatus {
@@ -31,8 +31,8 @@ enum Reminders {
             return false
         }
         let content = UNMutableNotificationContent()
-        content.title = "Two minutes, out loud."
-        content.body = practiceTitle.map { "Your next session: \($0)." } ?? "Your next session is ready."
+        content.title = String(localized: "Two minutes, out loud.", bundle: AppLanguage.bundle)
+        content.body = practiceTitle.map { String(localized: "Your next session: \($0).", bundle: AppLanguage.bundle) } ?? String(localized: "Your next session is ready.", bundle: AppLanguage.bundle)
         content.sound = .default
         let trigger = UNCalendarNotificationTrigger(dateMatching: DateComponents(hour: hour, minute: minute), repeats: true)
         try? await center.add(UNNotificationRequest(identifier: id, content: content, trigger: trigger))

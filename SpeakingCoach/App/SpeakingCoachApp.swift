@@ -6,12 +6,15 @@ struct SpeakingCoachApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
 
     init() {
+        AppLanguage.install()
         Analytics.configurePostHog()
         Haptics.prepare()
         #if DEBUG
         if LaunchFlags.has("-fresh-start") {
             UserDefaults.standard.removeObject(forKey: "sc.onboardingDraft.v1")
+            AppLanguage.forget()
         }
+        if let language = LaunchFlags.value("-language") { AppLanguage.choose(language) }
         assert(Typeface.isAvailable, "DM Sans failed to load — the app is silently rendering in San Francisco.")
         #endif
     }
@@ -38,6 +41,23 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
 
     func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification) async -> UNNotificationPresentationOptions {
         [.banner, .sound]
+    }
+}
+
+/// The app's language as SwiftUI observes it. Changing it re-renders every
+/// screen in the new language at once.
+@MainActor
+@Observable
+final class LanguageState {
+    static let shared = LanguageState()
+    private(set) var code = AppLanguage.code
+    private(set) var isChosen = AppLanguage.chosen != nil
+
+    func choose(_ code: String) {
+        guard AppLanguage.supported.contains(code) else { return }
+        AppLanguage.choose(code)
+        self.code = code
+        isChosen = true
     }
 }
 

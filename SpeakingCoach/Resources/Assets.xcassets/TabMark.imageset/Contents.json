@@ -1,6 +1,6 @@
 {
   "images" : [
-    { "filename" : "bloom.svg", "idiom" : "universal" }
+    { "filename" : "mark.svg", "idiom" : "universal" }
   ],
   "info" : { "author" : "xcode", "version" : 1 },
   "properties" : {

@@ -53,7 +53,7 @@ struct FeedbackView: View {
                                 .fixedSize(horizontal: false, vertical: true)
                         }
                         Spacer(minLength: Space.md)
-                        GlassIconButton(systemImage: "xmark", size: 40, iconSize: 14, color: Palette.dim, accessibilityLabel: "Close") { dismiss() }
+                        GlassIconButton(systemImage: "xmark", size: 40, iconSize: 14, color: Palette.dim, accessibilityLabel: String(localized: "Close", bundle: AppLanguage.bundle)) { dismiss() }
                     }
 
                     TextField("", text: $text, prompt: Text("Tell us what happened…").foregroundStyle(Palette.muted), axis: .vertical)
@@ -71,7 +71,7 @@ struct FeedbackView: View {
                                 .aspectRatio(contentMode: .fit)
                                 .frame(maxHeight: 220)
                                 .clipShape(RoundedRectangle(cornerRadius: Corner.sm, style: .continuous))
-                            GlassIconButton(systemImage: "xmark", size: 32, iconSize: 12, color: Palette.dim, accessibilityLabel: "Remove screenshot") {
+                            GlassIconButton(systemImage: "xmark", size: 32, iconSize: 12, color: Palette.dim, accessibilityLabel: String(localized: "Remove screenshot", bundle: AppLanguage.bundle)) {
                                 self.screenshot = nil
                                 item = nil
                             }
@@ -99,7 +99,7 @@ struct FeedbackView: View {
             }
             .scrollDismissesKeyboard(.interactively)
 
-            PrimaryButton(title: "Send", systemImage: "paperplane.fill", isLoading: sending) {
+            PrimaryButton(title: String(localized: "Send", bundle: AppLanguage.bundle), systemImage: "paperplane.fill", isLoading: sending) {
                 Task { await send() }
             }
             .disabled(trimmed.isEmpty)
@@ -110,9 +110,9 @@ struct FeedbackView: View {
 
     private var thanks: some View {
         StatusScreen(
-            title: "Thank you",
-            message: "Your feedback is on its way. It genuinely shapes what we build next.",
-            primary: StatusScreen.Action(title: "Done") { dismiss() }
+            title: String(localized: "Thank you", bundle: AppLanguage.bundle),
+            message: String(localized: "Your feedback is on its way. It genuinely shapes what we build next.", bundle: AppLanguage.bundle),
+            primary: StatusScreen.Action(title: String(localized: "Done", bundle: AppLanguage.bundle)) { dismiss() }
         )
     }
 
@@ -128,7 +128,7 @@ struct FeedbackView: View {
             sent = true
         } catch {
             Haptics.error()
-            problem = "Your feedback couldn't be sent. Check your connection and try again."
+            problem = String(localized: "Your feedback couldn't be sent. Check your connection and try again.", bundle: AppLanguage.bundle)
         }
     }
 }

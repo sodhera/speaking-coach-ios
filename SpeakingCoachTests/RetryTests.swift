@@ -4,6 +4,11 @@ import XCTest
 /// The retry checkpoint must match the server's `retryFromReport`, or the app
 /// would offer retries the server refuses.
 final class RetryTests: XCTestCase {
+    override func setUp() {
+        super.setUp()
+        AppLanguage.choose("en")
+    }
+
     private let practice = PracticeCatalog.definition("interview_tell_me_about_yourself")!
 
     private func report(evidenceTurn: String?, retry: RetryCheckpoint? = nil, transcript: [TranscriptLine]? = nil, target: Int = 1) -> PracticeReport {

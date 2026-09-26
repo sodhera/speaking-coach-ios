@@ -4,7 +4,9 @@ import Supabase
 
 /// First-party funnel analytics into Supabase and PostHog. Supabase receives
 /// page, duration, and action events. PostHog also receives allowlisted,
-/// bounded onboarding choices. Neither receives names, free text, or speech.
+/// bounded onboarding choices and product events (sessions, feedback,
+/// purchases), keyed to the account's opaque id. Neither receives names,
+/// emails, free text, or speech.
 ///
 /// Onboarding pages are named `ob_<step>` with the step's index, so drop-off
 /// reads straight off the funnel.
@@ -24,17 +26,59 @@ enum Analytics {
     private static var flushTask: Task<Void, Never>?
 
     /// PostHog is configured only when a project token is supplied at build
-    /// time. Automatic interaction, screen, lifecycle, and replay capture stay
-    /// disabled; only explicit page events are mirrored there.
+    /// time. App lifecycle events (installed, updated, opened, backgrounded)
+    /// are captured; automatic interaction, screen and replay capture stay
+    /// off, since they could pick up what people type.
     static func configurePostHog() {
         let token = AppConfig.postHogProjectToken.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !token.isEmpty else { return }
         let config = PostHogConfig(projectToken: token, host: AppConfig.postHogHost)
         config.captureScreenViews = false
         config.captureElementInteractions = false
-        config.captureApplicationLifecycleEvents = false
+        config.captureApplicationLifecycleEvents = true
         config.sessionReplay = false
         PostHogSDK.shared.setup(config)
+        PostHogSDK.shared.register(["app_language": AppLanguage.code])
+    }
+
+    private static var isReviewRun: Bool {
+        #if DEBUG
+        ProcessInfo.processInfo.arguments.contains { $0.hasPrefix("-review") || $0 == "-fresh-start" || $0 == "-zara-demo" }
+        #else
+        false
+        #endif
+    }
+
+    /// Ties events to the account's opaque id, with the few fixed answers
+    /// that segment the funnel. Nil (signed out) starts a fresh anonymous id.
+    static func identify(userID: UUID?, profile: CoachProfile?) {
+        guard !isReviewRun else { return }
+        guard let userID else {
+            PostHogSDK.shared.reset()
+            PostHogSDK.shared.register(["app_language": AppLanguage.code])
+            return
+        }
+        var properties: [String: Any] = ["language": AppLanguage.code]
+        if let moment = profile?.moment { properties["moment"] = moment.rawValue }
+        if let readiness = profile?.readiness { properties["readiness_baseline"] = min(max(readiness, 0), 10) }
+        if let source = profile?.heardFrom { properties["heard_from"] = source.rawValue }
+        if profile?.isLegacy == true { properties["legacy_account"] = true }
+        PostHogSDK.shared.identify(userID.uuidString.lowercased(), userProperties: properties)
+    }
+
+    /// A product event. Callers pass only fixed values: enum raw values,
+    /// catalog ids, bounded numbers and flags, never anything a person typed
+    /// or said.
+    static func capture(_ event: String, _ properties: [String: Any] = [:]) {
+        guard !isReviewRun else { return }
+        var properties = properties
+        properties["visit_id"] = visitID.uuidString
+        PostHogSDK.shared.capture(event, properties: properties)
+    }
+
+    static func languageChosen(_ code: String, from source: String) {
+        PostHogSDK.shared.register(["app_language": code])
+        capture("language_chosen", ["language": code, "previous": AppLanguage.chosen ?? "none", "source": source])
     }
 
     /// Records entering a page, closing the previous one with its duration.
@@ -61,9 +105,7 @@ enum Analytics {
         event: String = "onboarding_choice",
         step: Int
     ) {
-        #if DEBUG
-        if ProcessInfo.processInfo.arguments.contains(where: { $0.hasPrefix("-review") || $0 == "-fresh-start" }) { return }
-        #endif
+        guard !isReviewRun else { return }
         var properties: [String: Any] = [
             "page_id": String(page.lowercased().prefix(48)),
             "step_index": min(max(step, 0), 19),
@@ -84,10 +126,8 @@ enum Analytics {
     }
 
     private static func queue(page: String, type: String, step: Int?, duration: Int? = nil) {
-        #if DEBUG
         // Keep simulator review runs and UI tests out of the real funnel.
-        if ProcessInfo.processInfo.arguments.contains(where: { $0.hasPrefix("-review") || $0 == "-fresh-start" }) { return }
-        #endif
+        guard !isReviewRun else { return }
         let pageID = String(page.lowercased().prefix(48))
         let stepIndex = step.map { min(max($0, 0), 19) }
         pending.append(Event(

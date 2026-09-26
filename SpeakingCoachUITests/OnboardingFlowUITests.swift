@@ -15,13 +15,13 @@ final class OnboardingFlowUITests: XCTestCase {
     }
 
     func testFullOnboardingReachesAccountStep() {
-        tap("Get started")
-
-        // Practice language: the device's own leads; English here.
-        XCTAssertTrue(app.staticTexts["Which language do you want to practice?"].waitForExistence(timeout: 5))
+        // Language comes first, with nothing chosen for the user.
+        XCTAssertTrue(app.staticTexts["Choose your language"].waitForExistence(timeout: 8))
+        XCTAssertFalse(app.buttons["Continue"].isEnabled)
         tap("English")
         snap("00-language")
         tap("Continue")
+        tap("Get started")
 
         // Name
         let field = app.textFields.firstMatch
@@ -80,14 +80,14 @@ final class OnboardingFlowUITests: XCTestCase {
 
         // Demo: tap through a clearly labeled example and its one change.
         XCTAssertTrue(app.staticTexts["See how practice works."].waitForExistence(timeout: 5))
-        let answer = app.buttons["Show an example answer"].firstMatch
+        let answer = app.buttons["Play an example"].firstMatch
         XCTAssertTrue(answer.waitForExistence(timeout: 5))
         answer.tap()
-        let retry = app.buttons["Show a clearer answer"].firstMatch
+        let retry = app.buttons["Play it with the change"].firstMatch
         XCTAssertTrue(retry.waitForExistence(timeout: 12))
         snap("07-demo-heard-back")
         retry.tap()
-        XCTAssertTrue(app.staticTexts["In practice, you'll try your own words and get one useful next step."].waitForExistence(timeout: 12))
+        XCTAssertTrue(app.staticTexts["Your words, one change, a clearer try."].waitForExistence(timeout: 12))
         snap("07-demo-done")
         tap("Continue", timeout: 6)
 
@@ -114,9 +114,17 @@ final class OnboardingFlowUITests: XCTestCase {
         XCTAssertFalse(app.buttons["Sign up with email"].exists)
     }
 
+    func testLanguageSpeaksAsItIsTapped() {
+        XCTAssertTrue(app.staticTexts["Choose your language"].waitForExistence(timeout: 8))
+        tap("Español")
+        XCTAssertTrue(app.staticTexts["Elige tu idioma"].waitForExistence(timeout: 3))
+        tap("Continuar")
+        XCTAssertTrue(app.buttons["Empezar"].waitForExistence(timeout: 5))
+    }
+
     func testDraftResumesAfterRelaunch() {
+        chooseEnglish()
         tap("Get started")
-        tap("Continue")
         let field = app.textFields.firstMatch
         XCTAssertTrue(field.waitForExistence(timeout: 5))
         field.typeText("Maya")
@@ -132,6 +140,7 @@ final class OnboardingFlowUITests: XCTestCase {
     }
 
     func testSignInCrossfadeKeepsTheMarkStill() {
+        chooseEnglish()
         tap("I already have an account")
         XCTAssertTrue(app.staticTexts["Welcome back"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.buttons["Sign in with Apple"].exists)
@@ -142,6 +151,12 @@ final class OnboardingFlowUITests: XCTestCase {
     }
 
     // MARK: Helpers
+
+    private func chooseEnglish() {
+        XCTAssertTrue(app.staticTexts["Choose your language"].waitForExistence(timeout: 8))
+        tap("English")
+        tap("Continue")
+    }
 
     private func tap(_ label: String, timeout: TimeInterval = 5, file: StaticString = #filePath, line: UInt = #line) {
         let button = app.buttons[label].firstMatch

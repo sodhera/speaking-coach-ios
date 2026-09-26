@@ -60,7 +60,7 @@ final class AppModel {
     func commitOnboarding(_ answers: OnboardingAnswers) {
         if let userID {
             let profile = answers.profile()
-            self.profile = profile
+            adopt(profile)
             phase = .ready
             OnboardingFlow.clearDraft()
             Task { await ProfileService.save(profile, userID: userID) }
@@ -85,11 +85,37 @@ final class AppModel {
         phase = .ready
     }
 
-    func updateLanguage(_ language: String) {
-        guard var profile, let userID, profile.language != language else { return }
-        profile.language = language
+    /// The one language for everything: the screens, the partner, the
+    /// feedback. Saved on the account so the server's reports match it.
+    func changeLanguage(to code: String) {
+        Analytics.languageChosen(code, from: "settings")
+        LanguageState.shared.choose(code)
+        syncLanguage()
+        // Session titles in history are read in the language they're shown in.
+        if let userID { Task { await history.load(userID: userID) } }
+    }
+
+    /// The device's choice wins over the account's. An account restored on a
+    /// phone where nothing was chosen yet (an update from the old app, a
+    /// sign-in on a new phone) takes the account's language instead.
+    private func syncLanguage() {
+        guard var profile, let userID else { return }
+        if AppLanguage.chosen == nil {
+            let adopted = AppLanguage.supported.contains(profile.language) ? profile.language : AppLanguage.code
+            LanguageState.shared.choose(adopted)
+        }
+        guard profile.language != AppLanguage.code else { return }
+        profile.language = AppLanguage.code
         self.profile = profile
+        ProfileService.cache(profile, userID: userID)
         Task { await ProfileService.save(profile, userID: userID) }
+    }
+
+    /// Every path that sets the profile ends here.
+    private func adopt(_ profile: CoachProfile) {
+        self.profile = profile
+        syncLanguage()
+        Analytics.identify(userID: userID, profile: self.profile)
     }
 
     /// The first plan's last step: readiness asked again, saved beside the
@@ -114,7 +140,7 @@ final class AppModel {
         let (data, response) = try await URLSession.shared.data(for: request)
         guard (response as? HTTPURLResponse)?.statusCode == 200 else {
             let message = (try? JSONDecoder().decode([String: String].self, from: data))?["error"]
-            throw AuthFailure.message(message ?? "Your account couldn't be deleted. Please try again.")
+            throw AuthFailure.message(message ?? String(localized: "Your account couldn't be deleted. Please try again.", bundle: AppLanguage.bundle))
         }
         if let userID { ProfileService.cache(nil, userID: userID) }
         try await AuthService.signOut()
@@ -128,7 +154,6 @@ final class AppModel {
     func setZaraDemoIdentity() {
         var answers = OnboardingAnswers.reviewFixture(before: .account)
         answers.name = "Zara"
-        answers.language = "en"
         answers.category = .presentations
         answers.moment = .presentation
         profile = answers.profile()
@@ -152,6 +177,7 @@ final class AppModel {
             preparation.clearLocal()
             // Signed out, nobody can speak to unlock — so nothing stays shut.
             routine.clearOnSignOut()
+            Analytics.identify(userID: nil, profile: nil)
             phase = .signedOut
             await subscriptions.identify(nil)
             return
@@ -160,6 +186,7 @@ final class AppModel {
         let user = session.user
         userID = user.id
         email = user.email
+        Analytics.identify(userID: user.id, profile: profile)
         // Resolve access alongside the profile, not after it.
         Task { await subscriptions.identify(user) }
 
@@ -174,35 +201,35 @@ final class AppModel {
             pendingAnswers = nil
             OnboardingFlow.clearDraft()
             if !Self.isNewAccount(user), let existing = await ProfileService.fetch(user: user) {
-                profile = existing
                 ProfileService.cache(existing, userID: user.id)
+                adopt(existing)
                 phase = .existingAccount
                 return
             }
             var fresh = answers
             if fresh.name.isEmpty, case .string(let name)? = user.userMetadata["full_name"] { fresh.name = name }
             let profile = fresh.profile()
-            self.profile = profile
+            adopt(profile)
             phase = .ready
             await ProfileService.save(profile, userID: user.id)
             return
         }
 
         if let cached = ProfileService.cached(userID: user.id) {
-            profile = cached
+            adopt(cached)
             phase = .ready
             // Refresh quietly in case another device changed it.
             if let remote = await ProfileService.fetch(user: user), remote != cached {
-                profile = remote
                 ProfileService.cache(remote, userID: user.id)
+                adopt(remote)
             }
             return
         }
 
         phase = .launching
         if let remote = await ProfileService.fetch(user: user) {
-            profile = remote
             ProfileService.cache(remote, userID: user.id)
+            adopt(remote)
             phase = .ready
         } else {
             phase = .needsSetup

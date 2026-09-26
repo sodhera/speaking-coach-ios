@@ -49,6 +49,7 @@ struct MorningStage: View {
                 .opacity(0.55 + 0.45 * depth)
 
                 GrainOverlay()
+                DotGrid()
             }
         }
         .ignoresSafeArea()
@@ -88,6 +89,7 @@ struct MorningPaper: View {
         ZStack {
             MorningStage.sky
             GrainOverlay()
+            DotGrid()
         }
         // Grain multiplies onto this sky only, never onto what's beneath.
         .compositingGroup()
@@ -116,9 +118,12 @@ extension EnvironmentValues {
 /// The app's ground: one flat warm tone, no gradient, grain or ripples.
 struct AppGround: View {
     var body: some View {
-        ground
-            .ignoresSafeArea()
-            .accessibilityHidden(true)
+        ZStack {
+            ground
+            DotGrid()
+        }
+        .ignoresSafeArea()
+        .accessibilityHidden(true)
     }
 
     @ViewBuilder
@@ -145,6 +150,32 @@ struct AppGround: View {
 
 /// A fine paper grain so large gradients never band and the ground reads as
 /// a material. Generated once, tiled.
+/// Quiet drafting-paper dots, on every page. A tiled image rather than a
+/// drawn grid, so a full screen of dots costs one texture.
+struct DotGrid: View {
+    private static let spacing: CGFloat = 22
+
+    var body: some View {
+        Rectangle()
+            .fill(ImagePaint(image: Image(uiImage: Self.tile), scale: 1 / Self.scale))
+            .allowsHitTesting(false)
+    }
+
+    private static let scale: CGFloat = 3
+
+    private static let tile: UIImage = {
+        let side = spacing * scale
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1
+        format.opaque = false
+        return UIGraphicsImageRenderer(size: CGSize(width: side, height: side), format: format).image { context in
+            let dot = 1.5 * scale
+            UIColor(Palette.ink.opacity(0.14)).setFill()
+            context.cgContext.fillEllipse(in: CGRect(x: (side - dot) / 2, y: (side - dot) / 2, width: dot, height: dot))
+        }
+    }()
+}
+
 private struct GrainOverlay: View {
     var body: some View {
         Rectangle()

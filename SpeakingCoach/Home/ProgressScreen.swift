@@ -22,7 +22,7 @@ struct ActivitySections: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            SectionTitle(text: "History")
+            SectionTitle(text: String(localized: "History", bundle: AppLanguage.bundle))
             historyList
                 .padding(.top, Space.md)
         }
@@ -50,7 +50,7 @@ struct ActivitySections: View {
             .glassSurface(cornerRadius: Corner.lg)
 
             if entries.count > Self.shownAtFirst {
-                QuietButton(title: showsAll ? "Show fewer" : "Show \(entries.count - Self.shownAtFirst) more", color: Palette.coralDeep) {
+                QuietButton(title: showsAll ? String(localized: "Show fewer", bundle: AppLanguage.bundle) : String(localized: "Show \(entries.count - Self.shownAtFirst) more", bundle: AppLanguage.bundle), color: Palette.coralDeep) {
                     withAnimation(.easeInOut(duration: 0.3)) { showsAll.toggle() }
                 }
             }
@@ -76,7 +76,7 @@ struct ActivitySections: View {
                         .fixedSize(horizontal: false, vertical: true)
                     // A retry whose session is too old to be listed stands
                     // alone, so it says what it is.
-                    Text(SessionText.when(record.date) + (record.parentID == nil ? "" : " · Retry"))
+                    Text(record.parentID == nil ? SessionText.when(record.date) : String(localized: "\(SessionText.when(record.date)) · Retry", bundle: AppLanguage.bundle, comment: "Slot: when the session was, e.g. 'Today, 10:43 AM'."))
                         .font(Typeface.body(13))
                         .foregroundStyle(Palette.muted)
                         .lineLimit(1)
@@ -135,7 +135,7 @@ struct ActivitySections: View {
         openError = nil
         Task {
             do { onOpenReport(try await history.report(id: record.id)) }
-            catch { openError = "That session couldn't be opened. Check your connection and try again." }
+            catch { openError = String(localized: "That session couldn't be opened. Check your connection and try again.", bundle: AppLanguage.bundle) }
             opening = nil
         }
     }
@@ -151,33 +151,21 @@ enum SessionText {
            let section = HomeSection.containing(practice) {
             return section.icon
         }
-        if record.title == CustomSituation.ieltsSpeaking.title { return HomeSection.ielts.icon }
-        if record.title == CustomSituation.streetHello.title || record.isCustom { return HomeSection.custom.icon }
+        if record.isCustom { return HomeSection.custom.icon }
         return "text.bubble"
     }
 
     /// "Today, 10:43 AM", "Yesterday, 6:10 PM", "Monday, 9:05 AM", then
     /// "Tue, Sep 8" once it's more than a week back.
     static func when(_ date: Date, now: Date = .now, calendar: Calendar = .current) -> String {
-        let time = date.formatted(date: .omitted, time: .shortened)
-        if calendar.isDate(date, inSameDayAs: now) { return "Today, \(time)" }
+        let time = date.formatted(Date.FormatStyle(date: .omitted, time: .shortened, locale: AppLanguage.locale))
+        if calendar.isDate(date, inSameDayAs: now) { return String(localized: "Today, \(time)", bundle: AppLanguage.bundle) }
         let daysBack = calendar.dateComponents([.day], from: calendar.startOfDay(for: date), to: calendar.startOfDay(for: now)).day ?? 0
-        if daysBack == 1 { return "Yesterday, \(time)" }
-        if daysBack < 7 { return "\(date.formatted(.dateTime.weekday(.wide))), \(time)" }
+        if daysBack == 1 { return String(localized: "Yesterday, \(time)", bundle: AppLanguage.bundle) }
+        if daysBack < 7 { return String(localized: "\(date.formatted(.dateTime.weekday(.wide).locale(AppLanguage.locale))), \(time)", bundle: AppLanguage.bundle, comment: "A weekday, then a time: 'Monday, 9:05 AM'.") }
         return calendar.isDate(date, equalTo: now, toGranularity: .year)
-            ? date.formatted(.dateTime.weekday(.abbreviated).month(.abbreviated).day())
-            : date.formatted(.dateTime.month(.abbreviated).day().year())
-    }
-
-    /// A day for mid-sentence: "today", "yesterday", "on Monday", "on Sep 8".
-    static func day(_ date: Date, now: Date = .now, calendar: Calendar = .current) -> String {
-        let daysBack = calendar.dateComponents([.day], from: calendar.startOfDay(for: date), to: calendar.startOfDay(for: now)).day ?? 0
-        switch daysBack {
-        case ..<1: return "today"
-        case 1: return "yesterday"
-        case 2..<7: return "on \(date.formatted(.dateTime.weekday(.wide)))"
-        default: return "on \(date.formatted(.dateTime.month(.abbreviated).day()))"
-        }
+            ? date.formatted(.dateTime.weekday(.abbreviated).month(.abbreviated).day().locale(AppLanguage.locale))
+            : date.formatted(.dateTime.month(.abbreviated).day().year().locale(AppLanguage.locale))
     }
 }
 
@@ -214,11 +202,6 @@ struct PracticeWeeks: Equatable {
             }
         }
     }
-
-    /// Sessions this calendar week: the last row.
-    var thisWeek: Int { rows.last?.reduce(0) { $0 + $1.count } ?? 0 }
-
-    var daysPracticed: Int { rows.joined().filter { $0.count > 0 }.count }
 }
 
 /// A session and the retries that went back to it. Ordered by the latest
@@ -251,7 +234,7 @@ private struct EmptyHistory: View {
         HStack(alignment: .top, spacing: Space.md) {
             GlassRowIcon(icon: "mic")
             VStack(alignment: .leading, spacing: 3) {
-                Text(loaded ? "Nothing here yet" : "Loading your history…")
+                Text(loaded ? String(localized: "Nothing here yet", bundle: AppLanguage.bundle) : String(localized: "Loading your history…", bundle: AppLanguage.bundle))
                     .font(Typeface.label(16))
                     .foregroundStyle(Palette.ink)
                 if loaded {

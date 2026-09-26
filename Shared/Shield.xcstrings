@@ -1,0 +1,1268 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "Not now": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ahora no"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pas maintenant"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nicht jetzt"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non ora"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agora não"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Niet nu"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nie teraz"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inte nu"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Şimdi değil"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не сейчас"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не зараз"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "अभी नहीं"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ليس الآن"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今はしない"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "나중에"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "以后再说"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jangan sekarang"
+          }
+        },
+        "fil": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hindi ngayon"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Không phải bây giờ"
+          }
+        }
+      }
+    },
+    "Open Speaking Coach": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir Speaking Coach"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouvrir Speaking Coach"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speaking Coach öffnen"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apri Speaking Coach"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir o Speaking Coach"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Speaking Coach"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otwórz Speaking Coach"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Öppna Speaking Coach"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speaking Coach'u aç"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Открыть Speaking Coach"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Відкрити Speaking Coach"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speaking Coach खोलें"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "افتح Speaking Coach"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speaking Coachを開く"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speaking Coach 열기"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "打开 Speaking Coach"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buka Speaking Coach"
+          }
+        },
+        "fil": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buksan ang Speaking Coach"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mở Speaking Coach"
+          }
+        }
+      }
+    },
+    "Say one thing out loud in Speaking Coach to open this app for %lld minutes.": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Say one thing out loud in Speaking Coach to open this app for %lld minute."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Say one thing out loud in Speaking Coach to open this app for %lld minutes."
+                }
+              }
+            }
+          }
+        },
+        "es": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Di algo en voz alta en Speaking Coach para abrir esta app durante %lld minuto."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Di algo en voz alta en Speaking Coach para abrir esta app durante %lld minutos."
+                }
+              }
+            }
+          }
+        },
+        "fr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Dis une chose à voix haute dans Speaking Coach pour ouvrir cette app pendant %lld minute."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Dis une chose à voix haute dans Speaking Coach pour ouvrir cette app pendant %lld minutes."
+                }
+              }
+            }
+          }
+        },
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Sag in Speaking Coach etwas laut, um diese App für %lld Minute zu öffnen."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Sag in Speaking Coach etwas laut, um diese App für %lld Minuten zu öffnen."
+                }
+              }
+            }
+          }
+        },
+        "it": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Di' una cosa ad alta voce in Speaking Coach per aprire questa app per %lld minuto."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Di' una cosa ad alta voce in Speaking Coach per aprire questa app per %lld minuti."
+                }
+              }
+            }
+          }
+        },
+        "pt-BR": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Diga algo em voz alta no Speaking Coach para abrir este app por %lld minuto."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Diga algo em voz alta no Speaking Coach para abrir este app por %lld minutos."
+                }
+              }
+            }
+          }
+        },
+        "nl": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Zeg iets hardop in Speaking Coach om deze app %lld minuut te openen."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Zeg iets hardop in Speaking Coach om deze app %lld minuten te openen."
+                }
+              }
+            }
+          }
+        },
+        "pl": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Powiedz coś na głos w Speaking Coach, aby otworzyć tę aplikację na %lld minutę."
+                }
+              },
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Powiedz coś na głos w Speaking Coach, aby otworzyć tę aplikację na %lld minuty."
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Powiedz coś na głos w Speaking Coach, aby otworzyć tę aplikację na %lld minut."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Powiedz coś na głos w Speaking Coach, aby otworzyć tę aplikację na %lld minuty."
+                }
+              }
+            }
+          }
+        },
+        "sv": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Säg något högt i Speaking Coach för att öppna appen i %lld minut."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Säg något högt i Speaking Coach för att öppna appen i %lld minuter."
+                }
+              }
+            }
+          }
+        },
+        "tr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Bu uygulamayı %lld dakika açmak için Speaking Coach'ta sesli bir şey söyle."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Bu uygulamayı %lld dakika açmak için Speaking Coach'ta sesli bir şey söyle."
+                }
+              }
+            }
+          }
+        },
+        "ru": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Скажите что-нибудь вслух в Speaking Coach, чтобы открыть это приложение на %lld минуту."
+                }
+              },
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Скажите что-нибудь вслух в Speaking Coach, чтобы открыть это приложение на %lld минуты."
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Скажите что-нибудь вслух в Speaking Coach, чтобы открыть это приложение на %lld минут."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Скажите что-нибудь вслух в Speaking Coach, чтобы открыть это приложение на %lld минуты."
+                }
+              }
+            }
+          }
+        },
+        "uk": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Скажіть щось уголос у Speaking Coach, щоб відкрити цю програму на %lld хвилину."
+                }
+              },
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Скажіть щось уголос у Speaking Coach, щоб відкрити цю програму на %lld хвилини."
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Скажіть щось уголос у Speaking Coach, щоб відкрити цю програму на %lld хвилин."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Скажіть щось уголос у Speaking Coach, щоб відкрити цю програму на %lld хвилини."
+                }
+              }
+            }
+          }
+        },
+        "hi": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "इस ऐप को %lld मिनट के लिए खोलने को Speaking Coach में कुछ ज़ोर से बोलें।"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "इस ऐप को %lld मिनट के लिए खोलने को Speaking Coach में कुछ ज़ोर से बोलें।"
+                }
+              }
+            }
+          }
+        },
+        "ar": {
+          "variations": {
+            "plural": {
+              "zero": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "قل شيئًا بصوت عالٍ في Speaking Coach لفتح هذا التطبيق لمدة %lld دقيقة."
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "قل شيئًا بصوت عالٍ في Speaking Coach لفتح هذا التطبيق لمدة دقيقة واحدة."
+                }
+              },
+              "two": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "قل شيئًا بصوت عالٍ في Speaking Coach لفتح هذا التطبيق لمدة دقيقتين."
+                }
+              },
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "قل شيئًا بصوت عالٍ في Speaking Coach لفتح هذا التطبيق لمدة %lld دقائق."
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "قل شيئًا بصوت عالٍ في Speaking Coach لفتح هذا التطبيق لمدة %lld دقيقة."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "قل شيئًا بصوت عالٍ في Speaking Coach لفتح هذا التطبيق لمدة %lld دقيقة."
+                }
+              }
+            }
+          }
+        },
+        "ja": {
+          "variations": {
+            "plural": {
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "このアプリを%lld分間開くには、Speaking Coachで何か声に出して話してください。"
+                }
+              }
+            }
+          }
+        },
+        "ko": {
+          "variations": {
+            "plural": {
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "이 앱을 %lld분 동안 열려면 Speaking Coach에서 소리 내어 한마디 하세요."
+                }
+              }
+            }
+          }
+        },
+        "zh-Hans": {
+          "variations": {
+            "plural": {
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "在 Speaking Coach 中大声说一句话，即可打开此 App %lld分钟。"
+                }
+              }
+            }
+          }
+        },
+        "id": {
+          "variations": {
+            "plural": {
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Ucapkan satu hal dengan suara keras di Speaking Coach untuk membuka app ini selama %lld menit."
+                }
+              }
+            }
+          }
+        },
+        "fil": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Magsabi ng isang bagay nang malakas sa Speaking Coach para mabuksan ang app na ito nang %lld minuto."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Magsabi ng isang bagay nang malakas sa Speaking Coach para mabuksan ang app na ito nang %lld minuto."
+                }
+              }
+            }
+          }
+        },
+        "vi": {
+          "variations": {
+            "plural": {
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Nói một điều thành tiếng trong Speaking Coach để mở ứng dụng này trong %lld phút."
+                }
+              }
+            }
+          }
+        }
+      },
+      "comment": "Pluralized."
+    },
+    "Say one thing out loud in Speaking Coach to open this site for %lld minutes.": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Say one thing out loud in Speaking Coach to open this site for %lld minute."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Say one thing out loud in Speaking Coach to open this site for %lld minutes."
+                }
+              }
+            }
+          }
+        },
+        "es": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Di algo en voz alta en Speaking Coach para abrir este sitio durante %lld minuto."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Di algo en voz alta en Speaking Coach para abrir este sitio durante %lld minutos."
+                }
+              }
+            }
+          }
+        },
+        "fr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Dis une chose à voix haute dans Speaking Coach pour ouvrir ce site pendant %lld minute."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Dis une chose à voix haute dans Speaking Coach pour ouvrir ce site pendant %lld minutes."
+                }
+              }
+            }
+          }
+        },
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Sag in Speaking Coach etwas laut, um diese Website für %lld Minute zu öffnen."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Sag in Speaking Coach etwas laut, um diese Website für %lld Minuten zu öffnen."
+                }
+              }
+            }
+          }
+        },
+        "it": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Di' una cosa ad alta voce in Speaking Coach per aprire questo sito per %lld minuto."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Di' una cosa ad alta voce in Speaking Coach per aprire questo sito per %lld minuti."
+                }
+              }
+            }
+          }
+        },
+        "pt-BR": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Diga algo em voz alta no Speaking Coach para abrir este site por %lld minuto."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Diga algo em voz alta no Speaking Coach para abrir este site por %lld minutos."
+                }
+              }
+            }
+          }
+        },
+        "nl": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Zeg iets hardop in Speaking Coach om deze website %lld minuut te openen."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Zeg iets hardop in Speaking Coach om deze website %lld minuten te openen."
+                }
+              }
+            }
+          }
+        },
+        "pl": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Powiedz coś na głos w Speaking Coach, aby otworzyć tę stronę na %lld minutę."
+                }
+              },
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Powiedz coś na głos w Speaking Coach, aby otworzyć tę stronę na %lld minuty."
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Powiedz coś na głos w Speaking Coach, aby otworzyć tę stronę na %lld minut."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Powiedz coś na głos w Speaking Coach, aby otworzyć tę stronę na %lld minuty."
+                }
+              }
+            }
+          }
+        },
+        "sv": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Säg något högt i Speaking Coach för att öppna webbplatsen i %lld minut."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Säg något högt i Speaking Coach för att öppna webbplatsen i %lld minuter."
+                }
+              }
+            }
+          }
+        },
+        "tr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Bu siteyi %lld dakika açmak için Speaking Coach'ta sesli bir şey söyle."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Bu siteyi %lld dakika açmak için Speaking Coach'ta sesli bir şey söyle."
+                }
+              }
+            }
+          }
+        },
+        "ru": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Скажите что-нибудь вслух в Speaking Coach, чтобы открыть этот сайт на %lld минуту."
+                }
+              },
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Скажите что-нибудь вслух в Speaking Coach, чтобы открыть этот сайт на %lld минуты."
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Скажите что-нибудь вслух в Speaking Coach, чтобы открыть этот сайт на %lld минут."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Скажите что-нибудь вслух в Speaking Coach, чтобы открыть этот сайт на %lld минуты."
+                }
+              }
+            }
+          }
+        },
+        "uk": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Скажіть щось уголос у Speaking Coach, щоб відкрити цей сайт на %lld хвилину."
+                }
+              },
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Скажіть щось уголос у Speaking Coach, щоб відкрити цей сайт на %lld хвилини."
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Скажіть щось уголос у Speaking Coach, щоб відкрити цей сайт на %lld хвилин."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Скажіть щось уголос у Speaking Coach, щоб відкрити цей сайт на %lld хвилини."
+                }
+              }
+            }
+          }
+        },
+        "hi": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "इस साइट को %lld मिनट के लिए खोलने को Speaking Coach में कुछ ज़ोर से बोलें।"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "इस साइट को %lld मिनट के लिए खोलने को Speaking Coach में कुछ ज़ोर से बोलें।"
+                }
+              }
+            }
+          }
+        },
+        "ar": {
+          "variations": {
+            "plural": {
+              "zero": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "قل شيئًا بصوت عالٍ في Speaking Coach لفتح هذا الموقع لمدة %lld دقيقة."
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "قل شيئًا بصوت عالٍ في Speaking Coach لفتح هذا الموقع لمدة دقيقة واحدة."
+                }
+              },
+              "two": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "قل شيئًا بصوت عالٍ في Speaking Coach لفتح هذا الموقع لمدة دقيقتين."
+                }
+              },
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "قل شيئًا بصوت عالٍ في Speaking Coach لفتح هذا الموقع لمدة %lld دقائق."
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "قل شيئًا بصوت عالٍ في Speaking Coach لفتح هذا الموقع لمدة %lld دقيقة."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "قل شيئًا بصوت عالٍ في Speaking Coach لفتح هذا الموقع لمدة %lld دقيقة."
+                }
+              }
+            }
+          }
+        },
+        "ja": {
+          "variations": {
+            "plural": {
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "このサイトを%lld分間開くには、Speaking Coachで何か声に出して話してください。"
+                }
+              }
+            }
+          }
+        },
+        "ko": {
+          "variations": {
+            "plural": {
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "이 사이트를 %lld분 동안 열려면 Speaking Coach에서 소리 내어 한마디 하세요."
+                }
+              }
+            }
+          }
+        },
+        "zh-Hans": {
+          "variations": {
+            "plural": {
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "在 Speaking Coach 中大声说一句话，即可打开此网站 %lld分钟。"
+                }
+              }
+            }
+          }
+        },
+        "id": {
+          "variations": {
+            "plural": {
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Ucapkan satu hal dengan suara keras di Speaking Coach untuk membuka situs ini selama %lld menit."
+                }
+              }
+            }
+          }
+        },
+        "fil": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Magsabi ng isang bagay nang malakas sa Speaking Coach para mabuksan ang site na ito nang %lld minuto."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Magsabi ng isang bagay nang malakas sa Speaking Coach para mabuksan ang site na ito nang %lld minuto."
+                }
+              }
+            }
+          }
+        },
+        "vi": {
+          "variations": {
+            "plural": {
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Nói một điều thành tiếng trong Speaking Coach để mở trang web này trong %lld phút."
+                }
+              }
+            }
+          }
+        }
+      },
+      "comment": "Pluralized."
+    },
+    "Speak to unlock": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Habla para desbloquear"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parle pour débloquer"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sprechen zum Entsperren"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parla per sbloccare"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fale para desbloquear"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spreek om te ontgrendelen"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mów, by odblokować"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prata för att låsa upp"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kilidi açmak için konuş"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Скажи, чтобы разблокировать"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Скажіть, щоб розблокувати"
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "अनलॉक के लिए बोलें"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تحدّث لفتح القفل"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "話してロック解除"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "말해서 잠금 해제"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "开口解锁"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bicara untuk membuka"
+          }
+        },
+        "fil": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Magsalita para ma-unlock"
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nói để mở khóa"
+          }
+        }
+      }
+    },
+    "Tap for today's prompt. One sentence, out loud.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toca para ver el reto de hoy. Una frase, en voz alta."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Touche pour le défi du jour. Une phrase, à voix haute."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tippe für den heutigen Impuls. Ein Satz, laut."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tocca per lo spunto di oggi. Una frase, ad alta voce."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toque para o desafio de hoje. Uma frase, em voz alta."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tik voor de vraag van vandaag. Eén zin, hardop."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stuknij, aby zobaczyć dzisiejsze wyzwanie. Jedno zdanie, na głos."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tryck för dagens fråga. En mening, högt."
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bugünün sorusu için dokun. Tek cümle, sesli."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Коснитесь, чтобы открыть вопрос дня. Одна фраза вслух."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Торкніться, щоб відкрити питання дня. Одна фраза вголос."
+          }
+        },
+        "hi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "आज के सवाल के लिए टैप करें। एक वाक्य, ज़ोर से।"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اضغط لسؤال اليوم. جملة واحدة، بصوت عالٍ."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "タップして今日のお題へ。一文を声に出して。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "탭해서 오늘의 질문을 확인하세요. 한 문장, 소리 내어."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "轻点查看今日话题。一句话，大声说。"
+          }
+        },
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ketuk untuk topik hari ini. Satu kalimat, dengan suara keras."
+          }
+        },
+        "fil": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I-tap para sa tanong ngayong araw. Isang pangungusap, nang malakas."
+          }
+        },
+        "vi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chạm để xem chủ đề hôm nay. Một câu, thành tiếng."
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

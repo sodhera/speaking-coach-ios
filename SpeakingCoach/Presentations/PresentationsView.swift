@@ -5,7 +5,6 @@ import UniformTypeIdentifiers
 /// questions. Decks stay on this phone.
 struct PresentationsView: View {
     let store: PresentationStore
-    let language: String
     let onBack: () -> Void
 
     @State private var importing = false
@@ -20,8 +19,8 @@ struct PresentationsView: View {
                 ScrollView(showsIndicators: false) {
                     VStack(alignment: .leading, spacing: Space.xxl) {
                         SubpageHeader(
-                            title: "Presentations",
-                            subtitle: "Practice your talk with your own slides, then answer the questions your audience would ask.",
+                            title: String(localized: "Presentations", bundle: AppLanguage.bundle),
+                            subtitle: String(localized: "Practice your talk with your own slides, then answer the questions your audience would ask.", bundle: AppLanguage.bundle),
                             onBack: onBack
                         )
                         if store.decks.isEmpty {
@@ -53,7 +52,7 @@ struct PresentationsView: View {
                 .safeAreaPadding(.top)
                 .bottomEdgeFade()
 
-                PrimaryButton(title: "Add slides", systemImage: "plus", isLoading: working) {
+                PrimaryButton(title: String(localized: "Add slides", bundle: AppLanguage.bundle), systemImage: "plus", isLoading: working) {
                     problem = nil
                     importing = true
                 }
@@ -67,7 +66,7 @@ struct PresentationsView: View {
         .toolbar(.hidden, for: .tabBar)
         .navigationDestination(item: $selected) { id in
             if let deck = store.decks.first(where: { $0.id == id }) {
-                DeckView(store: store, deck: deck, language: language, onBack: { selected = nil })
+                DeckView(store: store, deck: deck, onBack: { selected = nil })
             }
         }
         .fileImporter(isPresented: $importing, allowedContentTypes: Self.importTypes) { result in
@@ -105,11 +104,11 @@ struct PresentationsView: View {
         .glassSurface(cornerRadius: Corner.lg)
     }
 
-    private static let steps = [
-        "Add your slides.",
-        "Give the talk out loud, moving through them.",
-        "Answer the questions your audience asks.",
-    ]
+    private static var steps: [String] { [
+        String(localized: "Add your slides.", bundle: AppLanguage.bundle),
+        String(localized: "Give the talk out loud, moving through them.", bundle: AppLanguage.bundle),
+        String(localized: "Answer the questions your audience asks.", bundle: AppLanguage.bundle),
+    ] }
 
     private func add(_ url: URL) async {
         working = true
@@ -126,10 +125,11 @@ struct PresentationsView: View {
             let deck = try store.importPDF(data, fileName: name)
             Haptics.success()
             Analytics.action("presentation_added")
+            Analytics.capture("presentation_added", ["slides": deck.slideCount, "from_pptx": url.pathExtension.lowercased() == "pptx"])
             selected = deck.id
         } catch {
             Haptics.error()
-            problem = (error as? LocalizedError)?.errorDescription ?? "That file couldn't be added. Try a PDF."
+            problem = (error as? LocalizedError)?.errorDescription ?? String(localized: "That file couldn't be added. Try a PDF.", bundle: AppLanguage.bundle)
         }
     }
 }
@@ -162,9 +162,7 @@ private struct DeckRow: View {
     }
 
     private var detail: String {
-        let slides = deck.slideCount == 1 ? "1 slide" : "\(deck.slideCount) slides"
-        let count = store.rehearsals[deck.id]?.count ?? 0
-        return count == 0 ? "\(slides) · Not practiced yet" : "\(slides) · Practiced \(count == 1 ? "once" : "\(count) times")"
+        PresentationDeck.summary(slides: deck.slideCount, practiced: store.rehearsals[deck.id]?.count ?? 0)
     }
 }
 

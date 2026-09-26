@@ -29,7 +29,7 @@ enum AuthService {
         let nonce = randomNonce()
         let credential = try await AppleSignInSheet.present(hashedNonce: sha256(nonce))
         guard let tokenData = credential.identityToken, let idToken = String(data: tokenData, encoding: .utf8) else {
-            throw AuthFailure.message("Apple didn't return a sign-in token. Please try again.")
+            throw AuthFailure.message(String(localized: "Apple didn't return a sign-in token. Please try again.", bundle: AppLanguage.bundle))
         }
         do {
             try await auth.signInWithIdToken(credentials: .init(provider: .apple, idToken: idToken, nonce: nonce))
@@ -84,12 +84,12 @@ enum AuthService {
         if let apple = error as? ASAuthorizationError, apple.code == .canceled { return .cancelled }
         if let api = error as? AuthError {
             switch api.errorCode {
-            case .overRequestRateLimit: return .message("Too many tries. Wait a minute and try again.")
+            case .overRequestRateLimit: return .message(String(localized: "Too many tries. Wait a minute and try again.", bundle: AppLanguage.bundle))
             default: return .message(api.message)
             }
         }
-        if (error as? URLError) != nil { return .message("You're offline. Check your connection and try again.") }
-        return .message("Something went wrong. Please try again.")
+        if (error as? URLError) != nil { return .message(String(localized: "You're offline. Check your connection and try again.", bundle: AppLanguage.bundle)) }
+        return .message(String(localized: "Something went wrong. Please try again.", bundle: AppLanguage.bundle))
     }
 
     // MARK: Nonce
@@ -132,7 +132,7 @@ private final class AppleSignInSheet: NSObject, ASAuthorizationControllerDelegat
             if let credential = authorization.credential as? ASAuthorizationAppleIDCredential {
                 continuation?.resume(returning: credential)
             } else {
-                continuation?.resume(throwing: AuthFailure.message("Apple sign-in returned an unexpected credential."))
+                continuation?.resume(throwing: AuthFailure.message(String(localized: "Apple sign-in returned an unexpected credential.", bundle: AppLanguage.bundle)))
             }
             continuation = nil
         }
@@ -145,7 +145,7 @@ private final class AppleSignInSheet: NSObject, ASAuthorizationControllerDelegat
                 let failure = error as NSError
                 AppLog.error("Apple authorization failed: \(failure.domain) (\(failure.code))")
             }
-            continuation?.resume(throwing: cancelled ? AuthFailure.cancelled : AuthFailure.message("Apple sign-in didn't finish. Please try again."))
+            continuation?.resume(throwing: cancelled ? AuthFailure.cancelled : AuthFailure.message(String(localized: "Apple sign-in didn't finish. Please try again.", bundle: AppLanguage.bundle)))
             continuation = nil
         }
     }

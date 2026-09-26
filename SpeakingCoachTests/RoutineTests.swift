@@ -2,6 +2,11 @@ import XCTest
 @testable import SpeakingCoach
 
 final class RoutineTests: XCTestCase {
+    override func setUp() {
+        super.setUp()
+        AppLanguage.choose("en")
+    }
+
     private var calendar: Calendar = { var c = Calendar(identifier: .gregorian); c.timeZone = TimeZone(identifier: "UTC")!; return c }()
 
     /// 2030-05-06 is a Monday (weekday 2).
@@ -47,10 +52,12 @@ final class RoutineTests: XCTestCase {
         XCTAssertFalse(prompt.evaluate("I like it very much today honestly").passed)
     }
 
-    func testOtherLanguagesOnlyGetOpenQuestions() {
+    func testOtherLanguagesNeverGetEnglishPictureChecks() {
+        AppLanguage.choose("es")
+        defer { AppLanguage.choose("en") }
         for offset in 0..<14 {
             let day = Date(timeIntervalSince1970: 1_900_000_000 + Double(offset) * 86_400)
-            XCTAssertEqual(DailyPrompt.today(day, language: "es").kind, .answer)
+            XCTAssertNotEqual(DailyPrompt.today(day).kind, .describe)
         }
     }
 }

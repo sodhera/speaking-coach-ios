@@ -2,6 +2,11 @@ import XCTest
 @testable import SpeakingCoach
 
 final class OnboardingLogicTests: XCTestCase {
+    override func setUp() {
+        super.setUp()
+        AppLanguage.choose("en")
+    }
+
     func testNoAgreementMeansSteadyNeverAProblem() {
         XCTAssertEqual(SpeakingPattern.from([:]), .steady)
         let allNo = Dictionary(uniqueKeysWithValues: PainStatement.allCases.map { ($0, Agreement.no) })
@@ -33,15 +38,7 @@ final class OnboardingLogicTests: XCTestCase {
 
     func testEveryMomentHasAFirstPractice() {
         for moment in SpeakingMoment.allCases {
-            let practice = moment.firstPractice
-            XCTAssertNotNil(practice, "\(moment)")
-            // Catalog moments must name a real catalog rehearsal; built-in
-            // ones must route back to their own scene.
-            if let situation = moment.builtInSituation {
-                XCTAssertEqual(practice.flatMap(CustomSituation.builtIn(for:)), situation)
-            } else {
-                XCTAssertNotNil(PracticeCatalog.definition(practice?.id ?? ""), "\(moment)")
-            }
+            XCTAssertNotNil(PracticeCatalog.definition(moment.firstPractice?.id ?? ""), "\(moment)")
         }
     }
 
@@ -51,10 +48,10 @@ final class OnboardingLogicTests: XCTestCase {
         }
     }
 
-    func testIELTSIsOnlyOfferedForEnglish() {
-        XCTAssertTrue(SpeakingCategory.available(forPracticeLanguage: "en").contains(.ielts))
-        XCTAssertFalse(SpeakingCategory.available(forPracticeLanguage: "de").contains(.ielts))
-        XCTAssertEqual(SpeakingCategory.available(forPracticeLanguage: "de").count, 3)
+    func testRetiredIELTSAnswersStillDecode() throws {
+        let decoder = JSONDecoder()
+        XCTAssertEqual(try decoder.decode(SpeakingMoment.self, from: Data(#""ielts""#.utf8)), .everyday)
+        XCTAssertEqual(try decoder.decode(SpeakingCategory.self, from: Data(#""ielts""#.utf8)), .everyday)
     }
 
     func testCatalogRehearsalsAreNeverMistakenForBuiltInScenes() {
@@ -65,12 +62,6 @@ final class OnboardingLogicTests: XCTestCase {
         XCTAssertNil(CustomSituation.builtIn(for: userScene.definition))
     }
 
-    func testIELTSExaminerOpensLikeTheRealTest() {
-        let practice = SpeakingMoment.ielts.firstPractice
-        XCTAssertEqual(practice?.id, "custom")
-        XCTAssertTrue(practice?.opening.contains("full name") ?? false)
-    }
-
     func testCatalogDecodesAllThirteenPractices() {
         XCTAssertEqual(PracticeCatalog.all.count, 13)
     }
@@ -78,7 +69,7 @@ final class OnboardingLogicTests: XCTestCase {
     func testEveryDemoHasFillersToLiftAndACleanRetry() {
         for moment in SpeakingMoment.allCases {
             let script = DemoScript.for(moment)
-            XCTAssertGreaterThan(script.fillerCount, 0, "\(moment)")
+            XCTAssertTrue(script.firstWords.contains(where: \.isFiller), "\(moment)")
             XCTAssertTrue(script.firstWords.contains { !$0.isFiller }, "\(moment)")
             XCTAssertFalse(script.betterWords.contains(where: \.isFiller), "\(moment)")
             XCTAssertFalse(script.firstWords.contains { $0.text.contains("{") || $0.text.contains("}") }, "\(moment)")
@@ -98,12 +89,12 @@ final class OnboardingLogicTests: XCTestCase {
     func testPromiseNamesTheirMomentAndOutcomes() {
         XCTAssertEqual(SpeakingMoment.interview.promise(outcomes: [.calm, .clear]), "and you'll walk into your interview calm and clear.")
         XCTAssertEqual(SpeakingMoment.everyday.promise(outcomes: [.fluent]), "and you'll speak fluently, every day.")
-        XCTAssertEqual(SpeakingMoment.ielts.promise(outcomes: []), "and you'll walk into your speaking test ready.")
+        XCTAssertEqual(SpeakingMoment.presentation.promise(outcomes: []), "and you'll walk into your presentation ready.")
     }
 
     func testOutcomeOptionsFitTheMoment() {
-        XCTAssertFalse(SpeakingMoment.ielts.outcomeOptions.contains(.getTheYes))
-        XCTAssertTrue(SpeakingMoment.ielts.outcomeOptions.contains(.fluent))
+        XCTAssertFalse(SpeakingMoment.meetingPeople.outcomeOptions.contains(.getTheYes))
+        XCTAssertTrue(SpeakingMoment.everyday.outcomeOptions.contains(.fluent))
         XCTAssertTrue(SpeakingMoment.raise.outcomeOptions.contains(.getTheYes))
     }
 
@@ -115,10 +106,16 @@ final class OnboardingLogicTests: XCTestCase {
         XCTAssertTrue(answers.reportsPain)
     }
 
-    func testLanguageShortListLeadsWithTheSelectionAvailable() {
-        XCTAssertTrue(PracticeLanguage.shortList(selected: "ja").contains { $0.id == "ja" })
-        let list = PracticeLanguage.shortList(selected: "en").map(\.id)
-        XCTAssertEqual(Set(list).count, list.count)
+    func testDemoInEveryLanguageHasFillersToLift() {
+        defer { AppLanguage.choose("en") }
+        for code in AppLanguage.supported {
+            AppLanguage.choose(code)
+            for moment in SpeakingMoment.allCases {
+                let script = DemoScript.for(moment)
+                XCTAssertTrue(script.firstWords.contains(where: \.isFiller), "\(code) \(moment)")
+                XCTAssertFalse(script.betterWords.contains(where: \.isFiller), "\(code) \(moment)")
+            }
+        }
     }
 
     func testUntouchedReadinessIsNotRecorded() {

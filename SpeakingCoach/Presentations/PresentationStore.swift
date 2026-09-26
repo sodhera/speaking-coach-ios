@@ -28,6 +28,17 @@ struct PresentationDeck: Codable, Identifiable, Equatable {
     var brief = PresentationBrief()
 }
 
+extension PresentationDeck {
+    /// "12 slides · Practiced twice": how big a deck is and how often it's
+    /// been practiced, wherever a deck is listed.
+    static func summary(slides: Int, practiced: Int) -> String {
+        let practice = practiced == 0
+            ? String(localized: "Not practiced yet", bundle: AppLanguage.bundle)
+            : String(localized: "Practiced \(practiced) times", bundle: AppLanguage.bundle, comment: "Pluralized: 'Practiced once', 'Practiced 3 times'.")
+        return "\(String(localized: "\(slides) slides", bundle: AppLanguage.bundle, comment: "Pluralized.")) · \(practice)"
+    }
+}
+
 struct SlideEvent: Codable, Equatable {
     /// Zero-based slide shown from this moment.
     let slideIndex: Int
@@ -118,9 +129,9 @@ final class PresentationStore {
         case unreadable, empty, tooLarge
         var errorDescription: String? {
             switch self {
-            case .unreadable: "That file couldn't be opened as a presentation. Export it as a PDF and try again."
-            case .empty: "That PDF has no pages."
-            case .tooLarge: "That presentation is over 100 slides. Try a shorter version."
+            case .unreadable: String(localized: "That file couldn't be opened as a presentation. Export it as a PDF and try again.", bundle: AppLanguage.bundle)
+            case .empty: String(localized: "That PDF has no pages.", bundle: AppLanguage.bundle)
+            case .tooLarge: String(localized: "That presentation is over 100 slides. Try a shorter version.", bundle: AppLanguage.bundle)
             }
         }
     }
@@ -136,7 +147,7 @@ final class PresentationStore {
         }
         let title = (fileName as NSString).deletingPathExtension
         let deck = PresentationDeck(
-            id: UUID(), title: title.isEmpty ? "Presentation" : title, createdAt: .now, updatedAt: .now,
+            id: UUID(), title: title.isEmpty ? String(localized: "Presentation", bundle: AppLanguage.bundle) : title, createdAt: .now, updatedAt: .now,
             fileName: fileName, slideCount: document.pageCount, slideTexts: texts
         )
         try FileManager.default.createDirectory(at: folder(for: deck.id), withIntermediateDirectories: true)
