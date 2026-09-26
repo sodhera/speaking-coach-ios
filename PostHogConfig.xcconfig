@@ -1,5 +1,5 @@
 // Optional local configuration. Put the PostHog project token in the ignored
 // Secrets.xcconfig file; builds without one keep PostHog disabled.
 POSTHOG_PROJECT_TOKEN =
-POSTHOG_HOST = https://us.i.posthog.com
+POSTHOG_HOST = https:/$()/us.i.posthog.com
 #include? "Secrets.xcconfig"
