@@ -12,8 +12,7 @@ struct MainShellView: View {
     var body: some View {
         TabView {
             HomeView(model: model, pendingBriefing: pendingBriefing, onStart: onStart, onOpenReport: onOpenReport, onStartCustom: onStartCustom)
-                // The brand's petals, as a template image the tab bar tints.
-                .tabItem { Label("Practice", image: "TabMark") }
+                .tabItem { Label("Practice", systemImage: "waveform") }
             ProfileView(model: model, onOpenReport: onOpenReport)
                 .tabItem { Label("Profile", systemImage: "person.crop.circle") }
         }

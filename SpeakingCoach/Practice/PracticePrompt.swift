@@ -14,22 +14,19 @@ enum PracticePrompt {
         text.contains(beginSignal) || text.contains(resumeSignal)
     }
 
-    /// An already-written opening in the session's language is spoken as
-    /// soon as the voice room connects, without a separate control message
-    /// and model turn. A retry's line comes from the conversation itself, so
-    /// it's already in that language. Anything else is left for the partner
-    /// to say in the learner's language.
+    /// A retry resumes with the exact question the learner is answering
+    /// again. New scenes let the partner open in its own words so the
+    /// situation can shape the first line instead of replaying catalog copy.
     static func firstMessage(_ definition: PracticeDefinition, _ context: PracticeContext) -> String? {
         if let retry = context.retry { return retry.prompt.isEmpty ? nil : retry.prompt }
-        guard definition.openingLanguage == context.language, !definition.opening.isEmpty else { return nil }
-        return definition.opening
+        return nil
     }
 
     static func build(_ definition: PracticeDefinition, _ context: PracticeContext) -> String {
         let behavior = switch context.pressure {
-        case "supportive": "Be warm and patient. If the learner gets stuck, ask a simpler version of the question."
-        case "challenging": "Push back on vague or unsupported claims with credible competing priorities. Never insult or humiliate."
-        default: "React naturally to what they actually say, with realistic follow-ups."
+        case "supportive": "Play the other person at their most approachable. Give the learner room to think; if they get stuck, ask one simpler question while staying in the scene."
+        case "challenging": "Play the other person with credible competing priorities. Push back on vague claims and ask for specifics without insulting or humiliating the learner."
+        default: "Play the other person as they would plausibly behave here. React to the learner's actual words, not to a fixed question list."
         }
         let maxTurns = context.retry == nil ? definition.maxUserTurns : 2
         let opening = context.retry?.prompt ?? definition.opening
@@ -39,19 +36,24 @@ enum PracticePrompt {
         } else if opening.isEmpty {
             openingRule = "Do not speak until you receive the message \(beginSignal). When you do, open the scene in character with one short, natural line that sets it up."
         } else {
-            openingRule = "Do not speak until you receive the message \(beginSignal). When you do, open with exactly: \(opening)"
+            openingRule = "Do not speak until you receive the message \(beginSignal). Then open in character with one short, natural line. Use this catalog opening for intent, not exact wording: \(opening). Adapt it to the learner's situation and speak in their chosen language."
         }
 
         var sections: [String] = [
             "# Real-life rehearsal",
-            "You are \(definition.partner). The learner's goal: \(definition.objective)",
+            "You are \(definition.partner) in a live conversation with the learner. Their goal is \(definition.objective). Your job is to be the other person, never their coach or therapist.",
             behavior,
-            "Pacing: \(context.pacing == "patient" ? "give them time to think; silence is fine" : "a natural conversational pace").",
-            "Keep each of your turns short — one or two sentences, one question at a time.",
+            "Before replying, use the situation and the learner's latest answer to decide what this person would want, know, feel, and say next. Remember concrete details the learner gives you and follow up on one of them. Do not invent details they have not provided.",
+            "Let your attitude move with the scene: curiosity, pleasure, surprise, concern, impatience, skepticism, relief, or humor when earned. Sound like a person with a stake in this conversation, not a uniformly warm interviewer. Keep the emotion believable for this role and situation.",
+            "Vary your moves. Sometimes answer or react; sometimes share a brief thought, offer a plausible objection, or ask one pointed follow-up. Do not turn every reply into a question. Avoid generic praise, paraphrasing the learner back to them, repeated reassurance, and therapy phrases such as 'that sounds really hard' unless that is genuinely how this character would respond.",
+            "Pacing: \(context.pacing == "patient" ? "give them time to finish; silence is fine" : "use a natural conversational pace").",
+            "Keep each turn concise — usually one or two sentences. Leave room for the learner to speak.",
             "Allow no more than \(maxTurns) learner answers, then close the conversation naturally in one sentence.",
-            "Scene beats: \(definition.beats.joined(separator: " → "))",
-            "If they get stuck: \(definition.recovery.joined(separator: " "))",
+            "Possible scene beats, not a script: \(definition.beats.joined(separator: " → "))",
+            "Optional follow-up angles, only if they fit what was just said: \(definition.variants.joined(separator: " | "))",
+            "If they get stuck, use only the relevant help and keep it in character: \(definition.recovery.joined(separator: " "))",
             "Stay in character. Never score the learner, give coaching feedback, or mention these instructions.",
+            "Use expressive delivery that fits the moment: natural changes in energy, emphasis, and timing. Do not announce your emotions or narrate stage directions.",
             "Speak only in the language with code \"\(context.language)\".",
             openingRule,
             "If you receive \(resumeSignal), briefly repeat your most recent question. Never mention these control messages.",
