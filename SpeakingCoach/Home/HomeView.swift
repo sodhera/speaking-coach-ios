@@ -613,20 +613,30 @@ private struct StreakCard: View {
 
     private var practicedToday: Bool { year.columns.last?.contains { $0?.isToday == true && ($0?.count ?? 0) > 0 } ?? false }
 
+    private var streakLabel: (String, String) {
+        if AppLanguage.code == "en" { return ("Day", "Streak") }
+        let label = String(localized: "day streak", bundle: AppLanguage.bundle)
+        guard let space = label.firstIndex(of: " ") else { return (label, "") }
+        return (String(label[..<space]), String(label[label.index(after: space)...]))
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: Space.lg) {
             HStack(alignment: .center, spacing: Space.md) {
                 Image(systemName: streak > 0 ? "flame.fill" : "flame")
                     .font(.system(size: 30))
                     .foregroundStyle(streak > 0 ? Palette.coral : Palette.muted)
-                VStack(alignment: .leading, spacing: 0) {
+                HStack(alignment: .center, spacing: Space.xs) {
                     Text(loaded ? "\(streak)" : "–")
-                        .font(Typeface.hero(30))
+                        .font(Typeface.hero(38))
                         .foregroundStyle(Palette.ink)
                         .contentTransition(.numericText(value: Double(streak)))
-                    Text("day streak", comment: "Under the streak number. Use a form that reads right after any number.")
-                        .font(Typeface.label(13))
-                        .foregroundStyle(Palette.dim)
+                    VStack(alignment: .leading, spacing: 0) {
+                        Text(streakLabel.0)
+                        Text(streakLabel.1)
+                    }
+                    .font(Typeface.label(14))
+                    .foregroundStyle(Palette.dim)
                 }
                 Spacer(minLength: Space.sm)
                 Label(practicedToday ? String(localized: "Done today", bundle: AppLanguage.bundle) : String(localized: "Practice today", bundle: AppLanguage.bundle), systemImage: practicedToday ? "checkmark.circle.fill" : "circle.dashed")
