@@ -647,41 +647,31 @@ private struct StreakCard: View {
                     .background(Capsule().fill((practicedToday ? Palette.sage : Palette.ink).opacity(0.08)))
             }
 
-            VStack(alignment: .leading, spacing: Space.sm) {
-                HStack {
-                    Text("Past year")
-                    Spacer()
-                    Text(loaded ? "\(year.practicedDays) days practiced" : "–")
-                }
-                .font(Typeface.label(12))
-                .foregroundStyle(Palette.dim)
-
-                GeometryReader { geometry in
-                    let gap: CGFloat = 1
-                    let dot = max(2, min(6, (geometry.size.width - CGFloat(year.columns.count - 1) * gap) / CGFloat(year.columns.count)))
-                    VStack(alignment: .leading, spacing: 5) {
-                        HStack(alignment: .top, spacing: gap) {
-                            ForEach(year.columns.indices, id: \.self) { index in
-                                Text(monthLabel(for: year.columns[index]))
-                                    .font(Typeface.label(9))
-                                    .foregroundStyle(Palette.muted)
-                                    .fixedSize()
-                                    .frame(width: dot, alignment: .leading)
-                            }
+            GeometryReader { geometry in
+                let gap: CGFloat = 1
+                let dot = max(2, min(6, (geometry.size.width - CGFloat(year.columns.count - 1) * gap) / CGFloat(year.columns.count)))
+                VStack(alignment: .leading, spacing: 5) {
+                    HStack(alignment: .top, spacing: gap) {
+                        ForEach(year.columns.indices, id: \.self) { index in
+                            Text(monthLabel(for: year.columns[index]))
+                                .font(Typeface.label(9))
+                                .foregroundStyle(Palette.muted)
+                                .fixedSize()
+                                .frame(width: dot, alignment: .leading)
                         }
-                        HStack(spacing: gap) {
-                            ForEach(year.columns.indices, id: \.self) { index in
-                                VStack(spacing: gap) {
-                                    ForEach(0..<7, id: \.self) { weekday in
-                                        dotView(year.columns[index][weekday], size: dot)
-                                    }
+                    }
+                    HStack(spacing: gap) {
+                        ForEach(year.columns.indices, id: \.self) { index in
+                            VStack(spacing: gap) {
+                                ForEach(0..<7, id: \.self) { weekday in
+                                    dotView(year.columns[index][weekday], size: dot)
                                 }
                             }
                         }
                     }
                 }
-                .frame(height: 12 + 5 + 7 * 6 + 6)
             }
+            .frame(height: 12 + 5 + 7 * 6 + 6)
         }
         .padding(Space.xl)
         .frame(maxWidth: .infinity, alignment: .leading)
