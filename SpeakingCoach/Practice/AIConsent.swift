@@ -99,12 +99,14 @@ private struct AIConsentView: View {
                     .glassSurface(cornerRadius: Corner.lg)
                     .padding(.top, Space.sm)
 
-                    Text("This happens only when you practice. Read more in our [Privacy Policy](\(AppConfig.privacyURL.absoluteString)).")
-                        .font(Typeface.body(14))
-                        .foregroundStyle(Palette.dim)
-                        .tint(Palette.coralDeep)
-                        .lineSpacing(2)
-                        .fixedSize(horizontal: false, vertical: true)
+                    VStack(alignment: .leading, spacing: 0) {
+                        Text("This happens only when you practice. Read more in our")
+                            .foregroundStyle(Palette.dim)
+                        Link("Privacy Policy", destination: AppConfig.privacyURL)
+                            .foregroundStyle(Palette.coralDeep)
+                    }
+                    .font(Typeface.body(14))
+                    .fixedSize(horizontal: false, vertical: true)
                 }
                 .padding(.horizontal, Space.xxl)
                 .padding(.top, Space.xxxl)
