@@ -214,6 +214,7 @@ struct PracticeYear: Equatable {
     }
 
     let columns: [[Day?]]
+    let recentDays: [Day]
     let practicedDays: Int
 
     init(counts: [Date: Int], now: Date = .now, calendar: Calendar = .current) {
@@ -231,6 +232,10 @@ struct PracticeYear: Equatable {
                 let date = calendar.date(byAdding: .day, value: offset, to: first) ?? first
                 return Day(date: date, count: counts[date, default: 0], isToday: date == today)
             }
+        }
+        recentDays = (0..<7).map { daysAgo in
+            let date = calendar.date(byAdding: .day, value: daysAgo - 6, to: today) ?? today
+            return Day(date: date, count: counts[date, default: 0], isToday: date == today)
         }
     }
 }

@@ -155,8 +155,10 @@ struct HomeView: View {
             StreakCard(
                 streak: model.history.streak,
                 year: PracticeYear(counts: model.history.activityCounts),
-                loaded: model.history.loaded
+                loaded: model.history.loaded,
+                userID: model.userID
             )
+            .id(model.userID)
             .padding(.horizontal, Space.xxl)
             .padding(.top, Space.lg)
 
@@ -610,8 +612,22 @@ private struct StreakCard: View {
     let streak: Int
     let year: PracticeYear
     let loaded: Bool
+    @AppStorage private var viewMode: String
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var transition: CGFloat
 
-    private var practicedToday: Bool { year.columns.last?.contains { $0?.isToday == true && ($0?.count ?? 0) > 0 } ?? false }
+    init(streak: Int, year: PracticeYear, loaded: Bool, userID: UUID?) {
+        self.streak = streak
+        self.year = year
+        self.loaded = loaded
+        let key = "sc.home.activityView.\(userID?.uuidString.lowercased() ?? "guest")"
+        let savedWeek = UserDefaults.standard.string(forKey: key) == "week"
+        _viewMode = AppStorage(wrappedValue: "year", key)
+        _transition = State(initialValue: savedWeek ? 1 : 0)
+    }
+
+    private var showingWeek: Bool { viewMode == "week" }
+    private var practicedToday: Bool { (year.recentDays.last?.count ?? 0) > 0 }
 
     private var streakLabel: (String, String) {
         if AppLanguage.code == "en" { return ("Day", "Streak") }
@@ -621,6 +637,32 @@ private struct StreakCard: View {
     }
 
     var body: some View {
+        Button {
+            toggleView()
+        } label: {
+            cardContent
+                .padding(Space.xl)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .glassSurface(cornerRadius: Corner.lg, whiteness: 0.58)
+                .contentShape(RoundedRectangle(cornerRadius: Corner.lg))
+        }
+        .buttonStyle(StreakCardPressStyle())
+        .accessibilityLabel(practicedToday
+            ? String(localized: "\(streak)-day streak. You've practiced today. \(year.practicedDays) days practiced in the past year.", bundle: AppLanguage.bundle)
+            : String(localized: "\(streak)-day streak. Not practiced yet today. \(year.practicedDays) days practiced in the past year.", bundle: AppLanguage.bundle))
+        .accessibilityHint(showingWeek ? "Show the past year" : "Show the last seven days")
+    }
+
+    private func toggleView() {
+        Haptics.selection()
+        let toWeek = !showingWeek
+        withAnimation(reduceMotion ? .easeInOut(duration: 0.16) : .spring(response: 0.46, dampingFraction: 0.86)) {
+            transition = toWeek ? 1 : 0
+            viewMode = toWeek ? "week" : "year"
+        }
+    }
+
+    private var cardContent: some View {
         VStack(alignment: .leading, spacing: Space.lg) {
             HStack(alignment: .center, spacing: Space.md) {
                 Image(systemName: streak > 0 ? "flame.fill" : "flame")
@@ -647,10 +689,19 @@ private struct StreakCard: View {
                     .background(Capsule().fill((practicedToday ? Palette.sage : Palette.ink).opacity(0.08)))
             }
 
-            GeometryReader { geometry in
+            ZStack(alignment: .topLeading) {
+                yearView
+                WeekActivityRow(days: year.recentDays, transition: transition, reduceMotion: reduceMotion)
+            }
+            .frame(height: 65)
+        }
+    }
+
+    private var yearView: some View {
+        GeometryReader { geometry in
                 let gap: CGFloat = 1
                 let dot = max(2, min(6, (geometry.size.width - CGFloat(year.columns.count - 1) * gap) / CGFloat(year.columns.count)))
-                VStack(alignment: .leading, spacing: 5) {
+                ZStack(alignment: .topLeading) {
                     HStack(alignment: .top, spacing: gap) {
                         ForEach(year.columns.indices, id: \.self) { index in
                             Text(monthLabel(for: year.columns[index]))
@@ -660,38 +711,11 @@ private struct StreakCard: View {
                                 .frame(width: dot, alignment: .leading)
                         }
                     }
-                    HStack(spacing: gap) {
-                        ForEach(year.columns.indices, id: \.self) { index in
-                            VStack(spacing: gap) {
-                                ForEach(0..<7, id: \.self) { weekday in
-                                    dotView(year.columns[index][weekday], size: dot)
-                                }
-                            }
-                        }
-                    }
+                    .opacity(Double(max(0, 1 - transition)))
+                    YearActivityField(year: year, transition: transition, reduceMotion: reduceMotion)
                 }
             }
-            .frame(height: 12 + 5 + 7 * 6 + 6)
-        }
-        .padding(Space.xl)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .glassSurface(cornerRadius: Corner.lg, whiteness: 0.58)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(practicedToday
-            ? String(localized: "\(streak)-day streak. You've practiced today. \(year.practicedDays) days practiced in the past year.", bundle: AppLanguage.bundle)
-            : String(localized: "\(streak)-day streak. Not practiced yet today. \(year.practicedDays) days practiced in the past year.", bundle: AppLanguage.bundle))
-    }
-
-    @ViewBuilder
-    private func dotView(_ day: PracticeYear.Day?, size: CGFloat) -> some View {
-        if let day {
-            Circle()
-                .fill(day.count >= 3 ? Palette.coralDeep : day.count == 2 ? Palette.coral : day.count == 1 ? Palette.coral.opacity(0.58) : Palette.ink.opacity(0.09))
-                .frame(width: size, height: size)
-                .overlay { Circle().strokeBorder(Palette.coralDeep, lineWidth: day.isToday ? 0.7 : 0) }
-        } else {
-            Color.clear.frame(width: size, height: size)
-        }
+            .frame(height: 65)
     }
 
     private func monthLabel(for column: [PracticeYear.Day?]) -> String {
@@ -699,6 +723,111 @@ private struct StreakCard: View {
               Calendar.current.component(.month, from: firstOfMonth.date).isMultiple(of: 2)
         else { return "" }
         return firstOfMonth.date.formatted(.dateTime.month(.abbreviated))
+    }
+}
+
+/// The year's cells converge on their weekday positions as the weekly marks form.
+private struct YearActivityField: View, Animatable {
+    let year: PracticeYear
+    var transition: CGFloat
+    let reduceMotion: Bool
+
+    var animatableData: CGFloat {
+        get { transition }
+        set { transition = newValue }
+    }
+
+    var body: some View {
+        Canvas { context, size in
+            let columns = max(year.columns.count, 1)
+            let gap: CGFloat = 1
+            let dot = max(2, min(6, (size.width - CGFloat(columns - 1) * gap) / CGFloat(columns)))
+            let progress = min(max(transition, 0), 1)
+            let travel = reduceMotion ? CGFloat.zero : progress * progress * (3 - 2 * progress)
+            let opacity = pow(1 - progress, 2)
+            let firstWeekday = Calendar.current.component(.weekday, from: year.recentDays.first?.date ?? .now)
+            let firstRow = (firstWeekday + 5) % 7
+            for column in year.columns.indices {
+                for row in 0..<7 {
+                    guard let day = year.columns[column][row] else { continue }
+                    guard opacity > 0.001 else { continue }
+                    let side = dot * (1 - 0.25 * progress)
+                    let startX = CGFloat(column) * (dot + gap) + dot / 2
+                    let startY = 17 + CGFloat(row) * (dot + gap) + dot / 2
+                    let weekIndex = (row - firstRow + 7) % 7
+                    let targetX = (CGFloat(weekIndex) + 0.5) * size.width / 7
+                    let centerX = startX + (targetX - startX) * travel
+                    let centerY = startY + (22 - startY) * travel
+                    let rect = CGRect(x: centerX - side / 2, y: centerY - side / 2, width: side, height: side)
+                    let shape = Path(roundedRect: rect, cornerRadius: side / 2)
+                    let color = day.count >= 3 ? Palette.coralDeep
+                        : day.count == 2 ? Palette.coral
+                        : day.count == 1 ? Palette.coral.opacity(0.58)
+                        : Palette.ink.opacity(0.09)
+                    var cell = context
+                    cell.opacity = Double(opacity)
+                    cell.fill(shape, with: .color(color))
+                    if day.isToday {
+                        cell.stroke(shape, with: .color(Palette.coralDeep), lineWidth: 0.7)
+                    }
+                }
+            }
+        }
+        .frame(height: 65)
+        .accessibilityHidden(true)
+    }
+}
+
+private struct WeekActivityRow: View, Animatable {
+    let days: [PracticeYear.Day]
+    var transition: CGFloat
+    let reduceMotion: Bool
+
+    var animatableData: CGFloat {
+        get { transition }
+        set { transition = newValue }
+    }
+
+    var body: some View {
+        HStack(spacing: 0) {
+            ForEach(days.indices, id: \.self) { index in
+                let day = days[index]
+                let progress = min(max(transition, 0), 1)
+                VStack(spacing: Space.sm) {
+                    Circle()
+                        .fill(day.count > 0 ? Palette.coral : Palette.ink.opacity(0.08))
+                        .frame(width: 30, height: 30)
+                        .overlay {
+                            if day.count > 0 {
+                                Image(systemName: "checkmark")
+                                    .font(.system(size: 12, weight: .bold))
+                                    .foregroundStyle(.white)
+                            } else if day.isToday {
+                                Circle().strokeBorder(Palette.coral, lineWidth: 1.5)
+                            }
+                        }
+                        .scaleEffect(reduceMotion ? 1 : 0.84 + 0.16 * progress)
+                        .opacity(Double(progress))
+                    Text(day.date.formatted(.dateTime.weekday(.narrow)))
+                        .font(Typeface.label(11))
+                        .foregroundStyle(day.isToday ? Palette.ink : Palette.muted)
+                        .opacity(Double(progress))
+                }
+                .frame(maxWidth: .infinity)
+            }
+        }
+        .frame(height: 65)
+        .accessibilityHidden(true)
+    }
+}
+
+private struct StreakCardPressStyle: ButtonStyle {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(reduceMotion ? 1 : configuration.isPressed ? 0.985 : 1)
+            .animation(reduceMotion ? nil : .spring(response: 0.28, dampingFraction: 0.65), value: configuration.isPressed)
     }
 }
 
