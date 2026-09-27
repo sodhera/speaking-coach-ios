@@ -187,8 +187,7 @@ final class PracticeSession {
                 prompt: PracticePrompt.build(definition, context),
                 firstMessage: PracticePrompt.firstMessage(definition, context),
                 language: context.language,
-                duration: PracticePrompt.duration(definition, context),
-                maxUserTurns: context.retry == nil ? definition.maxUserTurns : 2
+                duration: PracticePrompt.duration(definition, context)
             )
             let roomReadyAt = Date.now
             AppLog.info("Practice startup ms: microphone \(Int(microphoneReadyAt.timeIntervalSince(startedAt) * 1000)), token \(Int(tokenReadyAt.timeIntervalSince(microphoneReadyAt) * 1000)), room \(Int(roomReadyAt.timeIntervalSince(tokenReadyAt) * 1000))")
@@ -226,17 +225,37 @@ final class PracticeSession {
         }
     }
 
-    /// If the line drops on its own mid-scene, keep what was said: go
-    /// straight to feedback when there are words, offer a retry when not.
+    /// A dropped line is an interruption, not a request for feedback.
     private func observeDrop() {
         Task { [weak self] in
             while let self, self.stage == .live {
                 if self.voice.phase == .ended, self.voice.droppedUnexpectedly {
-                    await self.finish()
+                    await self.interrupt(reason: "connection")
                     return
                 }
                 try? await Task.sleep(for: .milliseconds(500))
             }
+        }
+    }
+
+    /// Stop a cut-short conversation without treating it as a completed scene.
+    /// The draft was already saved turn by turn, so the learner chooses whether
+    /// to request feedback on those words.
+    func interrupt(reason: String) async {
+        guard !finishing, stage == .live else { return }
+        finishing = true
+        UIApplication.shared.isIdleTimerDisabled = false
+        let transcript = voice.transcript
+        await voice.end()
+        saveDraft(transcript)
+        track("practice_interrupted", ["reason": reason, "user_turns": transcript.filter { $0.role == .user }.count])
+        if transcript.contains(where: { $0.role == .user }) {
+            stage = .recovery(PracticeDraft(context: context, transcript: transcript))
+        } else {
+            stage = .failed(Failure(
+                title: String(localized: "Connection ended", bundle: AppLanguage.bundle),
+                message: String(localized: "Your conversation stopped before you could answer. Try again when you're ready.", bundle: AppLanguage.bundle)
+            ))
         }
     }
 

@@ -154,7 +154,7 @@ struct HomeView: View {
 
             StreakCard(
                 streak: model.history.streak,
-                week: PracticeWeeks(records: model.history.records, weeks: 1),
+                week: PracticeWeeks(records: model.history.records, weeks: 1, endingToday: true),
                 loaded: model.history.loaded
             )
             .padding(.horizontal, Space.xxl)
@@ -603,8 +603,8 @@ private extension Array {
 
 // MARK: - Streak
 
-/// Showing up, at the top of Home: the streak big, the week as a disc per
-/// day (ticked when practiced, today ringed), and whether today is done.
+/// Showing up, at the top of Home: the streak big, the last seven days as a
+/// disc per day (ticked when practiced, today ringed), and whether today is done.
 /// A zero streak wears the hollow grey flame; only a live one earns coral.
 private struct StreakCard: View {
     let streak: Int

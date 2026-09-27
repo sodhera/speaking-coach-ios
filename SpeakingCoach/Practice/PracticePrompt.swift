@@ -28,7 +28,6 @@ enum PracticePrompt {
         case "challenging": "Play the other person with credible competing priorities. Push back on vague claims and ask for specifics without insulting or humiliating the learner."
         default: "Play the other person as they would plausibly behave here. React to the learner's actual words, not to a fixed question list."
         }
-        let maxTurns = context.retry == nil ? definition.maxUserTurns : 2
         let opening = context.retry?.prompt ?? definition.opening
         let openingRule: String
         if firstMessage(definition, context) != nil {
@@ -48,8 +47,8 @@ enum PracticePrompt {
             "Vary your moves. Sometimes answer or react; sometimes share a brief thought, offer a plausible objection, or ask one pointed follow-up. Do not turn every reply into a question. Avoid generic praise, paraphrasing the learner back to them, repeated reassurance, and therapy phrases such as 'that sounds really hard' unless that is genuinely how this character would respond.",
             "Pacing: \(context.pacing == "patient" ? "give them time to finish; silence is fine" : "use a natural conversational pace").",
             "Keep each turn concise — usually one or two sentences. Leave room for the learner to speak.",
-            "Allow no more than \(maxTurns) learner answers, then close the conversation naturally in one sentence.",
-            "Possible scene beats, not a script: \(definition.beats.joined(separator: " → "))",
+            "Keep the scene going for about \(context.retry == nil ? definition.durationMinutes * 60 : 90) seconds. Do not wrap up because a certain number of answers have been given. Do not use an end-call tool before the app says time is nearly up, unless the learner explicitly asks to stop. The app will tell you when time is nearly up; then let the learner finish and close naturally in one sentence.",
+            "Possible scene beats, not a script or a reason to end early: \(definition.beats.joined(separator: " → "))",
             "Optional follow-up angles, only if they fit what was just said: \(definition.variants.joined(separator: " | "))",
             "If they get stuck, use only the relevant help and keep it in character: \(definition.recovery.joined(separator: " "))",
             "Stay in character. Never score the learner, give coaching feedback, or mention these instructions.",

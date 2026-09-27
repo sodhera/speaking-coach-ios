@@ -184,10 +184,12 @@ struct PracticeWeeks: Equatable {
 
     let rows: [[Day]]
 
-    init(records: [PracticeRecord], weeks: Int = 5, now: Date = .now, calendar: Calendar = .current) {
+    init(records: [PracticeRecord], weeks: Int = 5, endingToday: Bool = false, now: Date = .now, calendar: Calendar = .current) {
         let today = calendar.startOfDay(for: now)
         let thisWeek = calendar.dateInterval(of: .weekOfYear, for: today)?.start ?? today
-        let first = calendar.date(byAdding: .weekOfYear, value: -(weeks - 1), to: thisWeek) ?? thisWeek
+        let first = endingToday
+            ? calendar.date(byAdding: .day, value: -(weeks * 7 - 1), to: today) ?? today
+            : calendar.date(byAdding: .weekOfYear, value: -(weeks - 1), to: thisWeek) ?? thisWeek
         let counts = Dictionary(grouping: records) { calendar.startOfDay(for: $0.date) }.mapValues(\.count)
         rows = (0..<weeks).map { week in
             (0..<7).map { weekday in

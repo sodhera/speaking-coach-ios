@@ -37,7 +37,6 @@ final class VoiceSession {
     private var ticker: Task<Void, Never>?
     private let inputMeter = LevelMeter()
     private let outputMeter = LevelMeter()
-    private var maxUserTurns = 3
     private var readyToClose = false
     private var lastActivity = Date.now
     private var pausedFor = 0
@@ -76,10 +75,9 @@ final class VoiceSession {
 
     // MARK: Lifecycle
 
-    func start(token: String, prompt: String, firstMessage: String?, language: String, duration: Int, maxUserTurns: Int) async throws {
+    func start(token: String, prompt: String, firstMessage: String?, language: String, duration: Int) async throws {
         phase = .connecting
         remaining = duration
-        self.maxUserTurns = maxUserTurns
         beginsWithSignal = firstMessage == nil
         let config = ConversationConfig(
             agentOverrides: AgentOverrides(prompt: prompt, firstMessage: firstMessage, language: Language(rawValue: language) ?? .english)
@@ -155,7 +153,6 @@ final class VoiceSession {
         transcript = Array(lines.suffix(100))
         lastActivity = .now
         onTranscript?(transcript)
-        if let last = transcript.last, last.role == .coach, userTurns >= maxUserTurns { readyToClose = true }
         if !hadUserWords, transcript.contains(where: { $0.role == .user }) { firstUserWords?() }
     }
 

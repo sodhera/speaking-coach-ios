@@ -53,11 +53,11 @@ struct PracticeSessionView: View {
             #endif
             if case .preparing = session.stage { await session.start() }
         }
-        // The microphone must never stay live in the background: leaving the
-        // app mid-scene ends it and keeps the words for feedback.
+        // The microphone must never stay live in the background. Preserve the
+        // words, but let the learner decide whether to request feedback.
         .onChange(of: scenePhase) { _, phase in
             if phase == .background, case .live = session.stage {
-                Task { await session.finish() }
+                Task { await session.interrupt(reason: "background") }
             }
         }
         .persistentSystemOverlays(.hidden)
