@@ -139,24 +139,6 @@ extension EnvironmentValues {
     }
 }
 
-/// Quiet drafting-paper dots over every ground but the splash's. Drawn from
-/// the screen's top-left corner, so a slice of it (the status bar scrim)
-/// lines up with the full stage beneath.
-struct DotGrid: View {
-    var body: some View {
-        Canvas { context, size in
-            let spacing: CGFloat = 22
-            let dot = Path(ellipseIn: CGRect(x: 0, y: 0, width: 1.5, height: 1.5))
-            for x in stride(from: 11.0, through: size.width, by: spacing) {
-                for y in stride(from: 11.0, through: size.height, by: spacing) {
-                    context.fill(dot.offsetBy(dx: x, dy: y), with: .color(Palette.ink.opacity(0.14)))
-                }
-            }
-        }
-        .allowsHitTesting(false)
-        .accessibilityHidden(true)
-    }
-}
 
 /// The app's ground: one flat warm tone, no gradient, grain or ripples.
 struct AppGround: View {

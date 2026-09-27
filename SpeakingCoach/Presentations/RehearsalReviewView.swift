@@ -209,7 +209,7 @@ struct RehearsalReviewView: View {
 
             if isAnswering {
                 HStack(spacing: Space.md) {
-                    BloomMark(size: 30, level: recorder.level, breathes: false, glow: false)
+                    VoiceRods(size: 30, level: recorder.level, live: true)
                     Text("Listening · \(RehearsalView.clock(recorder.elapsed))")
                         .font(Typeface.label(15))
                         .foregroundStyle(Palette.ink)

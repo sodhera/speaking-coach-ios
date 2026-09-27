@@ -46,7 +46,7 @@ struct RehearsalView: View {
                 case .failed(let message, let canRetry): failed(message, canRetry: canRetry)
                 case .done(let id):
                     NavigationStack {
-                        RehearsalReviewView(store: store, deck: deck, rehearsalID: id, isFresh: true, onBack: onClose)
+                        RehearsalReviewView(store: store, deck: deck, rehearsalID: id, language: AppLanguage.code, isFresh: true, onBack: onClose)
                     }
                 }
             }

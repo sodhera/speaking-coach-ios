@@ -137,7 +137,7 @@ struct DeckView: View {
             }
         }
         .navigationDestination(item: $reviewing) { rehearsal in
-            RehearsalReviewView(store: store, deck: current, rehearsalID: rehearsal.id, onBack: { reviewing = nil })
+            RehearsalReviewView(store: store, deck: current, rehearsalID: rehearsal.id, language: AppLanguage.code, onBack: { reviewing = nil })
         }
         .confirmationDialog("Delete this presentation?", isPresented: $confirmingDelete, titleVisibility: .visible) {
             Button("Delete", role: .destructive) {

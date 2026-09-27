@@ -982,6 +982,8 @@ private struct PlanSteps: View {
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Step \(current + 1) of 3")
+    }
+}
 // MARK: - Categories
 
 /// The catalog's own grouping, used to order suggestions.

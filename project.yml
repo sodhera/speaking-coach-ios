@@ -33,6 +33,7 @@ targets:
     sources:
       - path: SpeakingCoach
         excludes: ["*.entitlements"]
+      - path: Shared
     dependencies:
       - package: Supabase
         product: Supabase

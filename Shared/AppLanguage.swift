@@ -12,7 +12,7 @@ enum AppLanguage {
     ]
 
     private static let key = "app.language"
-    private static var store: UserDefaults { UserDefaults(suiteName: RoutineShared.appGroup) ?? .standard }
+    private static var store: UserDefaults { .standard }
 
     /// Nil until the user has chosen. Nothing defaults to English.
     static var chosen: String? {

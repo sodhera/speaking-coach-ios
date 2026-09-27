@@ -148,7 +148,7 @@ struct ReviewScreens: View {
             case "presentationreview":
                 let (deck, rehearsal) = model.presentations.loadReviewFixture()
                 NavigationStack {
-                    RehearsalReviewView(store: model.presentations, deck: deck, rehearsalID: rehearsal.id, isFresh: true, onBack: {})
+                    RehearsalReviewView(store: model.presentations, deck: deck, rehearsalID: rehearsal.id, language: AppLanguage.code, isFresh: true, onBack: {})
                 }
             case "rehearsalready":
                 let (deck, _) = model.presentations.loadReviewFixture()
