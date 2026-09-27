@@ -32,11 +32,15 @@ struct CriterionLevel: Decodable, Equatable {
 @Observable
 final class PracticeHistory {
     private(set) var records: [PracticeRecord] = []
+    /// All saved practice days, including sessions older than the 60 reports
+    /// shown in history. The year grid and streak must use complete activity.
+    private(set) var activityCounts: [Date: Int] = [:]
     private(set) var loaded = false
     private(set) var userID: UUID?
 
     func reset() {
         records = []
+        activityCounts = [:]
         loaded = false
         userID = nil
     }
@@ -54,6 +58,25 @@ final class PracticeHistory {
                 .value
             guard self.userID == userID else { return }
             records = rows.map(\.record)
+            var dates: [Date] = []
+            let pageSize = 500
+            var offset = 0
+            while true {
+                let page: [ActivityRow] = try await Backend.supabase.from("reports")
+                    .select("id, created_at")
+                    .eq("user_id", value: userID)
+                    .neq("scenario_id", value: "feedback")
+                    .order("created_at", ascending: false)
+                    .order("id", ascending: false)
+                    .range(from: offset, to: offset + pageSize - 1)
+                    .execute()
+                    .value
+                dates.append(contentsOf: page.map(\.created_at))
+                if page.count < pageSize { break }
+                offset += pageSize
+            }
+            guard self.userID == userID else { return }
+            activityCounts = Dictionary(grouping: dates, by: { Calendar.current.startOfDay(for: $0) }).mapValues(\.count)
         } catch {
             AppLog.error("History load failed: \(error.localizedDescription)")
         }
@@ -64,7 +87,7 @@ final class PracticeHistory {
     /// yesterday, so a streak isn't shown as broken before today is over.
     var streak: Int {
         let calendar = Calendar.current
-        let days = Set(records.map { calendar.startOfDay(for: $0.date) })
+        let days = Set(activityCounts.keys)
         var day = calendar.startOfDay(for: .now)
         if !days.contains(day) { day = calendar.date(byAdding: .day, value: -1, to: day) ?? day }
         var count = 0
@@ -78,6 +101,7 @@ final class PracticeHistory {
     #if DEBUG
     func setReviewRecords(_ records: [PracticeRecord]) {
         self.records = records
+        activityCounts = Dictionary(grouping: records, by: { Calendar.current.startOfDay(for: $0.date) }).mapValues(\.count)
         loaded = true
     }
     #endif
@@ -126,6 +150,11 @@ final class PracticeHistory {
                 isCustom: customTitle != nil
             )
         }
+    }
+
+    private struct ActivityRow: Decodable {
+        let id: UUID
+        let created_at: Date
     }
 
     /// Tolerates an odd rubric: one malformed report mustn't cost the

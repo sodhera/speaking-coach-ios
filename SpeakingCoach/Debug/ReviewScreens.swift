@@ -268,10 +268,25 @@ extension AppModel {
             profile.planCompletedAt = .now
         }
         setReviewProfile(profile)
-        history.setReviewRecords(LaunchFlags.value("-review-screen") == "progress"
-            ? Self.reviewProgressRecords()
-            : Self.reviewRecords(for: step, moment: profile.moment))
+        history.setReviewRecords(LaunchFlags.has("-review-year")
+            ? Self.reviewYearRecords()
+            : LaunchFlags.value("-review-screen") == "progress"
+                ? Self.reviewProgressRecords()
+                : Self.reviewRecords(for: step, moment: profile.moment))
         if LaunchFlags.has("-review-plans") { subscriptions.useReviewPlans() }
+    }
+
+    /// A local-only year for visual review: three consecutive recent days
+    /// plus scattered practice over the preceding months.
+    private static func reviewYearRecords() -> [PracticeRecord] {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: .now)
+        return (0..<365).compactMap { daysAgo in
+            guard daysAgo < 3 || daysAgo.isMultiple(of: 9) || daysAgo.isMultiple(of: 17),
+                  let date = calendar.date(byAdding: .day, value: -daysAgo, to: today)
+            else { return nil }
+            return PracticeRecord(id: UUID(), activityID: "interview_evidence", title: "Explain your experience", date: date, score: nil, parentID: nil)
+        }
     }
 
     /// A rehearsal of the plan's practice, then its retry — as far as the

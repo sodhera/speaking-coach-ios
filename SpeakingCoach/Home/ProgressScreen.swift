@@ -184,12 +184,10 @@ struct PracticeWeeks: Equatable {
 
     let rows: [[Day]]
 
-    init(records: [PracticeRecord], weeks: Int = 5, endingToday: Bool = false, now: Date = .now, calendar: Calendar = .current) {
+    init(records: [PracticeRecord], weeks: Int = 5, now: Date = .now, calendar: Calendar = .current) {
         let today = calendar.startOfDay(for: now)
         let thisWeek = calendar.dateInterval(of: .weekOfYear, for: today)?.start ?? today
-        let first = endingToday
-            ? calendar.date(byAdding: .day, value: -(weeks * 7 - 1), to: today) ?? today
-            : calendar.date(byAdding: .weekOfYear, value: -(weeks - 1), to: thisWeek) ?? thisWeek
+        let first = calendar.date(byAdding: .weekOfYear, value: -(weeks - 1), to: thisWeek) ?? thisWeek
         let counts = Dictionary(grouping: records) { calendar.startOfDay(for: $0.date) }.mapValues(\.count)
         rows = (0..<weeks).map { week in
             (0..<7).map { weekday in
@@ -201,6 +199,37 @@ struct PracticeWeeks: Equatable {
                     isToday: date == today,
                     isFuture: date > today
                 )
+            }
+        }
+    }
+}
+
+/// Exactly 365 calendar days ending today, arranged Monday to Sunday like a
+/// contribution graph. Empty edge cells align the first and last weeks.
+struct PracticeYear: Equatable {
+    struct Day: Equatable {
+        let date: Date
+        let count: Int
+        let isToday: Bool
+    }
+
+    let columns: [[Day?]]
+    let practicedDays: Int
+
+    init(counts: [Date: Int], now: Date = .now, calendar: Calendar = .current) {
+        let today = calendar.startOfDay(for: now)
+        let first = calendar.date(byAdding: .day, value: -364, to: today) ?? today
+        let leading = (calendar.component(.weekday, from: first) + 5) % 7
+        practicedDays = (0..<365).reduce(0) { total, offset in
+            let date = calendar.date(byAdding: .day, value: offset, to: first) ?? first
+            return total + (counts[date, default: 0] > 0 ? 1 : 0)
+        }
+        columns = (0..<((leading + 365 + 6) / 7)).map { column in
+            (0..<7).map { weekday in
+                let offset = column * 7 + weekday - leading
+                guard (0..<365).contains(offset) else { return nil }
+                let date = calendar.date(byAdding: .day, value: offset, to: first) ?? first
+                return Day(date: date, count: counts[date, default: 0], isToday: date == today)
             }
         }
     }

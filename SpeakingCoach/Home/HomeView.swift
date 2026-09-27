@@ -24,7 +24,7 @@ struct MainShellView: View {
 /// **Practice: keep the habit, then pick something.** Three reads, top to
 /// bottom, nothing hidden behind a control:
 ///
-/// 1. **Your streak.** The number, the week as a disc per day, and whether
+/// 1. **Your streak.** The number, the past year as a dot per day, and whether
 ///    today is done. The one piece of the screen about showing up.
 /// 2. **For you.** A carousel whose next card peeks in from the right: what's
 ///    up next (the first plan, an event plan, or the next unpracticed
@@ -154,7 +154,7 @@ struct HomeView: View {
 
             StreakCard(
                 streak: model.history.streak,
-                week: PracticeWeeks(records: model.history.records, weeks: 1, endingToday: true),
+                year: PracticeYear(counts: model.history.activityCounts),
                 loaded: model.history.loaded
             )
             .padding(.horizontal, Space.xxl)
@@ -603,17 +603,15 @@ private extension Array {
 
 // MARK: - Streak
 
-/// Showing up, at the top of Home: the streak big, the last seven days as a
-/// disc per day (ticked when practiced, today ringed), and whether today is done.
+/// Showing up, at the top of Home: the streak big, the past 365 days as a
+/// contribution graph, and whether today is done.
 /// A zero streak wears the hollow grey flame; only a live one earns coral.
 private struct StreakCard: View {
     let streak: Int
-    let week: PracticeWeeks
+    let year: PracticeYear
     let loaded: Bool
 
-    private static let disc: CGFloat = 30
-
-    private var practicedToday: Bool { week.rows.last?.contains { $0.isToday && $0.count > 0 } ?? false }
+    private var practicedToday: Bool { year.columns.last?.contains { $0?.isToday == true && ($0?.count ?? 0) > 0 } ?? false }
 
     var body: some View {
         VStack(alignment: .leading, spacing: Space.lg) {
@@ -639,16 +637,40 @@ private struct StreakCard: View {
                     .background(Capsule().fill((practicedToday ? Palette.sage : Palette.ink).opacity(0.08)))
             }
 
-            HStack(spacing: 0) {
-                ForEach(Array((week.rows.last ?? []).enumerated()), id: \.offset) { _, day in
-                    VStack(spacing: Space.sm) {
-                        disc(day)
-                        Text(day.date.formatted(.dateTime.weekday(.narrow)))
-                            .font(Typeface.label(11))
-                            .foregroundStyle(day.isToday ? Palette.ink : Palette.muted)
-                    }
-                    .frame(maxWidth: .infinity)
+            VStack(alignment: .leading, spacing: Space.sm) {
+                HStack {
+                    Text("Past year")
+                    Spacer()
+                    Text(loaded ? "\(year.practicedDays) days practiced" : "–")
                 }
+                .font(Typeface.label(12))
+                .foregroundStyle(Palette.dim)
+
+                GeometryReader { geometry in
+                    let gap: CGFloat = 1
+                    let dot = max(2, min(6, (geometry.size.width - CGFloat(year.columns.count - 1) * gap) / CGFloat(year.columns.count)))
+                    VStack(alignment: .leading, spacing: 5) {
+                        HStack(alignment: .top, spacing: gap) {
+                            ForEach(year.columns.indices, id: \.self) { index in
+                                Text(monthLabel(for: year.columns[index]))
+                                    .font(Typeface.label(9))
+                                    .foregroundStyle(Palette.muted)
+                                    .fixedSize()
+                                    .frame(width: dot, alignment: .leading)
+                            }
+                        }
+                        HStack(spacing: gap) {
+                            ForEach(year.columns.indices, id: \.self) { index in
+                                VStack(spacing: gap) {
+                                    ForEach(0..<7, id: \.self) { weekday in
+                                        dotView(year.columns[index][weekday], size: dot)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                .frame(height: 12 + 5 + 7 * 6 + 6)
             }
         }
         .padding(Space.xl)
@@ -656,30 +678,27 @@ private struct StreakCard: View {
         .glassSurface(cornerRadius: Corner.lg, whiteness: 0.58)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(practicedToday
-            ? String(localized: "\(streak)-day streak. You've practiced today.", bundle: AppLanguage.bundle)
-            : String(localized: "\(streak)-day streak. Not practiced yet today.", bundle: AppLanguage.bundle))
+            ? String(localized: "\(streak)-day streak. You've practiced today. \(year.practicedDays) days practiced in the past year.", bundle: AppLanguage.bundle)
+            : String(localized: "\(streak)-day streak. Not practiced yet today. \(year.practicedDays) days practiced in the past year.", bundle: AppLanguage.bundle))
     }
 
     @ViewBuilder
-    private func disc(_ day: PracticeWeeks.Day) -> some View {
-        if day.count > 0 {
+    private func dotView(_ day: PracticeYear.Day?, size: CGFloat) -> some View {
+        if let day {
             Circle()
-                .fill(Palette.coral)
-                .frame(width: Self.disc, height: Self.disc)
-                .overlay {
-                    Image(systemName: "checkmark")
-                        .font(.system(size: 12, weight: .bold))
-                        .foregroundStyle(.white)
-                }
-        } else if day.isToday {
-            Circle()
-                .strokeBorder(Palette.coral, lineWidth: 1.5)
-                .frame(width: Self.disc, height: Self.disc)
+                .fill(day.count >= 3 ? Palette.coralDeep : day.count == 2 ? Palette.coral : day.count == 1 ? Palette.coral.opacity(0.58) : Palette.ink.opacity(0.09))
+                .frame(width: size, height: size)
+                .overlay { Circle().strokeBorder(Palette.coralDeep, lineWidth: day.isToday ? 0.7 : 0) }
         } else {
-            Circle()
-                .fill(Palette.ink.opacity(day.isFuture ? 0.04 : 0.08))
-                .frame(width: Self.disc, height: Self.disc)
+            Color.clear.frame(width: size, height: size)
         }
+    }
+
+    private func monthLabel(for column: [PracticeYear.Day?]) -> String {
+        guard let firstOfMonth = column.compactMap({ $0 }).first(where: { Calendar.current.component(.day, from: $0.date) == 1 }),
+              Calendar.current.component(.month, from: firstOfMonth.date).isMultiple(of: 2)
+        else { return "" }
+        return firstOfMonth.date.formatted(.dateTime.month(.abbreviated))
     }
 }
 
