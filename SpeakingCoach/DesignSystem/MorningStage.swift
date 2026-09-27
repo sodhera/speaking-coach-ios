@@ -14,13 +14,20 @@ struct MorningStage: View {
 
 
     @Environment(\.stageStyle) private var style
+    @Environment(\.showsDotGrid) private var showsDots
 
     var body: some View {
-        if style == .flat {
-            AppGround()
-        } else {
-            sunrise
+        ZStack {
+            if style == .flat {
+                AppGround()
+            } else {
+                sunrise
+            }
+            DotGrid()
+                .opacity(showsDots ? 1 : 0)
+                .ignoresSafeArea()
         }
+        .accessibilityHidden(true)
     }
 
     private var sunrise: some View {
@@ -76,13 +83,20 @@ extension MorningStage {
 /// reaches the top of the screen, which is the only place this is used.
 struct MorningPaper: View {
     @Environment(\.stageStyle) private var style
+    @Environment(\.showsDotGrid) private var showsDots
 
     var body: some View {
-        if style == .flat {
-            AppGround()
-        } else {
-            paper
+        ZStack {
+            if style == .flat {
+                AppGround()
+            } else {
+                paper
+            }
+            DotGrid()
+                .opacity(showsDots ? 1 : 0)
+                .ignoresSafeArea()
         }
+        .accessibilityHidden(true)
     }
 
     private var paper: some View {
@@ -108,10 +122,39 @@ private struct StageStyleKey: EnvironmentKey {
     static let defaultValue = StageStyle.morning
 }
 
+private struct ShowsDotGridKey: EnvironmentKey {
+    static let defaultValue = true
+}
+
 extension EnvironmentValues {
     var stageStyle: StageStyle {
         get { self[StageStyleKey.self] }
         set { self[StageStyleKey.self] = newValue }
+    }
+
+    /// Whether the ground carries its dot grid. Only the splash turns it off.
+    var showsDotGrid: Bool {
+        get { self[ShowsDotGridKey.self] }
+        set { self[ShowsDotGridKey.self] = newValue }
+    }
+}
+
+/// Quiet drafting-paper dots over every ground but the splash's. Drawn from
+/// the screen's top-left corner, so a slice of it (the status bar scrim)
+/// lines up with the full stage beneath.
+struct DotGrid: View {
+    var body: some View {
+        Canvas { context, size in
+            let spacing: CGFloat = 22
+            let dot = Path(ellipseIn: CGRect(x: 0, y: 0, width: 1.5, height: 1.5))
+            for x in stride(from: 11.0, through: size.width, by: spacing) {
+                for y in stride(from: 11.0, through: size.height, by: spacing) {
+                    context.fill(dot.offsetBy(dx: x, dy: y), with: .color(Palette.ink.opacity(0.14)))
+                }
+            }
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
     }
 }
 

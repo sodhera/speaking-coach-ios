@@ -236,7 +236,10 @@ private struct DeleteAccountSheet: View {
             .opacity(matches ? 1 : 0.45)
         }
         .padding(Space.xxl)
-        .background(Palette.paper)
+        .background {
+            Palette.paper.ignoresSafeArea()
+            DotGrid().ignoresSafeArea()
+        }
     }
 
     private func delete() async {

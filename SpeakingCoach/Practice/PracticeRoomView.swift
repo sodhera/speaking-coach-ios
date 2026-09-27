@@ -185,6 +185,12 @@ private struct PracticeRoom: View {
             VStack(spacing: Space.xxl) {
                 VoiceRods(size: 140, color: voice.isPaused ? Palette.muted : Palette.coral, level: level, live: !voice.isPaused)
                     .animation(.easeInOut(duration: 0.4), value: voice.isPaused)
+                    // Light behind the bloom, outside layout, so the caption
+                    // never moves as it swells.
+                    .background {
+                        VoiceGlow(partner: voice.partnerSpeaking, level: level)
+                            .frame(width: 420, height: 420)
+                    }
                 VStack(spacing: Space.md) {
                     Text(status)
                         .font(Typeface.label(14))
@@ -342,6 +348,27 @@ private struct SmallCapsuleButton: View {
         }
         .buttonStyle(.plain)
         .glassSurface(cornerRadius: 999, interactive: true)
+    }
+}
+
+/// A wash of light behind the bloom that swells with whoever is speaking:
+/// warm coral for the partner, pale gold for the user. No edges, so it reads
+/// as the room brightening rather than a meter.
+private struct VoiceGlow: View {
+    let partner: Bool
+    let level: Double
+
+    var body: some View {
+        let tint = partner ? Palette.coral : Color(hex: 0xF2B84B)
+        RadialGradient(
+            colors: [tint.opacity(0.08 * min(1, level * 1.4)), tint.opacity(0)],
+            center: .center,
+            startRadius: 40,
+            endRadius: 170
+        )
+        .animation(.easeInOut(duration: 0.6), value: partner)
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
     }
 }
 

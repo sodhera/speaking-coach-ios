@@ -165,11 +165,13 @@ struct RootView: View {
             // window. It turns flat as the splash heads into the app.
             MorningStage(depth: 0)
                 .environment(\.stageStyle, displayedScreen == .main || !stageVisible ? .flat : .morning)
+                .environment(\.showsDotGrid, displayedScreen != .splash)
             // The shared ground for every gate after onboarding.
             if displayedScreen != .onboarding && displayedScreen != .main {
                 // Ripples on the splash too: they run on the clock, so they
                 // carry straight on into welcome's own stage.
                 MorningStage(depth: displayedScreen == .splash ? 0 : 1)
+                    .environment(\.showsDotGrid, displayedScreen != .splash)
                     .opacity(stageVisible ? 1 : 0)
             }
 
