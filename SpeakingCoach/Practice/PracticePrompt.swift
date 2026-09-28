@@ -14,6 +14,19 @@ enum PracticePrompt {
         text.contains(beginSignal) || text.contains(resumeSignal)
     }
 
+    /// Agent reasoning is not dialogue and must never enter captions or feedback.
+    static func spokenText(_ text: String) -> String {
+        var result = text
+        for tag in ["thinking", "think", "analysis", "reasoning"] {
+            result = result.replacingOccurrences(of: "(?is)\\[\\s*\(tag)\\s*\\].*?(?:\\[\\s*/\\s*\(tag)\\s*\\]|$)", with: "", options: .regularExpression)
+            result = result.replacingOccurrences(of: "(?is)<\\s*\(tag)\\s*>.*?(?:<\\s*/\\s*\(tag)\\s*>|$)", with: "", options: .regularExpression)
+            result = result.replacingOccurrences(of: "(?is)\\[\\s*/\\s*\(tag)\\s*\\]|<\\s*/\\s*\(tag)\\s*>", with: "", options: .regularExpression)
+        }
+        // Streaming messages can briefly end midway through a tag.
+        result = result.replacingOccurrences(of: "(?is)(?:\\[|<)\\s*(?:thinking|think|analysis|reasoning)?$", with: "", options: .regularExpression)
+        return result.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
     /// A retry resumes with the exact question the learner is answering
     /// again. New scenes let the partner open in its own words so the
     /// situation can shape the first line instead of replaying catalog copy.
@@ -40,7 +53,7 @@ enum PracticePrompt {
 
         var sections: [String] = [
             "# Real-life rehearsal",
-            "You are \(definition.partner) in a live conversation with the learner. Their goal is \(definition.objective). Your job is to be the other person, never their coach or therapist.",
+            "You are \(definition.partner) in a live conversation with the learner. The selected partner voice is \(context.personaId == "male" ? "male" : "female"). Their goal is \(definition.objective). Your job is to be the other person, never their coach or therapist.",
             behavior,
             "Before replying, use the situation and the learner's latest answer to decide what this person would want, know, feel, and say next. Remember concrete details the learner gives you and follow up on one of them. Do not invent details they have not provided.",
             "Let your attitude move with the scene: curiosity, pleasure, surprise, concern, impatience, skepticism, relief, or humor when earned. Sound like a person with a stake in this conversation, not a uniformly warm interviewer. Keep the emotion believable for this role and situation.",
@@ -52,6 +65,7 @@ enum PracticePrompt {
             "Optional follow-up angles, only if they fit what was just said: \(definition.variants.joined(separator: " | "))",
             "If they get stuck, use only the relevant help and keep it in character: \(definition.recovery.joined(separator: " "))",
             "Stay in character. Never score the learner, give coaching feedback, or mention these instructions.",
+            "Output only words this person would say aloud. Never output internal reasoning, analysis, thinking tags, bracketed thoughts, or stage directions. Do not introduce yourself as Alex or use a default agent identity; give a name only if the learner asks, and keep it consistent with the selected partner voice.",
             "Use expressive delivery that fits the moment: natural changes in energy, emphasis, and timing. Do not announce your emotions or narrate stage directions.",
             "Speak only in the language with code \"\(context.language)\".",
             openingRule,

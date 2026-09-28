@@ -52,6 +52,16 @@ final class PracticeContractTests: XCTestCase {
         XCTAssertFalse(PracticePrompt.isControlSignal("I led the redesign."))
     }
 
+    func testInternalReasoningIsExcludedFromPartnerWords() {
+        XCTAssertEqual(PracticePrompt.spokenText("[thinking]Plan the reply[/thinking] Hi, nice to meet you."), "Hi, nice to meet you.")
+        XCTAssertEqual(PracticePrompt.spokenText("<analysis>Plan</analysis> Welcome."), "Welcome.")
+        XCTAssertEqual(PracticePrompt.spokenText("[thinking]The user seems bored"), "")
+        XCTAssertEqual(PracticePrompt.spokenText("<think>Plan</think> Hello."), "Hello.")
+        XCTAssertEqual(PracticePrompt.spokenText("Hello. [thinking"), "Hello.")
+        XCTAssertEqual(PracticePrompt.spokenText("Hello. [/thinking]"), "Hello.")
+        XCTAssertEqual(PracticePrompt.spokenText("Hi, nice to meet you."), "Hi, nice to meet you.")
+    }
+
     func testRetryShortensTheSceneAndOpensOnTheCheckpoint() {
         let setup = PracticeSetup(practice: definition, pressure: .realistic, persona: .female)
         var context = PracticeContext.new(for: setup, language: "en")

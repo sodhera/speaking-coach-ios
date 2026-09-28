@@ -143,7 +143,9 @@ final class VoiceSession {
 
     private func handle(_ messages: [Message]) {
         let lines = messages.compactMap { message -> TranscriptLine? in
-            let text = message.content.trimmingCharacters(in: .whitespacesAndNewlines)
+            let text = message.role == .user
+                ? message.content.trimmingCharacters(in: .whitespacesAndNewlines)
+                : PracticePrompt.spokenText(message.content)
             guard !text.isEmpty, !PracticePrompt.isControlSignal(text) else { return nil }
             let role: TranscriptLine.Role = message.role == .user ? .user : .coach
             return TranscriptLine(id: "\(role.rawValue)-\(message.id)".prefix(150).description, role: role, text: String(text.prefix(6000)))
