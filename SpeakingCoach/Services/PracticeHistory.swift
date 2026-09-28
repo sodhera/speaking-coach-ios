@@ -36,17 +36,21 @@ final class PracticeHistory {
     /// shown in history. The year grid and streak must use complete activity.
     private(set) var activityCounts: [Date: Int] = [:]
     private(set) var loaded = false
+    private(set) var loadFailed = false
     private(set) var userID: UUID?
 
     func reset() {
         records = []
         activityCounts = [:]
         loaded = false
+        loadFailed = false
         userID = nil
     }
 
     func load(userID: UUID) async {
         self.userID = userID
+        if records.isEmpty { loaded = false }
+        loadFailed = false
         do {
             let rows: [Row] = try await Backend.supabase.from("reports")
                 .select("id, scenario_id, score, created_at, activityId:analysis->practiceContext->>activityId, parentId:analysis->practiceContext->retry->>parentAttemptId, customTitle:analysis->custom->>title, criteria:analysis->practice->criteria")
@@ -78,8 +82,11 @@ final class PracticeHistory {
             guard self.userID == userID else { return }
             activityCounts = Dictionary(grouping: dates, by: { Calendar.current.startOfDay(for: $0) }).mapValues(\.count)
         } catch {
+            guard self.userID == userID else { return }
             AppLog.error("History load failed: \(error.localizedDescription)")
+            loadFailed = true
         }
+        guard self.userID == userID else { return }
         loaded = true
     }
 

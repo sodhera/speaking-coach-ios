@@ -13,6 +13,8 @@ struct ActivitySections: View {
     @State private var opening: UUID?
     @State private var openError: String?
     @State private var showsAll = false
+    @State private var historyWaitTimedOut = false
+    @State private var historyWaitCycle = 0
 
     /// Sessions listed before "Show more".
     private static let shownAtFirst = 8
@@ -26,6 +28,11 @@ struct ActivitySections: View {
             historyList
                 .padding(.top, Space.md)
         }
+        .task(id: historyWaitCycle) {
+            guard !history.loaded else { return }
+            try? await Task.sleep(for: .seconds(12))
+            if !Task.isCancelled, !history.loaded { historyWaitTimedOut = true }
+        }
     }
 
     // MARK: History
@@ -34,7 +41,29 @@ struct ActivitySections: View {
     private var historyList: some View {
         let entries = entries
         if entries.isEmpty {
-            EmptyHistory(loaded: history.loaded)
+            if history.loadFailed || (historyWaitTimedOut && !history.loaded) {
+                VStack(alignment: .leading, spacing: Space.sm) {
+                    Text("Your history couldn't load")
+                        .font(Typeface.label(16))
+                        .foregroundStyle(Palette.ink)
+                    Text("Check your connection and try again.")
+                        .font(Typeface.body(14))
+                        .foregroundStyle(Palette.dim)
+                    Button("Try again") {
+                        guard let userID = model.userID else { return }
+                        historyWaitTimedOut = false
+                        historyWaitCycle += 1
+                        Task { await history.load(userID: userID) }
+                    }
+                    .font(Typeface.label(14))
+                    .foregroundStyle(Palette.coralDeep)
+                }
+                .padding(Space.lg)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .glassSurface(cornerRadius: Corner.lg)
+            } else {
+                EmptyHistory(loaded: history.loaded)
+            }
         } else {
             let shown = showsAll ? entries : Array(entries.prefix(Self.shownAtFirst))
             VStack(spacing: 0) {

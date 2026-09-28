@@ -88,6 +88,22 @@ struct PracticeSessionView: View {
                     .foregroundStyle(Palette.ink)
             }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .overlay(alignment: .topLeading) {
+            Button {
+                Task {
+                    await session.abandon()
+                    onClose()
+                }
+            } label: {
+                Image(systemName: "xmark")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(Palette.ink)
+                    .frame(width: 44, height: 44)
+            }
+            .accessibilityLabel("Close")
+            .padding(Space.lg)
+        }
     }
 
     private var assessing: some View {

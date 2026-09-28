@@ -31,6 +31,10 @@ final class VoiceSession {
     var onNaturalEnd: (() -> Void)?
 
     private var conversation: Conversation?
+    private var connectionTask: Task<Void, Never>?
+    private var connectionTimeoutTask: Task<Void, Never>?
+    private var connectionContinuation: CheckedContinuation<Void, Error>?
+    private var connectionAttemptID: UUID?
     private var previousMicrophoneMutedState = false
     private var audioControlTask: Task<Void, Never>?
     private var cancellables: Set<AnyCancellable> = []
@@ -87,14 +91,47 @@ final class VoiceSession {
         // can change the partner's sound when recording resumes.
         previousMicrophoneMutedState = AudioManager.shared.isMicrophoneMuted
         AudioManager.shared.isMicrophoneMuted = false
-        do {
-            let conversation = try await ElevenLabs.startConversation(conversationToken: token, config: config)
-            self.conversation = conversation
-            observe(conversation)
-        } catch {
-            AudioManager.shared.isMicrophoneMuted = previousMicrophoneMutedState
-            throw error
+        let attemptID = UUID()
+        connectionAttemptID = attemptID
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            connectionContinuation = continuation
+            connectionTask = Task { [weak self] in
+                do {
+                    let connected = try await ElevenLabs.startConversation(conversationToken: token, config: config)
+                    guard let self, self.connectionAttemptID == attemptID else {
+                        await connected.endConversation()
+                        return
+                    }
+                    self.conversation = connected
+                    self.observe(connected)
+                    self.completeConnection(attemptID: attemptID, result: .success(()))
+                } catch {
+                    self?.completeConnection(attemptID: attemptID, result: .failure(error))
+                }
+            }
+            connectionTimeoutTask = Task { [weak self] in
+                try? await Task.sleep(for: .seconds(25))
+                guard !Task.isCancelled else { return }
+                self?.completeConnection(attemptID: attemptID, result: .failure(ConnectionTimeout()))
+            }
         }
+    }
+
+    private struct ConnectionTimeout: Error {}
+
+    private func completeConnection(attemptID: UUID, result: Result<Void, Error>) {
+        guard connectionAttemptID == attemptID, let continuation = connectionContinuation else { return }
+        connectionAttemptID = nil
+        connectionContinuation = nil
+        connectionTimeoutTask?.cancel()
+        connectionTimeoutTask = nil
+        if case .failure = result {
+            connectionTask?.cancel()
+            AudioManager.shared.isMicrophoneMuted = previousMicrophoneMutedState
+            phase = .ended
+        }
+        connectionTask = nil
+        continuation.resume(with: result)
     }
 
     private func observe(_ conversation: Conversation) {
@@ -197,6 +234,9 @@ final class VoiceSession {
 
     func end() async {
         endingByUser = true
+        if let attemptID = connectionAttemptID {
+            completeConnection(attemptID: attemptID, result: .failure(CancellationError()))
+        }
         await conversation?.endConversation()
         teardown()
     }
