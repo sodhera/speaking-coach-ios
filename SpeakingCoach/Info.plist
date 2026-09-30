@@ -38,6 +38,8 @@
 	<true/>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Speaking Coach uses your microphone only while you practice, so your partner can hear you and give feedback on your words.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Speaking Coach uses voice-only practice and does not activate your camera. Camera support is included in the conversation SDK.</string>
 	<key>PostHogHost</key>
 	<string>$(POSTHOG_HOST)</string>
 	<key>PostHogProjectToken</key>

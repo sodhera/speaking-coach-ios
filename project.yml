@@ -9,8 +9,8 @@ settings:
   base:
     SWIFT_VERSION: "5.10"
     DEVELOPMENT_TEAM: 6LYZDNCM4M
-    MARKETING_VERSION: "2.0.0"
-    CURRENT_PROJECT_VERSION: "20"
+    MARKETING_VERSION: "2.0.1"
+    CURRENT_PROJECT_VERSION: "22"
     ENABLE_USER_SCRIPT_SANDBOXING: YES
     SWIFT_STRICT_CONCURRENCY: targeted
 packages:
@@ -67,6 +67,7 @@ targets:
         LSRequiresIPhoneOS: true
         ITSAppUsesNonExemptEncryption: false
         NSMicrophoneUsageDescription: Speaking Coach uses your microphone only while you practice, so your partner can hear you and give feedback on your words.
+        NSCameraUsageDescription: Speaking Coach uses voice-only practice and does not activate your camera. Camera support is included in the conversation SDK.
         PostHogProjectToken: $(POSTHOG_PROJECT_TOKEN)
         PostHogHost: $(POSTHOG_HOST)
         UIAppFonts:

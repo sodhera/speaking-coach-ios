@@ -93,6 +93,10 @@ final class Subscriptions {
         Purchases.logLevel = .warn
         #endif
         Purchases.configure(withAPIKey: Self.apiKey)
+        // Apple Ads: send the install's AdServices token (once per install,
+        // no tracking prompt) so RevenueCat can tie purchases to the keyword
+        // that brought them. Right at launch, since the token lasts 24 hours.
+        Purchases.shared.attribution.enableAdServicesAttributionTokenCollection()
         streamTask = Task { [weak self] in
             for await info in Purchases.shared.customerInfoStream {
                 self?.apply(info)

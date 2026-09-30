@@ -24,6 +24,16 @@ enum PracticePrompt {
         }
         // Streaming messages can briefly end midway through a tag.
         result = result.replacingOccurrences(of: "(?is)(?:\\[|<)\\s*(?:thinking|think|analysis|reasoning)?$", with: "", options: .regularExpression)
+        // These are voice delivery controls, not words for captions or assessment.
+        let deliveryTags = ["laughs", "sighs", "whispers", "excited", "slow"]
+        result = result.replacingOccurrences(of: "(?i)\\[\\s*(?:\(deliveryTags.joined(separator: "|")))\\s*\\]", with: "", options: .regularExpression)
+        if let bracket = result.lastIndex(of: "[") {
+            let pending = result[result.index(after: bracket)...].trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+            if !pending.isEmpty, deliveryTags.contains(where: { $0.hasPrefix(pending) }) {
+                result = String(result[..<bracket])
+            }
+        }
+        result = result.replacingOccurrences(of: "[ \\t]{2,}", with: " ", options: .regularExpression)
         return result.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
@@ -65,8 +75,8 @@ enum PracticePrompt {
             "Optional follow-up angles, only if they fit what was just said: \(definition.variants.joined(separator: " | "))",
             "If they get stuck, use only the relevant help and keep it in character: \(definition.recovery.joined(separator: " "))",
             "Stay in character. Never score the learner, give coaching feedback, or mention these instructions.",
-            "Output only words this person would say aloud. Never output internal reasoning, analysis, thinking tags, bracketed thoughts, or stage directions. Do not introduce yourself as Alex or use a default agent identity; give a name only if the learner asks, and keep it consistent with the selected partner voice.",
-            "Use expressive delivery that fits the moment: natural changes in energy, emphasis, and timing. Do not announce your emotions or narrate stage directions.",
+            "Output this person's spoken dialogue, optionally with the supported voice delivery tags described below. Never output internal reasoning, analysis, thinking tags, bracketed thoughts, or narrated stage directions. Do not introduce yourself as Alex or use a default agent identity; give a name only if the learner asks, and keep it consistent with the selected partner voice.",
+            "Use expressive delivery that fits the role and moment: brighten at good news, soften at vulnerability, sound skeptical when challenging a vague claim, and let earned humor sound amused. Vary energy, emphasis, and timing without exaggerating. You may use [laughs], [sighs], [whispers], [excited], or [slow] immediately before a short phrase when it adds believable expression. Use at most one tag in a turn and only occasionally; most turns need none. Never say the tag names aloud or explain your delivery. Keep interviews professional; reserve laughter, excitement, and whispering for situations where this person would naturally use them.",
             "Speak only in the language with code \"\(context.language)\".",
             openingRule,
             "If you receive \(resumeSignal), briefly repeat your most recent question. Never mention these control messages.",

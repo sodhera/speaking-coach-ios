@@ -62,6 +62,16 @@ final class PracticeContractTests: XCTestCase {
         XCTAssertEqual(PracticePrompt.spokenText("Hi, nice to meet you."), "Hi, nice to meet you.")
     }
 
+    func testVoiceDeliveryTagsStayOutOfCaptionsAndFeedback() {
+        XCTAssertEqual(PracticePrompt.spokenText("[excited] That's great! [laughs] I knew you could do it."), "That's great! I knew you could do it.")
+        XCTAssertEqual(PracticePrompt.spokenText("[whispers] Between us, [slow] take your time."), "Between us, take your time.")
+        XCTAssertEqual(PracticePrompt.spokenText("[sighs] Fine."), "Fine.")
+        XCTAssertEqual(PracticePrompt.spokenText("Hello. [whisp"), "Hello.")
+        XCTAssertEqual(PracticePrompt.spokenText("Hello. [EXCITED"), "Hello.")
+        XCTAssertEqual(PracticePrompt.spokenText("Keep [the original wording] here."), "Keep [the original wording] here.")
+        XCTAssertEqual(PracticePrompt.spokenText("[thinking]Plan[/thinking] [slow] Let me explain."), "Let me explain.")
+    }
+
     func testRetryShortensTheSceneAndOpensOnTheCheckpoint() {
         let setup = PracticeSetup(practice: definition, pressure: .realistic, persona: .female)
         var context = PracticeContext.new(for: setup, language: "en")
