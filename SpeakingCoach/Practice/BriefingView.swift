@@ -1,3 +1,4 @@
+import PhotosUI
 import SwiftUI
 
 /// How a rehearsal is set up — exactly the fields `/api/practice/start` takes.
@@ -11,6 +12,9 @@ struct PracticeSetup: Hashable, Identifiable {
     var pacing: Pacing = .patient
     var persona: Persona
     var situation = ""
+    /// Interviews only: the CV, job post and notes the interviewer reads.
+    /// Never sent to the practice server; only the voice partner sees them.
+    var documents: [InterviewDocument] = []
 
     var id: String { practice.id }
 }
@@ -20,15 +24,22 @@ struct PracticeSetup: Hashable, Identifiable {
 /// list's last row, only if you want them. One button starts it.
 struct BriefingView: View {
     let practice: PracticeDefinition
+    /// The account's CV, job post and notes; offered on interviews only.
+    var documents: InterviewDocumentStore?
     let onBack: () -> Void
     let onStart: (PracticeSetup) -> Void
 
     @State private var setup: PracticeSetup
     @State private var adjusting = false
     @FocusState private var situationFocused: Bool
+    @State private var importing = false
+    @State private var photo: PhotosPickerItem?
+    @State private var reading = false
+    @State private var documentProblem: String?
 
-    init(practice: PracticeDefinition, onBack: @escaping () -> Void, onStart: @escaping (PracticeSetup) -> Void) {
+    init(practice: PracticeDefinition, documents: InterviewDocumentStore? = nil, onBack: @escaping () -> Void, onStart: @escaping (PracticeSetup) -> Void) {
         self.practice = practice
+        self.documents = documents
         self.onBack = onBack
         self.onStart = onStart
         // The first gentle practice never pressures; everything else starts realistic.
@@ -73,6 +84,11 @@ struct BriefingView: View {
 
                         details
                             .padding(.top, Space.xxl)
+
+                        if practice.category == "interviews", let documents {
+                            documentsSection(documents)
+                                .padding(.top, Space.xxl)
+                        }
                     }
                     .padding(.horizontal, Space.xxl)
                     .padding(.top, Space.lg)
@@ -85,6 +101,7 @@ struct BriefingView: View {
                     Analytics.action("briefing")
                     var final = setup
                     final.situation = setup.situation.trimmingCharacters(in: .whitespacesAndNewlines)
+                    if practice.category == "interviews" { final.documents = documents?.documents ?? [] }
                     onStart(final)
                 }
                 .padding(.horizontal, Space.xxl)
@@ -95,6 +112,18 @@ struct BriefingView: View {
         // A page with its own action at the bottom: the tab bar steps aside.
         .toolbar(.hidden, for: .tabBar)
         .onAppear { Analytics.enter("briefing") }
+        .fileImporter(isPresented: $importing, allowedContentTypes: DocumentText.fileTypes) { result in
+            guard case .success(let url) = result else { return }
+            addDocument(named: url.lastPathComponent) { try await DocumentText.read(url) }
+        }
+        .onChange(of: photo) { _, item in
+            guard let item else { return }
+            photo = nil
+            addDocument(named: String(localized: "Photo", bundle: AppLanguage.bundle)) {
+                guard let data = try await item.loadTransferable(type: Data.self) else { throw DocumentText.Failure.noText }
+                return try await DocumentText.read(image: data)
+            }
+        }
         .sheet(isPresented: $adjusting) {
             SceneScreen(depth: 0.4) {
                 HStack {
@@ -151,6 +180,110 @@ struct BriefingView: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
+        }
+    }
+
+    // MARK: Documents
+
+    /// The CV, the job post and notes, read on the phone. The interviewer
+    /// gets their text, so the questions are about this person and this role.
+    private func documentsSection(_ store: InterviewDocumentStore) -> some View {
+        VStack(alignment: .leading, spacing: Space.md) {
+            SectionTitle(text: String(localized: "Your CV and the job", bundle: AppLanguage.bundle))
+            Text("Add your CV, the job post or your notes. Your interviewer reads them and asks about your real experience.")
+                .font(Typeface.body(15))
+                .foregroundStyle(Palette.dim)
+                .lineSpacing(2)
+                .fixedSize(horizontal: false, vertical: true)
+
+            if !store.documents.isEmpty {
+                GlassRowGroup {
+                    ForEach(Array(store.documents.enumerated()), id: \.element.id) { index, document in
+                        if index > 0 { GlassRowDivider() }
+                        HStack(spacing: Space.md) {
+                            GlassRowIcon(icon: "doc.text")
+                            Text(document.name)
+                                .font(Typeface.body(16))
+                                .foregroundStyle(Palette.ink)
+                                .lineLimit(1)
+                                .truncationMode(.middle)
+                            Spacer(minLength: Space.sm)
+                            Button {
+                                Haptics.selection()
+                                store.remove(document)
+                            } label: {
+                                Image(systemName: "xmark")
+                                    .font(.system(size: 13, weight: .medium))
+                                    .foregroundStyle(Palette.muted)
+                                    .frame(width: 44, height: 44)
+                                    .contentShape(Rectangle())
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel(String(localized: "Remove \(document.name)", bundle: AppLanguage.bundle))
+                        }
+                        .frame(minHeight: 52)
+                    }
+                }
+            }
+
+            if reading {
+                HStack(spacing: 0) {
+                    Text("Reading the text")
+                    WaitingDots(font: Typeface.body(15), color: Palette.dim)
+                }
+                .font(Typeface.body(15))
+                .foregroundStyle(Palette.dim)
+                .frame(maxWidth: .infinity, minHeight: 50)
+            } else if !store.isFull {
+                GlassGroup(spacing: Space.md) {
+                    HStack(spacing: Space.md) {
+                        Button {
+                            Haptics.heavy()
+                            documentProblem = nil
+                            importing = true
+                        } label: {
+                            DocumentButtonLabel(title: String(localized: "Add a file", bundle: AppLanguage.bundle), systemImage: "doc.badge.plus")
+                        }
+                        .buttonStyle(.plain)
+                        .glassSurface(cornerRadius: 999, interactive: true)
+                        PhotosPicker(selection: $photo, matching: .images) {
+                            DocumentButtonLabel(title: String(localized: "Add a photo", bundle: AppLanguage.bundle), systemImage: "photo")
+                        }
+                        .buttonStyle(.plain)
+                        .glassSurface(cornerRadius: 999, interactive: true)
+                    }
+                }
+            }
+
+            if let documentProblem {
+                Text(documentProblem)
+                    .font(Typeface.body(14))
+                    .foregroundStyle(Palette.danger)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            Text("They stay on this phone. Only their text goes to your partner, in your interview sessions.")
+                .font(Typeface.body(13))
+                .foregroundStyle(Palette.muted)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    private func addDocument(named name: String, read: @escaping () async throws -> String) {
+        guard let documents else { return }
+        documentProblem = nil
+        reading = true
+        Task {
+            defer { reading = false }
+            do {
+                let text = try await read()
+                documents.add(name: name, text: text)
+                Haptics.success()
+                Analytics.action("briefing_document")
+            } catch {
+                Haptics.error()
+                documentProblem = (error as? LocalizedError)?.errorDescription ?? DocumentText.Failure.noText.localizedDescription
+            }
         }
     }
 
@@ -217,6 +350,20 @@ struct BriefingView: View {
                 $0 == .female ? String(localized: "Female", bundle: AppLanguage.bundle) : String(localized: "Male", bundle: AppLanguage.bundle)
             }
         }
+    }
+}
+
+/// The document actions' label: the room's paired glass pills.
+private struct DocumentButtonLabel: View {
+    let title: String
+    let systemImage: String
+
+    var body: some View {
+        Label(title, systemImage: systemImage)
+            .font(Typeface.label(15))
+            .foregroundStyle(Palette.ink)
+            .frame(maxWidth: .infinity, minHeight: 50)
+            .contentShape(Capsule())
     }
 }
 

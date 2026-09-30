@@ -40,12 +40,15 @@ final class PracticeSession {
 
     private let userID: UUID
     private let onFinished: () -> Void
+    /// What the interviewer reads (CV, job post, notes); empty otherwise.
+    private var documents: [InterviewDocument] = []
     private var finishing = false
     private var startCount = 0
 
     init(setup: PracticeSetup, userID: UUID, onFinished: @escaping () -> Void) {
         definition = setup.practice
         context = .new(for: setup, language: AppLanguage.code)
+        documents = setup.documents
         self.userID = userID
         self.onFinished = onFinished
     }
@@ -184,7 +187,7 @@ final class PracticeSession {
             }
             try await voice.start(
                 token: token,
-                prompt: PracticePrompt.build(definition, context),
+                prompt: PracticePrompt.build(definition, context, documents: documents),
                 firstMessage: PracticePrompt.firstMessage(definition, context),
                 language: context.language,
                 duration: PracticePrompt.duration(definition, context)

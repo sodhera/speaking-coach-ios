@@ -31,6 +31,7 @@ final class AppModel {
     let presentations = PresentationStore()
     let preparation = PreparationStore()
     let routine = RoutineStore()
+    let interviewDocuments = InterviewDocumentStore()
 
     /// Answers finished on the commit step before an account existed. Saved
     /// to the account the moment one appears.
@@ -143,6 +144,7 @@ final class AppModel {
             throw AuthFailure.message(message ?? String(localized: "Your account couldn't be deleted. Please try again.", bundle: AppLanguage.bundle))
         }
         if let userID { ProfileService.cache(nil, userID: userID) }
+        interviewDocuments.deleteAll()
         try await AuthService.signOut()
     }
 
@@ -175,6 +177,7 @@ final class AppModel {
             profile = nil
             history.reset()
             preparation.clearLocal()
+            interviewDocuments.unload()
             // The next account on this phone shouldn't get this one's reminders.
             routine.clearOnSignOut()
             Analytics.identify(userID: nil, profile: nil)
@@ -192,6 +195,7 @@ final class AppModel {
 
         if user.id != history.userID { Task { await history.load(userID: user.id) } }
         Task { await preparation.load(userID: user.id) }
+        interviewDocuments.load(userID: user.id)
 
         // A just-finished onboarding. A brand-new account takes the answers.
         // An existing one (Apple/Google are find-or-create, so "Get started"

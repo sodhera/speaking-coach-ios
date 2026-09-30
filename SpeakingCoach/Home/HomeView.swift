@@ -93,7 +93,7 @@ struct HomeView: View {
             .navigationDestination(for: HomeRoute.self) { route in
                 switch route {
                 case .briefing(let practice):
-                    BriefingView(practice: practice, onBack: back, onStart: onStart)
+                    BriefingView(practice: practice, documents: model.interviewDocuments, onBack: back, onStart: onStart)
                 case .section(let section):
                     SectionPage(
                         section: section,

@@ -98,7 +98,15 @@ struct ReviewScreens: View {
                     ExistingAccountView {}
                 }
             case "briefing":
-                BriefingView(practice: PracticeCatalog.definition("interview_tell_me_about_yourself")!, onBack: {}, onStart: { _ in })
+                BriefingView(practice: PracticeCatalog.definition("interview_tell_me_about_yourself")!, documents: model.interviewDocuments, onBack: {}, onStart: { _ in })
+                    .onAppear {
+                        // `-review-documents`: a CV and a job post already added.
+                        guard LaunchFlags.has("-review-documents") else { return }
+                        model.interviewDocuments.setReviewDocuments([
+                            InterviewDocument(id: UUID(), name: "Sulav Shrestha CV.pdf", text: "Product designer, 5 years."),
+                            InterviewDocument(id: UUID(), name: "Product designer job post.pdf", text: "Senior product designer."),
+                        ])
+                    }
             case "settings":
                 SettingsView(model: model)
             case "checkin":
