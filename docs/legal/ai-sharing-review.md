@@ -6,7 +6,7 @@ Transport checks reject practice, custom-situation, transcription, presentation 
 
 ## App Review notes for the next submitted build
 
-Speaking Coach uses ElevenLabs for live voice conversations and audio transcription, and OpenAI for custom-situation evaluation, practice feedback and presentation questions/answer feedback. Before the first transfer, the app shows “Allow AI data sharing?” with the providers, data categories and uses, a working Privacy Policy link, “Allow AI data sharing” and “Not now”. Only an explicit Allow unlocks the feature. Existing users must accept the expanded disclosure again. Review or withdraw permission in Settings → AI data sharing. Withdrawing blocks subsequent transfers. CV and job-post text are disclosed in interview setup as well. The public policy describes the data flows, provider protections and deletion requests.
+Speaking Coach uses ElevenLabs for live voice conversations and audio transcription, and OpenAI for custom-situation evaluation, practice feedback and presentation questions/answer feedback. Before the first transfer, the app shows “Practice with AI” with the providers, data categories and uses, a working Privacy Policy link, “Allow and continue” and “Not now”. Only an explicit Allow unlocks the feature. The “How AI uses your data” link opens https://www.orecci.com/ai-data-sharing.html with the fuller explanation. Existing users must accept the expanded disclosure again. Review or withdraw permission in Settings → AI data sharing. Withdrawing blocks subsequent transfers. CV and job-post text are disclosed in interview setup as well. The public policy describes the data flows, provider protections and deletion requests.
 
 ## Before submitting
 

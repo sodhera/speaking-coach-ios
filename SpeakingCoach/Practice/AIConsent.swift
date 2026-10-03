@@ -94,28 +94,30 @@ struct AIConsentView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: Space.lg) {
                     Kicker(text: "Your privacy", color: Palette.coralDeep)
-                    Text("Allow AI data sharing?")
+                    Text("Practice with AI")
                         .font(Typeface.title(28))
                         .foregroundStyle(Palette.ink)
                         .fixedSize(horizontal: false, vertical: true)
-                    Text("With your permission, Speaking Coach shares the following data with ElevenLabs and OpenAI to provide AI conversations, transcription, questions and feedback.")
+                    Text("With your permission, these two services help you practice and get feedback.")
                         .font(Typeface.body(16))
                         .foregroundStyle(Palette.dim)
                         .lineSpacing(3)
                         .fixedSize(horizontal: false, vertical: true)
 
-                    VStack(alignment: .leading, spacing: Space.lg) {
-                        ServiceRow(systemImage: "waveform", name: "ElevenLabs", role: "Receives live microphone audio, recorded practice and answer audio, and the practice context you provide, including CV, job post and interview notes. It runs your voice partner and transcribes recordings.")
+                    VStack(alignment: .leading, spacing: Space.md) {
+                        ServiceRow(systemImage: "waveform", name: "ElevenLabs", role: "Your live and recorded voice, practice context, and any CV, job post or interview notes you add — for conversations and transcription.")
                         Divider().overlay(Palette.border)
-                        ServiceRow(systemImage: "text.bubble", name: "OpenAI", role: "Receives conversation and recording transcripts, custom situations, and presentation slide text, title, audience, instructions, slide timing and answers. It checks situations and generates questions and feedback. Any personal details in this content are included.")
+                        ServiceRow(systemImage: "text.bubble", name: "OpenAI", role: "Your transcripts, custom situations, slides, presentation setup, slide timing and answers — for questions and feedback.")
                     }
                     .padding(Space.lg)
                     .glassSurface(cornerRadius: Corner.lg)
                     .padding(.top, Space.sm)
 
-                    VStack(alignment: .leading, spacing: 0) {
-                        Text("Data is sent through our servers or directly to ElevenLabs when you use these features. PowerPoint files are also uploaded to our server for PDF conversion. Choose Not now to continue without AI features. You can withdraw permission in Settings → AI data sharing. Withdrawal stops future sharing; it does not delete data already sent. Read more in our")
+                    VStack(alignment: .leading, spacing: Space.sm) {
+                        Text("Only when you use these features. PowerPoint files go to our server for conversion. You can change permission anytime in Settings.")
                             .foregroundStyle(Palette.dim)
+                        Link("How AI uses your data", destination: AppConfig.aiDataURL)
+                            .foregroundStyle(Palette.coralDeep)
                         Link("Privacy Policy", destination: AppConfig.privacyURL)
                             .foregroundStyle(Palette.coralDeep)
                     }
@@ -123,12 +125,12 @@ struct AIConsentView: View {
                     .fixedSize(horizontal: false, vertical: true)
                 }
                 .padding(.horizontal, Space.xxl)
-                .padding(.top, Space.xxxl)
+                .padding(.top, Space.xl)
             }
             .scrollBounceBehavior(.basedOnSize)
 
             VStack(spacing: Space.sm) {
-                PrimaryButton(title: "Allow AI data sharing") {
+                PrimaryButton(title: "Allow and continue") {
                     AIConsent.give()
                     Haptics.success()
                     onAgree()

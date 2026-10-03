@@ -10,11 +10,11 @@ final class AIConsentUITests: XCTestCase {
 
     func testDisclosureAndDecline() {
         let app = launch()
-        XCTAssertTrue(app.staticTexts["Allow AI data sharing?"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.staticTexts["Practice with AI"].waitForExistence(timeout: 10))
         XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "ElevenLabs")).firstMatch.exists)
-        app.swipeUp()
         XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "OpenAI")).firstMatch.exists)
         XCTAssertTrue(app.links["Privacy Policy"].exists || app.buttons["Privacy Policy"].exists)
+        XCTAssertTrue(app.links["How AI uses your data"].exists || app.buttons["How AI uses your data"].exists)
         let attachment = XCTAttachment(screenshot: app.screenshot())
         attachment.name = "AI data sharing disclosure"
         attachment.lifetime = .keepAlways
@@ -26,8 +26,8 @@ final class AIConsentUITests: XCTestCase {
 
     func testExplicitAllowUnlocksGate() {
         let app = launch()
-        XCTAssertTrue(app.buttons["Allow AI data sharing"].waitForExistence(timeout: 10))
-        app.buttons["Allow AI data sharing"].tap()
+        XCTAssertTrue(app.buttons["Allow and continue"].waitForExistence(timeout: 10))
+        app.buttons["Allow and continue"].tap()
         XCTAssertTrue(app.staticTexts["AI sharing allowed"].waitForExistence(timeout: 5))
     }
 }

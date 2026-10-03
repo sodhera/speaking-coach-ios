@@ -16,6 +16,7 @@ enum AppConfig {
     // Keep the callback already registered with Supabase for the existing app.
     static let authCallback = URL(string: "dating-coach://auth/callback")!
 
+    static let aiDataURL = URL(string: "https://www.orecci.com/ai-data-sharing.html")!
     static let privacyURL = URL(string: "https://www.orecci.com/privacy-policy.html")!
     static let termsURL = URL(string: "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")!
 }
