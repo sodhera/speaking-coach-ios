@@ -7,6 +7,7 @@ struct PresentationsView: View {
     let store: PresentationStore
     let onBack: () -> Void
 
+    @State private var awaitingConsent: (() -> Void)?
     @State private var importing = false
     @State private var working = false
     @State private var problem: String?
@@ -54,7 +55,7 @@ struct PresentationsView: View {
 
                 PrimaryButton(title: String(localized: "Add slides", bundle: AppLanguage.bundle), systemImage: "plus", isLoading: working) {
                     problem = nil
-                    importing = true
+                    awaitingConsent = AIConsent.gate { importing = true }
                 }
                 .padding(.horizontal, Space.xxl)
                 .padding(.bottom, Space.sm)
@@ -73,6 +74,7 @@ struct PresentationsView: View {
             guard case .success(let url) = result else { return }
             Task { await add(url) }
         }
+        .aiConsentSheet($awaitingConsent)
         .onAppear { Analytics.enter("presentations") }
     }
 

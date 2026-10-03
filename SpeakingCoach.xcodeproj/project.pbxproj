@@ -47,6 +47,7 @@
 		5B52AF5C5C159F323F7C1E5A /* OnboardingContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8737392A1F95DC94FB8CFCA /* OnboardingContent.swift */; };
 		5D998F09D29CC8C01A0C40E6 /* PaywallCopy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39B4B67FD7D079BB02458758 /* PaywallCopy.swift */; };
 		63EEBC7CF6AC3341ACFC1C91 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = A3975257C931F185F5A6B315 /* PrivacyInfo.xcprivacy */; };
+		692E739EBD631579B2EFA87A /* AIConsentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BCDC1B82FC2ADC7A882685C /* AIConsentTests.swift */; };
 		6D78E1D8F89CD05F5C48BF36 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EC2DBF32582E764DC852ED3 /* HomeView.swift */; };
 		6E4352913BF53A4D604D5850 /* ProgressTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 433EBA4CBAC5E3A9F411248A /* ProgressTests.swift */; };
 		6E57906B6B564D9FBD9D076C /* RehearsalReviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF9D0DB897DD4DC30D871082 /* RehearsalReviewView.swift */; };
@@ -99,6 +100,7 @@
 		F67CBEFBEA052AD976DFA057 /* RoutineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66CAE6207AFC3FB94116BDBD /* RoutineView.swift */; };
 		F8DB5181343677A95ACCA9BF /* DesignGallery.swift in Sources */ = {isa = PBXBuildFile; fileRef = E57D1AF86C5FABCAD39BB5EF /* DesignGallery.swift */; };
 		F8F9284D93E5C41CDDC93359 /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED7FEE3B55D24D58BF6A4C2E /* AppModel.swift */; };
+		FDE7BFB254D70C084E48E83E /* AIConsentUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 925DD6A03F9C867CFC4AAB37 /* AIConsentUITests.swift */; };
 		FE8E8DAF708E54A4981EC6BB /* Reminders.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EEFC53F8563D0E22CC8E65C /* Reminders.swift */; };
 		FF01B093CF1EC0735262238D /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = A398FE8FEABFD30BD81DDD92 /* Supabase */; };
 		FF32A034333EB5D93175B097 /* StepChrome.swift in Sources */ = {isa = PBXBuildFile; fileRef = 757DA098CB3204B89C383DA1 /* StepChrome.swift */; };
@@ -127,6 +129,7 @@
 		0151D4A9CAD9F0C1D34EC2B0 /* Subscriptions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Subscriptions.swift; sourceTree = "<group>"; };
 		01B57A87E9381F0DAECB1F2C /* OnboardingFlowUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingFlowUITests.swift; sourceTree = "<group>"; };
 		06CB085DB10284191B47AA62 /* InfoPlist.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = InfoPlist.xcstrings; sourceTree = "<group>"; };
+		0BCDC1B82FC2ADC7A882685C /* AIConsentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIConsentTests.swift; sourceTree = "<group>"; };
 		126CE6A403EC9174BE12B53F /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		135C3EE8B743375C8D4EA3DF /* VoiceSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceSession.swift; sourceTree = "<group>"; };
 		139A7F174FEA45591A261270 /* PracticeHistory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PracticeHistory.swift; sourceTree = "<group>"; };
@@ -184,6 +187,7 @@
 		79E871FE81EF75E7A4A8CE94 /* LanguagePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanguagePicker.swift; sourceTree = "<group>"; };
 		8F6497FED2B456EC0494E5DE /* Steps.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Steps.swift; sourceTree = "<group>"; };
 		8FBBDCBF6DE708E72B753CC7 /* Analytics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Analytics.swift; sourceTree = "<group>"; };
+		925DD6A03F9C867CFC4AAB37 /* AIConsentUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIConsentUITests.swift; sourceTree = "<group>"; };
 		9A9D6BD1C36CE74F7163C913 /* AudioRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioRecorder.swift; sourceTree = "<group>"; };
 		9C82D0A97FB7D70861FD0890 /* Haptics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Haptics.swift; sourceTree = "<group>"; };
 		9E16AE0D8F0D463CEC65946C /* PromptView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PromptView.swift; sourceTree = "<group>"; };
@@ -246,6 +250,7 @@
 		1F8973F54D5C068773A338BE /* SpeakingCoachTests */ = {
 			isa = PBXGroup;
 			children = (
+				0BCDC1B82FC2ADC7A882685C /* AIConsentTests.swift */,
 				2EC7DA605C425FC734F2C569 /* CustomSituationTests.swift */,
 				5820BB9F944B0C59FA860FAD /* FirstPlanTests.swift */,
 				C41896FE840BCC2D98966395 /* InterviewDocumentTests.swift */,
@@ -448,6 +453,7 @@
 		B405D2C8007EC29CD215AB44 /* SpeakingCoachUITests */ = {
 			isa = PBXGroup;
 			children = (
+				925DD6A03F9C867CFC4AAB37 /* AIConsentUITests.swift */,
 				01B57A87E9381F0DAECB1F2C /* OnboardingFlowUITests.swift */,
 				58C40E995A0E5305771F585D /* ZaraRecordingUITests.swift */,
 			);
@@ -667,6 +673,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				692E739EBD631579B2EFA87A /* AIConsentTests.swift in Sources */,
 				AB3535EC39C16BAF60D6B85E /* CustomSituationTests.swift in Sources */,
 				9A0B4DDAA7291E8D5BFC8070 /* FirstPlanTests.swift in Sources */,
 				87DAF42D8C1EF2E17ECC58CA /* InterviewDocumentTests.swift in Sources */,
@@ -686,6 +693,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FDE7BFB254D70C084E48E83E /* AIConsentUITests.swift in Sources */,
 				26ECE937A577B22EEFD8A0B1 /* OnboardingFlowUITests.swift in Sources */,
 				B1F2FABD591F5A9B0816B7F9 /* ZaraRecordingUITests.swift in Sources */,
 			);
@@ -872,7 +880,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 22;
+				CURRENT_PROJECT_VERSION = 23;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 6LYZDNCM4M;
 				ENABLE_NS_ASSERTIONS = NO;
@@ -973,7 +981,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 22;
+				CURRENT_PROJECT_VERSION = 23;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = 6LYZDNCM4M;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;

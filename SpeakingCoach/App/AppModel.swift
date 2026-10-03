@@ -144,6 +144,7 @@ final class AppModel {
             throw AuthFailure.message(message ?? String(localized: "Your account couldn't be deleted. Please try again.", bundle: AppLanguage.bundle))
         }
         if let userID { ProfileService.cache(nil, userID: userID) }
+        AIConsent.revoke()
         interviewDocuments.deleteAll()
         try await AuthService.signOut()
     }
@@ -172,6 +173,7 @@ final class AppModel {
         // An expired stored session is emitted as the initial session; the
         // SDK refreshes it right behind. Treat it as signed in for routing.
         guard let session else {
+            AIConsent.identify(nil)
             userID = nil
             email = nil
             profile = nil
@@ -188,6 +190,7 @@ final class AppModel {
 
         let user = session.user
         userID = user.id
+        AIConsent.identify(user.id)
         email = user.email
         Analytics.identify(userID: user.id, profile: profile)
         // Resolve access alongside the profile, not after it.

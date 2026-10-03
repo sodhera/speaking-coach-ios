@@ -52,6 +52,21 @@ struct ZaraDemoFlow: View {
     }
 }
 
+/// Uses the production gate with inert content to verify allow and decline.
+private struct ConsentReviewScreen: View {
+    @State private var declined = false
+
+    var body: some View {
+        if declined {
+            Text("AI sharing declined")
+        } else {
+            AIConsentGate(onDecline: { declined = true }) {
+                Text("AI sharing allowed")
+            }
+        }
+    }
+}
+
 /// `-review-screen=<name>` renders a screen against a fixture profile, with
 /// no account or purchase needed: `welcome`, `signin`, `existing`, `paywall`,
 /// `attribution`, `microphone`, `reminders`, `setup`, `home`, `profile`, `progress`,
@@ -71,7 +86,7 @@ struct ReviewScreens: View {
                     PaywallView(model: model)
                 }
             case "consent":
-                AIConsentGate(onDecline: {}) { Color.clear }
+                ConsentReviewScreen()
             case "attribution":
                 ZStack {
                     MorningStage(depth: 1)

@@ -10,6 +10,10 @@ struct SpeakingCoachApp: App {
         Analytics.configurePostHog()
         Haptics.prepare()
         #if DEBUG
+        if LaunchFlags.has("-review-consent-reset") {
+            AIConsent.identify(UUID(uuidString: "C0115E17-C011-4E17-A011-C0115E170001"))
+            AIConsent.revoke()
+        }
         if LaunchFlags.has("-fresh-start") {
             UserDefaults.standard.removeObject(forKey: "sc.onboardingDraft.v1")
             AppLanguage.forget()

@@ -80,6 +80,7 @@ final class VoiceSession {
     // MARK: Lifecycle
 
     func start(token: String, prompt: String, firstMessage: String?, language: String, duration: Int) async throws {
+        try AIConsent.require()
         phase = .connecting
         remaining = duration
         beginsWithSignal = firstMessage == nil
@@ -97,6 +98,7 @@ final class VoiceSession {
             connectionContinuation = continuation
             connectionTask = Task { [weak self] in
                 do {
+                    try AIConsent.require()
                     let connected = try await ElevenLabs.startConversation(conversationToken: token, config: config)
                     guard let self, self.connectionAttemptID == attemptID else {
                         await connected.endConversation()

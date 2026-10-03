@@ -10,7 +10,9 @@ enum PresentationAPI {
     /// Transcribes a recording (AAC in an .m4a) with the server's Scribe
     /// boundary. Signed-in only; files up to 10 MB.
     static func transcribe(_ audio: URL, language: String) async throws -> String {
+        try await AIConsent.require()
         let session = try await currentSession()
+        try await AIConsent.require(userID: session.user.id)
         let boundary = "Boundary-\(UUID().uuidString)"
         var body = Data()
         func field(_ name: String, _ value: String) {
@@ -77,6 +79,7 @@ enum PresentationAPI {
     /// Converts a .pptx to PDF on the server. Needs LibreOffice there; when
     /// it isn't available the server says so, and the app asks for a PDF.
     static func convert(pptx: Data, fileName: String) async throws -> Data {
+        try await AIConsent.require()
         let boundary = "Boundary-\(UUID().uuidString)"
         var body = Data()
         body.append("--\(boundary)\r\nContent-Disposition: form-data; name=\"presentation\"; filename=\"\(fileName)\"\r\nContent-Type: application/vnd.openxmlformats-officedocument.presentationml.presentation\r\n\r\n".data(using: .utf8)!)
@@ -98,11 +101,13 @@ enum PresentationAPI {
     // MARK: Plumbing
 
     private static func postJSON<Body: Encodable, Response: Decodable>(_ path: String, _ body: Body) async throws -> Response {
+        try await AIConsent.require()
         var request = URLRequest(url: AppConfig.apiBaseURL.appending(path: path))
         request.httpMethod = "POST"
         request.timeoutInterval = 90
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         let session = try await currentSession()
+        try await AIConsent.require(userID: session.user.id)
         request.setValue("Bearer \(session.accessToken)", forHTTPHeaderField: "Authorization")
         return try await send(request, body: try JSONEncoder().encode(body))
     }
@@ -118,6 +123,7 @@ enum PresentationAPI {
     }
 
     private static func send<Response: Decodable>(_ request: URLRequest, body: Data) async throws -> Response {
+        try await AIConsent.require()
         var request = request
         request.httpBody = body
         let data: Data

@@ -190,7 +190,7 @@ struct BriefingView: View {
     private func documentsSection(_ store: InterviewDocumentStore) -> some View {
         VStack(alignment: .leading, spacing: Space.md) {
             SectionTitle(text: String(localized: "Your CV and the job", bundle: AppLanguage.bundle))
-            Text("Add your CV, the job post or your notes. Your interviewer reads them and asks about your real experience.")
+            Text("Add your CV, the job post or your notes. After you allow AI data sharing and start an interview, their text is sent to ElevenLabs so your interviewer can ask about your experience. Remove anything you do not want to share.")
                 .font(Typeface.body(15))
                 .foregroundStyle(Palette.dim)
                 .lineSpacing(2)

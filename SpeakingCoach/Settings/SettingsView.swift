@@ -15,6 +15,8 @@ struct SettingsView: View {
     @State private var remindersOn = Reminders.isEnabled
     @State private var sendingFeedback = false
     @State private var showsRoutine = false
+    @State private var showsAISharing = false
+    @State private var aiSharingAllowed = AIConsent.isGiven
 
     private var subscriptions: Subscriptions { model.subscriptions }
 
@@ -95,6 +97,18 @@ struct SettingsView: View {
                     .padding(.vertical, Space.md)
                 }
 
+                section(String(localized: "AI data sharing", bundle: AppLanguage.bundle)) {
+                    rowButton(GlassRow(icon: "hand.raised", title: "Review AI data sharing", value: aiSharingAllowed ? "Allowed" : "Not allowed", showsChevron: true)) { showsAISharing = true }
+                    if aiSharingAllowed {
+                        GlassRowDivider()
+                        rowButton(GlassRow(icon: "hand.raised.slash", title: "Withdraw AI permission")) {
+                            AIConsent.revoke()
+                            aiSharingAllowed = false
+                            notice = "AI permission withdrawn. Future AI sharing is blocked until you allow it again. Data already sent is not deleted."
+                        }
+                    }
+                }
+
                 section(String(localized: "Help and legal", bundle: AppLanguage.bundle)) {
                     rowButton(GlassRow(icon: "bubble.left", title: String(localized: "Send feedback", bundle: AppLanguage.bundle), showsChevron: true)) { sendingFeedback = true }
                     GlassRowDivider()
@@ -140,7 +154,14 @@ struct SettingsView: View {
             DeleteAccountSheet(model: model)
                 .presentationDetents([.medium])
         }
-        .onAppear { Analytics.enter("settings") }
+        .sheet(isPresented: $showsAISharing, onDismiss: { aiSharingAllowed = AIConsent.isGiven }) {
+            ZStack {
+                MorningStage(depth: 0.8)
+                AIConsentView(onAgree: { showsAISharing = false }, onDecline: { showsAISharing = false })
+            }
+            .presentationDragIndicator(.visible)
+        }
+        .onAppear { aiSharingAllowed = AIConsent.isGiven; Analytics.enter("settings") }
     }
 
     /// The daily prompt's time, or "Off".

@@ -2,6 +2,7 @@ import Foundation
 import Supabase
 
 enum PracticeAPIError: LocalizedError {
+    case aiConsentRequired
     case signedOut
     case sessionUnavailable
     case subscriptionRequired
@@ -12,6 +13,7 @@ enum PracticeAPIError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
+        case .aiConsentRequired: String(localized: "Allow AI data sharing before using this feature. You can review your permission in Settings.", bundle: AppLanguage.bundle)
         case .signedOut: String(localized: "Please sign in again to practice.", bundle: AppLanguage.bundle)
         case .sessionUnavailable: String(localized: "We couldn't verify your sign-in. Check your connection and try again.", bundle: AppLanguage.bundle)
         case .subscriptionRequired: String(localized: "Your plan isn't active right now.", bundle: AppLanguage.bundle)
@@ -74,6 +76,7 @@ enum PracticeAPI {
     private struct Ignored: Decodable {}
 
     private static func post<Body: Encodable, Response: Decodable>(_ path: String, body: Body, timeout: TimeInterval) async throws -> Response {
+        try await AIConsent.require()
         let session: Session
         do {
             session = try await Backend.supabase.auth.session
@@ -91,6 +94,7 @@ enum PracticeAPI {
 
         let data: Data
         let response: URLResponse
+        try await AIConsent.require(userID: session.user.id)
         do {
             (data, response) = try await URLSession.shared.data(for: request)
         } catch {
@@ -158,6 +162,7 @@ enum CustomSituationAPI {
     }
 
     static func token(persona: PracticeSetup.Persona) async throws -> String {
+        try await AIConsent.require()
         let agent = persona == .male ? AppConfig.maleAgentID : AppConfig.femaleAgentID
         var components = URLComponents(url: AppConfig.apiBaseURL.appending(path: "api/elevenlabs-token"), resolvingAgainstBaseURL: false)!
         components.queryItems = [URLQueryItem(name: "agent_id", value: agent)]
@@ -248,6 +253,7 @@ enum CustomSituationAPI {
     }
 
     private static func post<Body: Encodable, Response: Decodable>(_ path: String, _ body: Body, timeout: TimeInterval) async throws -> Response {
+        try await AIConsent.require()
         var request = URLRequest(url: AppConfig.apiBaseURL.appending(path: path))
         request.httpMethod = "POST"
         request.timeoutInterval = timeout

@@ -1,23 +1,37 @@
 import SwiftUI
 
-/// Permission to send what the user says to the AI services that run a
-/// practice (App Store Guideline 5.1.2(i)): ElevenLabs hears the voice and
-/// plays the partner, OpenAI reads the words for feedback. Asked once, at the
-/// first moment anything would be sent — never during onboarding, so it's
-/// asked of old-app accounts too.
+/// Versioned, account-specific permission. A broader disclosure must use a new
+/// version so an earlier, narrower agreement cannot authorize new data sharing.
 @MainActor
 enum AIConsent {
-    private static let key = "sc.aiConsent.v1"
+    static let version = 2
+    private(set) static var userID: UUID?
+    private static var key: String? {
+        userID.map { "sc.aiConsent.v\(version).\($0.uuidString.lowercased())" }
+    }
 
-    static var isGiven: Bool { UserDefaults.standard.bool(forKey: key) }
+    static func identify(_ userID: UUID?) { self.userID = userID }
+    static var isGiven: Bool {
+        key.map { UserDefaults.standard.bool(forKey: $0) } ?? false
+    }
 
     static func give() {
+        guard let key else { return }
         UserDefaults.standard.set(true, forKey: key)
         Analytics.action("ai_consent")
     }
 
-    /// Runs `action` now when consent is already given and returns nil;
-    /// otherwise returns it to hold until the consent sheet is answered.
+    static func revoke() {
+        guard let key else { return }
+        UserDefaults.standard.removeObject(forKey: key)
+    }
+
+    /// Checked by every AI transport before any request or voice connection.
+    static func require(userID expectedUserID: UUID? = nil) throws {
+        guard expectedUserID == nil || expectedUserID == userID else { throw PracticeAPIError.aiConsentRequired }
+        guard isGiven else { throw PracticeAPIError.aiConsentRequired }
+    }
+
     static func gate(_ action: @escaping () -> Void) -> (() -> Void)? {
         guard isGiven else { return action }
         action()
@@ -40,7 +54,7 @@ struct AIConsentGate<Content: View>: View {
             ZStack {
                 MorningStage(depth: 0.8)
                 AIConsentView(
-                    onAgree: { withAnimation(.easeInOut(duration: 0.3)) { given = true } },
+                    onAgree: { withAnimation(.easeInOut(duration: 0.3)) { given = AIConsent.isGiven } },
                     onDecline: onDecline
                 )
             }
@@ -71,7 +85,7 @@ extension View {
 }
 
 /// Plain words about where the voice goes, named, before it goes there.
-private struct AIConsentView: View {
+struct AIConsentView: View {
     let onAgree: () -> Void
     let onDecline: () -> Void
 
@@ -79,28 +93,28 @@ private struct AIConsentView: View {
         VStack(spacing: 0) {
             ScrollView {
                 VStack(alignment: .leading, spacing: Space.lg) {
-                    Kicker(text: "Before you practice", color: Palette.coralDeep)
-                    Text("Your partner is an AI")
+                    Kicker(text: "Your privacy", color: Palette.coralDeep)
+                    Text("Allow AI data sharing?")
                         .font(Typeface.title(28))
                         .foregroundStyle(Palette.ink)
                         .fixedSize(horizontal: false, vertical: true)
-                    Text("To run the conversation and write your feedback, Speaking Coach sends what you say to two AI services.")
+                    Text("With your permission, Speaking Coach shares the following data with ElevenLabs and OpenAI to provide AI conversations, transcription, questions and feedback.")
                         .font(Typeface.body(16))
                         .foregroundStyle(Palette.dim)
                         .lineSpacing(3)
                         .fixedSize(horizontal: false, vertical: true)
 
                     VStack(alignment: .leading, spacing: Space.lg) {
-                        ServiceRow(systemImage: "waveform", name: "ElevenLabs", role: "Hears your voice and answers as your partner, live.")
+                        ServiceRow(systemImage: "waveform", name: "ElevenLabs", role: "Receives live microphone audio, recorded practice and answer audio, and the practice context you provide, including CV, job post and interview notes. It runs your voice partner and transcribes recordings.")
                         Divider().overlay(Palette.border)
-                        ServiceRow(systemImage: "text.bubble", name: "OpenAI", role: "Reads the words you said and writes your feedback.")
+                        ServiceRow(systemImage: "text.bubble", name: "OpenAI", role: "Receives conversation and recording transcripts, custom situations, and presentation slide text, title, audience, instructions, slide timing and answers. It checks situations and generates questions and feedback. Any personal details in this content are included.")
                     }
                     .padding(Space.lg)
                     .glassSurface(cornerRadius: Corner.lg)
                     .padding(.top, Space.sm)
 
                     VStack(alignment: .leading, spacing: 0) {
-                        Text("This happens only when you practice. Read more in our")
+                        Text("Data is sent through our servers or directly to ElevenLabs when you use these features. PowerPoint files are also uploaded to our server for PDF conversion. Choose Not now to continue without AI features. You can withdraw permission in Settings → AI data sharing. Withdrawal stops future sharing; it does not delete data already sent. Read more in our")
                             .foregroundStyle(Palette.dim)
                         Link("Privacy Policy", destination: AppConfig.privacyURL)
                             .foregroundStyle(Palette.coralDeep)
@@ -114,7 +128,7 @@ private struct AIConsentView: View {
             .scrollBounceBehavior(.basedOnSize)
 
             VStack(spacing: Space.sm) {
-                PrimaryButton(title: "Agree and continue") {
+                PrimaryButton(title: "Allow AI data sharing") {
                     AIConsent.give()
                     Haptics.success()
                     onAgree()
